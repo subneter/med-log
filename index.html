@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#131615" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1013" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,21 +13,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='24' width='52' height='20' rx='10' fill='%230d9488' transform='rotate(-30 32 32)'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='24' width='52' height='20' rx='10' fill='%235a5fe0' transform='rotate(-30 32 32)'/%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#f2f5f4; --card:#ffffff; --ink:#161b19; --ink-2:#6d7c76;
-    --line:#e4e9e7; --accent:#0d9488; --accent-soft:#e0f0ed;
-    --ok:#3f7a4e; --tap:#edf1ef; --bar:#0d9488;
+    --bg:#f3f4f7; --card:#ffffff; --ink:#16181f; --ink-2:#6f7484;
+    --line:#e5e7ee; --accent:#5a5fe0; --accent-soft:#e8e9fc;
+    --ok:#3f7a4e; --tap:#edeef4; --bar:#5a5fe0;
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#0e1110; --card:#181d1b; --ink:#eef2f0; --ink-2:#8b9a94;
-      --line:#242b28; --accent:#14a390; --accent-soft:#17312c;
-      --tap:#202623; --bar:#14a390; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
+      --bg:#0f1013; --card:#17181e; --ink:#eef0f4; --ink-2:#9095a5;
+      --line:#252732; --accent:#7578f0; --accent-soft:#252748;
+      --tap:#1f2129; --bar:#7578f0; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
     }
   }
@@ -46,6 +46,15 @@
   }
 
   .month-count{font-size:12px; color:var(--ink-2); font-weight:500; white-space:nowrap}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:0 5px; flex:0 0 auto}
+  .brand{display:flex; align-items:center; gap:7px; font-weight:800; font-size:15.5px; letter-spacing:-.3px}
+  .brand svg{display:block}
+  .ver{
+    font-size:10.5px; font-weight:600; color:var(--ink-2); letter-spacing:.02em;
+    background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
+  }
 
   /* ---------- today card ---------- */
   .today-card{
@@ -97,7 +106,7 @@
   }
   .add-btn{
     margin-top:10px; width:100%; border:0; cursor:pointer;
-    background:linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #063a34));
+    background:linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #14164f));
     color:#fff; font:inherit; font-size:15px; font-weight:700; letter-spacing:.01em;
     padding:13px; border-radius:15px; display:flex; align-items:center; justify-content:center; gap:8px;
     box-shadow:0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent);
@@ -248,6 +257,14 @@
 <body>
 <div class="app">
 
+  <header class="topbar">
+    <div class="brand">
+      <svg width="21" height="21" viewBox="0 0 64 64"><g transform="rotate(-30 32 32)"><rect x="6" y="24" width="52" height="20" rx="10" fill="var(--accent)"/><path d="M32 24v20" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M40 24h8a10 10 0 0 1 0 20h-8z" fill="#fff" opacity=".3"/></g></svg>
+      Med Log
+    </div>
+    <div class="ver" id="appVer">v3.0</div>
+  </header>
+
   <section class="today-card">
     <div class="today-top">
       <div>
@@ -262,7 +279,7 @@
       <button id="medSaveToday">Add</button>
     </div>
     <button class="add-btn" id="quickAdd">
-      <svg width="20" height="20" viewBox="0 0 64 64"><rect x="6" y="24" width="52" height="20" rx="10" fill="#fff" transform="rotate(-30 32 32)"/><path d="M26.8 26.3 40.7 50.4" stroke="#0d9488" stroke-width="3" stroke-linecap="round" transform="rotate(-30 32 32)"/></svg>
+      <svg width="20" height="20" viewBox="0 0 64 64"><rect x="6" y="24" width="52" height="20" rx="10" fill="#fff" transform="rotate(-30 32 32)"/><path d="M26.8 26.3 40.7 50.4" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" transform="rotate(-30 32 32)"/></svg>
       <span id="quickAddLabel">I took a tab</span>
     </button>
     <div class="safety-note" id="safetyNote">

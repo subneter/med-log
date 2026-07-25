@@ -1,5 +1,5 @@
 /* Med Log service worker — cache-first so the app works fully offline */
-var CACHE = 'med-log-v2';
+var CACHE = 'med-log-v3';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
