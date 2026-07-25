@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131615" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Med Log</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='24' width='52' height='20' rx='10' fill='%230d9488' transform='rotate(-30 32 32)'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f3f5f4; --card:#ffffff; --ink:#1e2321; --ink-2:#72807b;
+    --line:#e3e8e6; --accent:#0d9488; --accent-soft:#e0f0ed;
+    --ok:#3f7a4e; --tap:#ecf0ee; --bar:#0d9488;
+    --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
+    --shadow:0 1px 2px rgba(30,25,15,.05), 0 8px 24px rgba(30,25,15,.07);
+    --radius:20px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#131615; --card:#1d2220; --ink:#eef2f0; --ink-2:#8fa09a;
+      --line:#2b322f; --accent:#14a390; --accent-soft:#1a332e;
+      --tap:#252c29; --bar:#14a390; --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+      --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100dvh; display:flex; justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%; max-width:440px; padding:max(16px, env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));}
+
+  /* ---------- header ---------- */
+  header{display:flex; align-items:center; justify-content:space-between; padding:4px 4px 14px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; letter-spacing:-.2px}
+  .brand svg{display:block}
+  .month-count{font-size:13px; color:var(--ink-2); font-weight:500}
+
+  /* ---------- today card ---------- */
+  .today-card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:20px; margin-bottom:18px;
+  }
+  .today-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px}
+  .today-label{font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2)}
+  .today-date{font-size:22px; font-weight:700; letter-spacing:-.4px; margin-top:3px}
+  .today-doses{margin-top:14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-height:26px}
+  .today-doses .none{color:var(--ink-2); font-size:14px}
+  .dose-chip{
+    display:inline-flex; align-items:center; gap:6px; background:var(--tap);
+    border-radius:999px; padding:5px 11px 5px 7px; font-size:13px; font-weight:600; color:var(--ink);
+  }
+  .med-row{
+    display:flex; gap:8px; overflow-x:auto; margin-top:14px; padding:2px;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .med-row::-webkit-scrollbar{display:none}
+  .med-chip{
+    flex:0 0 auto; border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+    font:inherit; font-size:13px; font-weight:600; padding:8px 13px; border-radius:999px;
+    cursor:pointer; white-space:nowrap; transition:background .12s, border-color .12s, color .12s;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .med-chip.sel{background:var(--accent); border-color:var(--accent); color:#fff}
+  .med-chip.other{color:var(--ink-2); border-style:dashed}
+  .med-add-row{display:none; gap:8px; margin-top:10px}
+  .med-add-row.show{display:flex}
+  .med-add-row input{
+    flex:1; min-width:0; border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:12px; padding:10px 12px; font:inherit; font-size:14px;
+  }
+  .med-add-row input:focus{outline:none; border-color:var(--accent)}
+  .med-add-row button{
+    border:0; background:var(--ink); color:var(--bg); border-radius:12px; padding:0 16px;
+    font:inherit; font-size:13.5px; font-weight:700; cursor:pointer;
+  }
+  .add-btn{
+    margin-top:14px; width:100%; border:0; cursor:pointer;
+    background:var(--accent); color:#fff; font:inherit; font-size:16px; font-weight:700;
+    padding:16px; border-radius:16px; display:flex; align-items:center; justify-content:center; gap:9px;
+    transition:transform .08s ease, filter .15s;
+  }
+  .add-btn:active{transform:scale(.97); filter:brightness(.93)}
+  .safety-note{
+    margin-top:12px; font-size:12.5px; line-height:1.45; color:var(--ink-2);
+    background:var(--tap); border-radius:12px; padding:10px 12px; display:none;
+  }
+  .safety-note.show{display:block}
+
+  /* ---------- calendar card ---------- */
+  .cal-card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:16px 12px 14px; overflow:hidden; touch-action:pan-y;
+  }
+  .cal-head{display:flex; align-items:center; justify-content:space-between; padding:0 6px 12px}
+  .cal-title{font-size:17px; font-weight:700; letter-spacing:-.3px}
+  .cal-title small{font-weight:500; color:var(--ink-2); margin-left:6px; font-size:13px}
+  .nav{display:flex; gap:6px; align-items:center}
+  .nav button{
+    border:0; background:var(--tap); color:var(--ink); width:36px; height:36px; border-radius:12px;
+    font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform .08s;
+  }
+  .nav button:active{transform:scale(.92)}
+  .nav .today-jump{width:auto; padding:0 12px; font-size:13px; font-weight:600; color:var(--accent)}
+  .dow{display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px}
+  .dow span{text-align:center; font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--ink-2)}
+  .grid-wrap{position:relative}
+  .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+  .grid.anim-left{animation:slideL .22s ease}
+  .grid.anim-right{animation:slideR .22s ease}
+  @keyframes slideL{from{opacity:0; transform:translateX(26px)}to{opacity:1; transform:none}}
+  @keyframes slideR{from{opacity:0; transform:translateX(-26px)}to{opacity:1; transform:none}}
+  .day{
+    aspect-ratio:1/1.15; border-radius:13px; border:0; background:transparent; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding-top:7px; gap:4px; font:inherit; color:var(--ink); position:relative;
+    transition:background .12s;
+  }
+  .day:active{background:var(--tap)}
+  .day.blank{visibility:hidden; pointer-events:none}
+  .day .num{font-size:14px; font-weight:600; line-height:1; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;}
+  .day.is-today .num{background:var(--ink); color:var(--bg)}
+  .day.future{color:var(--ink-2); opacity:.45; pointer-events:none}
+  .day.has-dose{background:var(--accent-soft)}
+  .day.has-dose:active{filter:brightness(.96)}
+  .pills{display:flex; align-items:center; gap:2px; height:12px}
+  .pills svg{display:block}
+  .pills .more{font-size:10px; font-weight:700; color:var(--ink-2)}
+
+  /* ---------- history chart card ---------- */
+  .chart-card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:16px 16px 14px; margin-top:18px;
+  }
+  .chart-head{display:flex; align-items:baseline; justify-content:space-between; padding:0 2px 2px}
+  .chart-title{font-size:15px; font-weight:700; letter-spacing:-.2px}
+  .sample-clear{
+    border:0; background:transparent; padding:4px 0; cursor:pointer; font:inherit;
+    font-size:12px; font-weight:600; color:var(--ink-2); text-decoration:underline;
+    text-underline-offset:2px; display:none;
+  }
+  .sample-clear.show{display:inline}
+  .chart{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
+    align-items:end; height:132px; padding-top:6px;
+  }
+  .cbar{
+    border:0; background:transparent; padding:0; cursor:pointer; font:inherit; color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    height:100%; gap:5px; border-radius:10px; transition:background .12s;
+  }
+  .cbar:active{background:var(--tap)}
+  .cbar .val{font-size:12.5px; font-weight:600; line-height:1; color:var(--ink)}
+  .cbar .val.zero{color:var(--ink-2)}
+  .cbar .bar{
+    width:min(26px, 58%); background:var(--bar); border-radius:4px 4px 0 0;
+  }
+  .cbar .bar.zero{background:var(--line); border-radius:2px}
+  .cbar .mon{font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--ink-2); line-height:1.3}
+  .cbar.cur .mon{color:var(--ink); font-weight:700}
+
+  /* ---------- bottom sheet ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,12,8,.45); opacity:0; pointer-events:none;
+    transition:opacity .22s; z-index:10; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+  }
+  .overlay.open{opacity:1; pointer-events:auto}
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:11; margin:0 auto; max-width:440px;
+    background:var(--card); border-radius:24px 24px 0 0; box-shadow:0 -8px 40px rgba(0,0,0,.18);
+    padding:10px 20px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(105%); transition:transform .28s cubic-bezier(.32,.72,.28,1);
+  }
+  .sheet.open{transform:none}
+  .grabber{width:38px; height:4px; border-radius:2px; background:var(--line); margin:4px auto 14px}
+  .sheet h2{margin:0; font-size:19px; font-weight:700; letter-spacing:-.3px}
+  .sheet .sub{margin:4px 0 0; font-size:13.5px; color:var(--ink-2)}
+  .dose-list{list-style:none; margin:16px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; max-height:38vh; overflow-y:auto}
+  .dose-list li{
+    display:flex; align-items:center; gap:12px; background:var(--tap);
+    border-radius:14px; padding:11px 12px;
+  }
+  .dose-list .t{font-size:15px; font-weight:600; flex:1}
+  .dose-list .lbl{font-size:12.5px; color:var(--ink-2)}
+  .dose-list .del{
+    border:0; background:transparent; color:var(--ink-2); cursor:pointer; font-size:17px;
+    width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  }
+  .dose-list .del:active{background:var(--line); color:var(--accent)}
+  .empty-day{margin:18px 0 0; text-align:center; color:var(--ink-2); font-size:14px; padding:14px 0}
+  .sheet-add{
+    margin-top:16px; display:flex; gap:10px; align-items:stretch;
+  }
+  .sheet-add input[type=time]{
+    flex:0 0 116px; border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:14px; padding:0 10px; font:inherit; font-size:15px; font-weight:600; text-align:center;
+  }
+  .sheet-add button{
+    flex:1; border:0; background:var(--accent); color:#fff; font:inherit; font-size:15px; font-weight:700;
+    border-radius:14px; padding:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform .08s;
+  }
+  .sheet-add button:active{transform:scale(.97)}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; bottom:calc(26px + env(safe-area-inset-bottom)); left:50%; transform:translate(-50%, 20px);
+    background:var(--ink); color:var(--bg); font-size:14px; font-weight:600;
+    padding:11px 18px; border-radius:999px; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s; z-index:20; white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 64 64"><rect x="6" y="24" width="52" height="20" rx="10" fill="#0d9488" transform="rotate(-30 32 32)"/><path d="M32.8 17.3 46.7 41.4" stroke="#fff" stroke-width="3" stroke-linecap="round" transform="rotate(-30 32 32) translate(-6 -9)"/></svg>
+      Med Log
+    </div>
+    <div class="month-count" id="monthCount"></div>
+  </header>
+
+  <section class="today-card">
+    <div class="today-top">
+      <div>
+        <div class="today-label">Today</div>
+        <div class="today-date" id="todayDate"></div>
+      </div>
+    </div>
+    <div class="today-doses" id="todayDoses"></div>
+    <div class="med-row" id="medRowToday" aria-label="Choose medicine"></div>
+    <div class="med-add-row" id="medAddToday">
+      <input type="text" id="medInputToday" placeholder="Medicine name" maxlength="40">
+      <button id="medSaveToday">Add</button>
+    </div>
+    <button class="add-btn" id="quickAdd">
+      <svg width="20" height="20" viewBox="0 0 64 64"><rect x="6" y="24" width="52" height="20" rx="10" fill="#fff" transform="rotate(-30 32 32)"/><path d="M26.8 26.3 40.7 50.4" stroke="#0d9488" stroke-width="3" stroke-linecap="round" transform="rotate(-30 32 32)"/></svg>
+      <span id="quickAddLabel">I took a tab</span>
+    </button>
+    <div class="safety-note" id="safetyNote">
+      ⚠️ That's several tabs today. For most adults the limit is 8 × 500&nbsp;mg (4&nbsp;g) in 24 hours, spaced 4–6 hours apart. If pain persists, consider seeing a doctor.
+    </div>
+  </section>
+
+  <section class="cal-card" id="calCard">
+    <div class="cal-head">
+      <div class="cal-title"><span id="calMonth"></span><small id="calYear"></small></div>
+      <div class="nav">
+        <button class="today-jump" id="jumpToday" aria-label="Jump to current month">Today</button>
+        <button id="prevM" aria-label="Previous month">‹</button>
+        <button id="nextM" aria-label="Next month">›</button>
+      </div>
+    </div>
+    <div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-head">
+      <div class="chart-title">Last 6 months</div>
+      <button class="sample-clear" id="sampleClear">Sample data — clear</button>
+    </div>
+    <div class="chart" id="chart"></div>
+  </section>
+
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grabber"></div>
+  <h2 id="sheetTitle"></h2>
+  <p class="sub" id="sheetSub"></p>
+  <ul class="dose-list" id="doseList"></ul>
+  <div class="med-row" id="medRowSheet" aria-label="Choose medicine"></div>
+  <div class="med-add-row" id="medAddSheet">
+    <input type="text" id="medInputSheet" placeholder="Medicine name" maxlength="40">
+    <button id="medSaveSheet">Add</button>
+  </div>
+  <div class="sheet-add">
+    <input type="time" id="timeInput" aria-label="Time of dose">
+    <button id="sheetAdd">
+      <svg width="17" height="17" viewBox="0 0 64 64"><rect x="6" y="24" width="52" height="20" rx="10" fill="#fff" transform="rotate(-30 32 32)"/></svg>
+      Add tab
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var STORE_KEY = 'paracetamol-log-v1';
+
+  /* ---------- storage (localStorage with in-memory fallback) ---------- */
+  var mem = null;
+  function loadLog(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return mem || {}; }
+  }
+  function saveLog(log){
+    mem = log;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(log)); }catch(e){}
+  }
+  var log = loadLog();   // { "2026-07-24": [{t:"09:14", med:"Panadol Extra"}, ...], ... }
+
+  /* ---------- medicines ---------- */
+  var MEDS_KEY = 'paracetamol-meds-v1';
+  var LAST_MED_KEY = 'paracetamol-last-med';
+  var PRESETS = ['Panadol Advance', 'Panadol Extra', 'Panadol Cold & Flu', 'Panadol Migraine'];
+  var memMeds = null;
+  function loadMeds(){
+    try{
+      var raw = localStorage.getItem(MEDS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return memMeds; }
+  }
+  function saveMeds(){
+    memMeds = meds;
+    try{ localStorage.setItem(MEDS_KEY, JSON.stringify(meds)); }catch(e){}
+  }
+  var meds = loadMeds() || PRESETS.slice();
+  var selectedMed = null;
+  try{ selectedMed = localStorage.getItem(LAST_MED_KEY); }catch(e){}
+  if(!selectedMed || meds.indexOf(selectedMed) < 0) selectedMed = meds[0];
+  function setSelectedMed(m){
+    selectedMed = m;
+    try{ localStorage.setItem(LAST_MED_KEY, m); }catch(e){}
+  }
+  function shortMed(m){ return m.indexOf('Panadol ') === 0 ? m.slice(8) : m; }
+  var MED_COLORS = {
+    'Panadol Advance':   'var(--med-blue)',
+    'Panadol Extra':     'var(--med-red)',
+    'Panadol Cold & Flu':'var(--med-green)',
+    'Panadol Migraine':  'var(--med-black)'
+  };
+  function medColor(m){ return MED_COLORS[m] || 'var(--accent)'; }
+
+  /* migrate v1 entries ("09:14") to v2 objects ({t, med}) */
+  function normEntry(e){ return typeof e === 'string' ? { t: e, med: 'Panadol' } : e; }
+  function sortDoses(arr){ arr.sort(function(a, b){ return a.t < b.t ? -1 : a.t > b.t ? 1 : 0; }); }
+  (function migrate(){
+    var changed = false;
+    for(var k in log){
+      for(var i = 0; i < log[k].length; i++){
+        if(typeof log[k][i] === 'string'){ log[k][i] = normEntry(log[k][i]); changed = true; }
+      }
+    }
+    if(changed) saveLog(log);
+  })();
+
+  /* ---------- sample data (seeded once, removable) ---------- */
+  var SAMPLE_KEY = 'paracetamol-sample-v1';
+  var memSample = null;
+  function loadSample(){
+    try{
+      var raw = localStorage.getItem(SAMPLE_KEY);
+      return raw === null ? null : JSON.parse(raw);
+    }catch(e){ return memSample; }
+  }
+  function saveSample(s){
+    memSample = s;
+    try{ localStorage.setItem(SAMPLE_KEY, JSON.stringify(s)); }catch(e){}
+  }
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var sample = loadSample();
+  if(sample === null){
+    // first run: seed the previous 5 months with realistic demo doses
+    sample = {};
+    var rng = mulberry32(42);
+    var base = new Date();
+    for(var mi = 5; mi >= 1; mi--){
+      var md = new Date(base.getFullYear(), base.getMonth() - mi, 1);
+      var dim = new Date(md.getFullYear(), md.getMonth() + 1, 0).getDate();
+      var n = 3 + Math.floor(rng() * 4);          // 3–6 tabs that month
+      for(var si = 0; si < n; si++){
+        var day = 1 + Math.floor(rng() * dim);
+        var entry = {
+          t: pad(8 + Math.floor(rng() * 14)) + ':' + pad(Math.floor(rng() * 60)),
+          med: PRESETS[Math.floor(rng() * PRESETS.length)]
+        };
+        var sk = md.getFullYear() + '-' + pad(md.getMonth() + 1) + '-' + pad(day);
+        if(!sample[sk]) sample[sk] = [];
+        sample[sk].push(entry);
+        if(!log[sk]) log[sk] = [];
+        log[sk].push(entry);
+        sortDoses(log[sk]);
+      }
+    }
+    saveLog(log);
+    saveSample(sample);
+  }else{
+    // migrate old sample format (plain time strings)
+    var sChanged = false;
+    for(var sk2 in sample){
+      for(var s2 = 0; s2 < sample[sk2].length; s2++){
+        if(typeof sample[sk2][s2] === 'string'){ sample[sk2][s2] = normEntry(sample[sk2][s2]); sChanged = true; }
+      }
+    }
+    if(sChanged) saveSample(sample);
+  }
+  function hasSample(){
+    for(var k in sample) return true;
+    return false;
+  }
+  function clearSample(){
+    for(var k in sample){
+      if(!log[k]) continue;
+      for(var i = 0; i < sample[k].length; i++){
+        var s = sample[k][i];
+        for(var j = 0; j < log[k].length; j++){
+          if(log[k][j].t === s.t && log[k][j].med === s.med){ log[k].splice(j, 1); break; }
+        }
+      }
+      if(log[k].length === 0) delete log[k];
+    }
+    sample = {};
+    saveLog(log);
+    saveSample(sample);
+  }
+
+  /* ---------- date helpers ---------- */
+  function pad(n){ return (n<10?'0':'')+n; }
+  function keyOf(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayKey(){ return keyOf(new Date()); }
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function fmtTime12(t){ // "20:30" -> "8:30 PM"
+    var p = t.split(':'), h = +p[0], m = p[1];
+    var ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if(h === 0) h = 12;
+    return h + ':' + m + ' ' + ap;
+  }
+  function nowTime(){
+    var d = new Date();
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  /* ---------- state ---------- */
+  var view = new Date(); view.setDate(1);
+  var sheetKey = null;
+
+  /* ---------- pill svg ---------- */
+  function pillSVG(size, color){
+    color = color || 'var(--accent)';
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64">' +
+      '<g transform="rotate(-30 32 32)">' +
+      '<rect x="6" y="24" width="26" height="20" rx="10" fill="'+color+'"/>' +
+      '<path d="M32 24 h16 a10 10 0 0 1 0 20 h-16 z" fill="'+color+'" opacity=".45"/>' +
+      '</g></svg>';
+  }
+
+  /* ---------- render: header month count ---------- */
+  function renderMonthCount(){
+    var now = new Date();
+    var prefix = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-';
+    var n = 0;
+    for(var k in log){ if(k.indexOf(prefix) === 0) n += log[k].length; }
+    document.getElementById('monthCount').textContent =
+      n === 0 ? 'No tabs this month' : n + (n===1?' tab':' tabs') + ' this month';
+  }
+
+  /* ---------- render: today card ---------- */
+  function renderToday(){
+    var d = new Date();
+    document.getElementById('todayDate').textContent =
+      DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3);
+    var box = document.getElementById('todayDoses');
+    var doses = log[todayKey()] || [];
+    if(doses.length === 0){
+      box.innerHTML = '<span class="none">Nothing taken today</span>';
+    }else{
+      box.innerHTML = doses.map(function(e){
+        return '<span class="dose-chip">'+pillSVG(14, medColor(e.med))+' '+shortMed(e.med)+' · '+fmtTime12(e.t)+'</span>';
+      }).join('');
+    }
+    document.getElementById('safetyNote').classList.toggle('show', doses.length >= 4);
+  }
+
+  /* ---------- render: medicine choice chips ---------- */
+  function renderMedRows(){
+    var html = meds.map(function(m){
+      return '<button class="med-chip'+(m === selectedMed ? ' sel' : '')+'" data-med="'+
+        m.replace(/"/g,'&quot;')+'">'+pillSVG(13, medColor(m))+m+'</button>';
+    }).join('') + '<button class="med-chip other" data-other="1">+ Other</button>';
+    document.getElementById('medRowToday').innerHTML = html;
+    document.getElementById('medRowSheet').innerHTML = html;
+    document.getElementById('quickAddLabel').textContent = 'I took ' + selectedMed;
+  }
+
+  /* ---------- render: calendar ---------- */
+  function renderCal(dir){
+    var y = view.getFullYear(), m = view.getMonth();
+    document.getElementById('calMonth').textContent = MONTHS[m];
+    document.getElementById('calYear').textContent = y;
+
+    var first = new Date(y, m, 1);
+    var startBlank = (first.getDay() + 6) % 7;      // Monday-first
+    var daysInMonth = new Date(y, m+1, 0).getDate();
+    var tk = todayKey();
+    var now = new Date(); now.setHours(0,0,0,0);
+
+    var html = '';
+    for(var b = 0; b < startBlank; b++) html += '<button class="day blank"></button>';
+    for(var d = 1; d <= daysInMonth; d++){
+      var date = new Date(y, m, d);
+      var k = keyOf(date);
+      var doses = log[k] || [];
+      var cls = 'day';
+      if(k === tk) cls += ' is-today';
+      if(date > now) cls += ' future';
+      if(doses.length) cls += ' has-dose';
+      var pills = '';
+      if(doses.length){
+        var shown = Math.min(doses.length, 3);
+        for(var i = 0; i < shown; i++) pills += pillSVG(11, medColor(doses[i].med));
+        if(doses.length > 3) pills += '<span class="more">+'+(doses.length-3)+'</span>';
+      }
+      html += '<button class="'+cls+'" data-key="'+k+'" aria-label="'+d+' '+MONTHS[m]+', '+doses.length+' tabs">' +
+              '<span class="num">'+d+'</span><span class="pills">'+pills+'</span></button>';
+    }
+    var grid = document.getElementById('grid');
+    grid.innerHTML = html;
+    if(dir){
+      grid.classList.remove('anim-left','anim-right');
+      void grid.offsetWidth;
+      grid.classList.add(dir === 1 ? 'anim-left' : 'anim-right');
+    }
+  }
+
+  /* ---------- render: 6-month history chart ---------- */
+  function renderChart(){
+    var now = new Date();
+    var items = [];
+    for(var i = 5; i >= 0; i--){
+      var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      var prefix = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-';
+      var n = 0;
+      for(var k in log){ if(k.indexOf(prefix) === 0) n += log[k].length; }
+      items.push({ y: d.getFullYear(), m: d.getMonth(), count: n });
+    }
+    var max = 1;
+    for(var j = 0; j < items.length; j++) if(items[j].count > max) max = items[j].count;
+    var AREA = 84; // px available for the tallest bar
+    var html = items.map(function(it){
+      var h = it.count === 0 ? 3 : Math.max(10, Math.round(it.count / max * AREA));
+      var isCur = it.y === now.getFullYear() && it.m === now.getMonth();
+      return '<button class="cbar' + (isCur ? ' cur' : '') + '" data-y="' + it.y + '" data-m="' + it.m + '"' +
+        ' aria-label="' + MONTHS[it.m] + ' ' + it.y + ': ' + it.count + ' tabs. Tap to open in calendar.">' +
+        '<span class="val' + (it.count === 0 ? ' zero' : '') + '">' + it.count + '</span>' +
+        '<span class="bar' + (it.count === 0 ? ' zero' : '') + '" style="height:' + h + 'px"></span>' +
+        '<span class="mon">' + MONTHS[it.m].slice(0,3) + '</span></button>';
+    }).join('');
+    document.getElementById('chart').innerHTML = html;
+    document.getElementById('sampleClear').classList.toggle('show', hasSample());
+  }
+
+  function renderAll(dir){
+    renderToday();
+    renderMedRows();
+    renderCal(dir);
+    renderMonthCount();
+    renderChart();
+    if(sheetKey) renderSheet();
+  }
+
+  /* ---------- add / remove doses ---------- */
+  function addDose(key, time, med){
+    if(!log[key]) log[key] = [];
+    log[key].push({ t: time, med: med });
+    sortDoses(log[key]);
+    saveLog(log);
+  }
+  function removeDose(key, idx){
+    if(!log[key]) return;
+    log[key].splice(idx, 1);
+    if(log[key].length === 0) delete log[key];
+    saveLog(log);
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer = null;
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------- quick add (today) ---------- */
+  document.getElementById('quickAdd').addEventListener('click', function(){
+    var t = nowTime();
+    addDose(todayKey(), t, selectedMed);
+    renderAll();
+    if(navigator.vibrate) navigator.vibrate(15);
+    toast('Logged ' + shortMed(selectedMed) + ' — ' + fmtTime12(t));
+  });
+
+  /* ---------- medicine chip rows (today card + sheet) ---------- */
+  function bindMedRow(rowId, addRowId, inputId, saveId){
+    var addRow = document.getElementById(addRowId);
+    var input = document.getElementById(inputId);
+    function saveNew(){
+      var v = input.value.trim();
+      if(!v) return;
+      if(meds.indexOf(v) < 0){ meds.push(v); saveMeds(); }
+      setSelectedMed(v);
+      input.value = '';
+      addRow.classList.remove('show');
+      renderMedRows();
+      if(sheetKey) renderSheet();
+    }
+    document.getElementById(rowId).addEventListener('click', function(e){
+      var chip = e.target.closest('.med-chip');
+      if(!chip) return;
+      if(chip.hasAttribute('data-other')){
+        addRow.classList.toggle('show');
+        if(addRow.classList.contains('show')) input.focus();
+        return;
+      }
+      setSelectedMed(chip.getAttribute('data-med'));
+      addRow.classList.remove('show');
+      renderMedRows();
+    });
+    document.getElementById(saveId).addEventListener('click', saveNew);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') saveNew(); });
+  }
+  bindMedRow('medRowToday', 'medAddToday', 'medInputToday', 'medSaveToday');
+  bindMedRow('medRowSheet', 'medAddSheet', 'medInputSheet', 'medSaveSheet');
+
+  /* ---------- month nav ---------- */
+  function shiftMonth(delta){
+    view.setMonth(view.getMonth() + delta);
+    renderCal(delta > 0 ? 1 : -1);
+  }
+  document.getElementById('prevM').addEventListener('click', function(){ shiftMonth(-1); });
+  document.getElementById('nextM').addEventListener('click', function(){ shiftMonth(1); });
+  document.getElementById('jumpToday').addEventListener('click', function(){
+    view = new Date(); view.setDate(1);
+    renderCal(1);
+  });
+
+  /* swipe left/right on the calendar */
+  var touchX = null, touchY = null;
+  var calCard = document.getElementById('calCard');
+  calCard.addEventListener('touchstart', function(e){
+    touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+  }, {passive:true});
+  calCard.addEventListener('touchend', function(e){
+    if(touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    var dy = e.changedTouches[0].clientY - touchY;
+    touchX = null;
+    if(Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4){
+      shiftMonth(dx < 0 ? 1 : -1);
+    }
+  }, {passive:true});
+
+  /* ---------- day sheet ---------- */
+  var overlay = document.getElementById('overlay');
+  var sheet = document.getElementById('sheet');
+
+  function openSheet(key){
+    sheetKey = key;
+    renderSheet();
+    overlay.classList.add('open');
+    sheet.classList.add('open');
+  }
+  function closeSheet(){
+    sheetKey = null;
+    overlay.classList.remove('open');
+    sheet.classList.remove('open');
+  }
+  overlay.addEventListener('click', closeSheet);
+
+  function renderSheet(){
+    if(!sheetKey) return;
+    var p = sheetKey.split('-');
+    var d = new Date(+p[0], +p[1]-1, +p[2]);
+    var isToday = sheetKey === todayKey();
+    document.getElementById('sheetTitle').textContent =
+      (isToday ? 'Today — ' : '') + DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    var doses = log[sheetKey] || [];
+    document.getElementById('sheetSub').textContent =
+      doses.length === 0 ? 'Nothing taken' :
+      doses.length + (doses.length===1 ? ' tab taken' : ' tabs taken');
+    var list = document.getElementById('doseList');
+    if(doses.length === 0){
+      list.innerHTML = '<div class="empty-day">Nothing logged for this day</div>';
+    }else{
+      list.innerHTML = doses.map(function(e, i){
+        return '<li>'+pillSVG(18, medColor(e.med))+
+          '<span class="t">'+fmtTime12(e.t)+'</span>'+
+          '<span class="lbl">'+e.med+'</span>'+
+          '<button class="del" data-i="'+i+'" aria-label="Remove this dose">✕</button></li>';
+      }).join('');
+    }
+    document.getElementById('timeInput').value = isToday ? nowTime() : '12:00';
+  }
+
+  document.getElementById('grid').addEventListener('click', function(e){
+    var btn = e.target.closest('.day');
+    if(!btn || btn.classList.contains('blank') || btn.classList.contains('future')) return;
+    openSheet(btn.getAttribute('data-key'));
+  });
+
+  document.getElementById('doseList').addEventListener('click', function(e){
+    var del = e.target.closest('.del');
+    if(!del || !sheetKey) return;
+    removeDose(sheetKey, +del.getAttribute('data-i'));
+    renderAll();
+    toast('Removed');
+  });
+
+  document.getElementById('sheetAdd').addEventListener('click', function(){
+    if(!sheetKey) return;
+    var t = document.getElementById('timeInput').value || nowTime();
+    addDose(sheetKey, t, selectedMed);
+    renderAll();
+    if(navigator.vibrate) navigator.vibrate(15);
+    toast('Logged ' + shortMed(selectedMed) + ' — ' + fmtTime12(t));
+  });
+
+  /* drag-down to close the sheet */
+  var sheetStartY = null;
+  sheet.addEventListener('touchstart', function(e){
+    if(e.target.closest('.dose-list')) return;
+    sheetStartY = e.touches[0].clientY;
+  }, {passive:true});
+  sheet.addEventListener('touchend', function(e){
+    if(sheetStartY === null) return;
+    var dy = e.changedTouches[0].clientY - sheetStartY;
+    sheetStartY = null;
+    if(dy > 60) closeSheet();
+  }, {passive:true});
+
+  /* chart: tap a bar -> open that month in the calendar */
+  document.getElementById('chart').addEventListener('click', function(e){
+    var bar = e.target.closest('.cbar');
+    if(!bar) return;
+    var y = +bar.getAttribute('data-y'), m = +bar.getAttribute('data-m');
+    var dir = (y * 12 + m) < (view.getFullYear() * 12 + view.getMonth()) ? -1 : 1;
+    view = new Date(y, m, 1);
+    renderCal(dir);
+    document.getElementById('calCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  });
+
+  /* remove the demo sample data */
+  document.getElementById('sampleClear').addEventListener('click', function(){
+    clearSample();
+    renderAll();
+    toast('Sample data removed');
+  });
+
+  /* refresh "today" when the app is reopened past midnight */
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) renderAll();
+  });
+
+  renderAll();
+
+  /* PWA: register the service worker when served over https (no-op for a local file) */
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
