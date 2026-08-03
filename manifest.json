@@ -1,7 +1,7 @@
 {
   "name": "Med Log",
   "short_name": "Med Log",
-  "description": "One-tap paracetamol tracker with calendar history",
+  "description": "Medicine log, to-do lists and daily routine tracker",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

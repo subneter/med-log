@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='24' width='52' height='20' rx='10' fill='%235a5fe0' transform='rotate(-30 32 32)'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235a5fe0'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='60' height='60' rx='16' fill='url(%23g)'/%3E%3Cpath d='M20 33.5 28.5 42 45 24' fill='none' stroke='white' stroke-width='6.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='47' cy='16' r='3.6' fill='white'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#f3f4f7; --card:#ffffff; --ink:#16181f; --ink-2:#6f7484;
@@ -42,7 +42,7 @@
   .app{
     width:100%; max-width:440px;
     padding:max(10px, env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
-    display:flex; flex-direction:column; min-height:100dvh; gap:10px;
+    display:flex; flex-direction:column; height:100dvh; gap:10px;
   }
 
   .month-count{font-size:12px; color:var(--ink-2); font-weight:500; white-space:nowrap}
@@ -244,6 +244,99 @@
   }
   .sheet-add button:active{transform:scale(.97)}
 
+  /* ---------- pages & bottom tab bar ---------- */
+  .page{flex:1 1 auto; display:flex; flex-direction:column; gap:10px; min-height:0; overflow-y:auto; scrollbar-width:none}
+  .page::-webkit-scrollbar{display:none}
+  .page.hide{display:none}
+  #catList{display:flex; flex-direction:column; gap:10px}
+  #catList:empty{display:none}
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    border:1px solid var(--line); padding:13px 15px; flex:0 0 auto;
+  }
+  .tabbar{
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(3,1fr);
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .tabbar button{
+    border:0; background:transparent; cursor:pointer; font:inherit;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:8px 0 7px; color:var(--ink-2); font-size:10.5px; font-weight:600;
+    transition:color .15s, background .15s;
+  }
+  .tabbar button.on{color:var(--accent); background:var(--accent-soft)}
+  .tabbar button:active{filter:brightness(.95)}
+
+  /* ---------- to-do tab ---------- */
+  .cat-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+  .cat-name{font-size:14px; font-weight:700; letter-spacing:-.2px; display:flex; align-items:center; gap:7px}
+  .cat-count{font-size:11px; font-weight:600; color:var(--ink-2); background:var(--tap); border-radius:999px; padding:2px 8px}
+  .cat-del{border:0; background:transparent; color:var(--ink-2); cursor:pointer; padding:4px; border-radius:8px; display:flex}
+  .todo-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+  .todo-item{display:flex; align-items:center; gap:9px; background:var(--tap); border-radius:12px; padding:9px 10px}
+  .todo-check{
+    flex:0 0 auto; width:21px; height:21px; border-radius:7px; border:2px solid var(--ink-2);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
+    color:transparent; transition:all .15s;
+  }
+  .todo-item.done .todo-check{background:var(--accent); border-color:var(--accent); color:#fff}
+  .todo-text{flex:1; font-size:13.5px; font-weight:500; line-height:1.3; min-width:0; overflow-wrap:break-word}
+  .todo-item.done .todo-text{text-decoration:line-through; color:var(--ink-2)}
+  .todo-star{border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2); display:flex; border-radius:8px}
+  .todo-star.on{color:#e8a13c}
+  .todo-star.on svg{fill:#e8a13c}
+  .todo-del{border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2); display:flex; border-radius:8px}
+  .todo-add{display:flex; gap:7px; margin-top:8px}
+  .todo-add input{
+    flex:1; min-width:0; border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:11px; padding:8px 11px; font:inherit; font-size:13px;
+  }
+  .todo-add input:focus{outline:none; border-color:var(--accent)}
+  .todo-add button{
+    border:0; background:var(--tap); color:var(--accent); border-radius:11px; padding:0 13px;
+    font:inherit; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .empty-note{color:var(--ink-2); font-size:12.5px; text-align:center; padding:6px 0}
+
+  /* ---------- routine tab ---------- */
+  .rt-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+  .rt-item{display:flex; align-items:center; gap:9px; background:var(--tap); border-radius:12px; padding:9px 10px}
+  .rt-check{
+    flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:2px solid var(--ink-2);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
+    color:transparent; transition:all .15s;
+  }
+  .rt-item.done .rt-check{background:var(--accent); border-color:var(--accent); color:#fff}
+  .rt-name{flex:1; font-size:13.5px; font-weight:500; min-width:0; overflow-wrap:break-word}
+  .rt-item.done .rt-name{color:var(--ink-2)}
+  .rt-prog{font-size:11.5px; font-weight:600; color:var(--ink-2)}
+  .range-row{display:flex; gap:5px; margin:2px 0 10px}
+  .range-row button{
+    flex:1; border:1.5px solid var(--line); background:var(--card); color:var(--ink-2);
+    border-radius:999px; padding:5px 0; font:inherit; font-size:11.5px; font-weight:700; cursor:pointer;
+  }
+  .range-row button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+  .hgrid{display:flex; flex-direction:column; gap:5px}
+  .hgrid-row{display:flex; align-items:center; gap:4px}
+  .hgrid-name{
+    flex:0 0 86px; font-size:11px; font-weight:600; color:var(--ink-2);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .hgrid-cells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
+  .hcell{width:13px; height:13px; border-radius:50%; background:var(--tap); border:1px solid var(--line)}
+  .hcell.on{background:var(--accent); border-color:var(--accent)}
+  .hcell.na{opacity:.35}
+  .hgrid-days{display:flex; align-items:center; gap:4px; margin-top:2px}
+  .hgrid-days .hgrid-name{visibility:hidden}
+  .hgrid-daycells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
+  .hgrid-daycells span{font-size:9.5px; font-weight:700; color:var(--ink-2)}
+  .hbars{display:grid; align-items:end; gap:2px; height:76px}
+  .hbar{background:var(--bar); border-radius:3px 3px 0 0; min-height:2px}
+  .hbar.zero{background:var(--line)}
+  .hbars-x{display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:var(--ink-2); font-weight:600}
+  .hist-note{font-size:10.5px; color:var(--ink-2); margin-top:6px; text-align:center}
+
   /* ---------- toast ---------- */
   .toast{
     position:fixed; bottom:calc(26px + env(safe-area-inset-bottom)); left:50%; transform:translate(-50%, 20px);
@@ -259,11 +352,20 @@
 
   <header class="topbar">
     <div class="brand">
-      <svg width="21" height="21" viewBox="0 0 64 64"><g transform="rotate(-30 32 32)"><rect x="6" y="24" width="52" height="20" rx="10" fill="var(--accent)"/><path d="M32 24v20" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M40 24h8a10 10 0 0 1 0 20h-8z" fill="#fff" opacity=".3"/></g></svg>
+      <svg width="22" height="22" viewBox="0 0 64 64">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#5a5fe0"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#ec4899"/>
+        </linearGradient></defs>
+        <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lg)"/>
+        <path d="M20 33.5 28.5 42 45 24" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="47" cy="16" r="3.6" fill="#fff"/>
+      </svg>
       Med Log
     </div>
-    <div class="ver" id="appVer">v3.1</div>
+    <div class="ver" id="appVer">v4.0</div>
   </header>
+
+  <main class="page" id="page-meds">
 
   <section class="today-card">
     <div class="today-top">
@@ -313,6 +415,66 @@
     </div>
     <div class="chart" id="chart"></div>
   </section>
+
+  </main>
+
+  <main class="page hide" id="page-todo">
+    <div id="catList"></div>
+    <section class="card">
+      <div class="todo-add" style="margin-top:0">
+        <input type="text" id="catInput" placeholder="New category (e.g. Work, Home)" maxlength="24">
+        <button id="catAdd">Add</button>
+      </div>
+    </section>
+  </main>
+
+  <main class="page hide" id="page-routine">
+    <section class="card">
+      <div class="cat-head">
+        <div class="cat-name sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          Today's routine
+        </div>
+        <span class="rt-prog" id="rtProg"></span>
+      </div>
+      <ul class="rt-list" id="rtList"></ul>
+      <div class="todo-add">
+        <input type="text" id="rtInput" placeholder="Add a daily routine…" maxlength="40">
+        <button id="rtAdd">Add</button>
+      </div>
+    </section>
+    <section class="card">
+      <div class="cat-head" style="margin-bottom:6px">
+        <div class="cat-name sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+          History
+        </div>
+      </div>
+      <div class="range-row" id="rangeRow">
+        <button data-r="7" class="on">1W</button>
+        <button data-r="30">1M</button>
+        <button data-r="91">3M</button>
+        <button data-r="182">6M</button>
+        <button data-r="365">1Y</button>
+      </div>
+      <div id="histViz"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button id="tab-meds" class="on" aria-label="Medicines">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+      Meds
+    </button>
+    <button id="tab-todo" aria-label="To-do list">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      To-Do
+    </button>
+    <button id="tab-routine" aria-label="Daily routine">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+      Routine
+    </button>
+  </nav>
 
 </div>
 
@@ -821,6 +983,280 @@
   document.addEventListener('visibilitychange', function(){
     if(!document.hidden) renderAll();
   });
+
+  /* ==================== TABS ==================== */
+  var TAB_KEY = 'active-tab-v1';
+  var TABS = ['meds','todo','routine'];
+  function showTab(name){
+    TABS.forEach(function(t){
+      document.getElementById('page-'+t).classList.toggle('hide', t !== name);
+      document.getElementById('tab-'+t).classList.toggle('on', t === name);
+    });
+    try{ localStorage.setItem(TAB_KEY, name); }catch(e){}
+  }
+  TABS.forEach(function(t){
+    document.getElementById('tab-'+t).addEventListener('click', function(){ showTab(t); });
+  });
+  (function(){
+    var last = null;
+    try{ last = localStorage.getItem(TAB_KEY); }catch(e){}
+    if(last && TABS.indexOf(last) > -1) showTab(last);
+  })();
+
+  /* ==================== TO-DO ==================== */
+  var TODO_KEY = 'todos-v1', CATS_KEY = 'todo-cats-v1';
+  var memTodos = null, memCats = null;
+  function loadJSON(key, fallback, mem){
+    try{ var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ return mem !== null ? mem : fallback; }
+  }
+  function saveTodos(){ memTodos = todos; try{ localStorage.setItem(TODO_KEY, JSON.stringify(todos)); }catch(e){} }
+  function saveCats(){ memCats = cats; try{ localStorage.setItem(CATS_KEY, JSON.stringify(cats)); }catch(e){} }
+  var todos = loadJSON(TODO_KEY, [], memTodos);   // [{id, cat, text, pri, done:null|ms, created:ms}]
+  var cats = loadJSON(CATS_KEY, ['Personal'], memCats);
+  var DAY_MS = 24 * 60 * 60 * 1000;
+
+  /* purge items completed more than a day ago */
+  (function(){
+    var now = Date.now();
+    var before = todos.length;
+    todos = todos.filter(function(t){ return !(t.done && now - t.done > DAY_MS); });
+    if(todos.length !== before) saveTodos();
+  })();
+
+  function esc(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  var STAR_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.6a.6.6 0 0 1 1 0l2.6 5.4 5.9.9a.6.6 0 0 1 .3 1l-4.2 4.2 1 5.9a.6.6 0 0 1-.9.6L12 17.9l-5.2 2.7a.6.6 0 0 1-.9-.6l1-5.9L2.7 9.9a.6.6 0 0 1 .3-1l5.9-.9z"/></svg>';
+  var X_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var CHECK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg>';
+
+  function renderTodo(){
+    var box = document.getElementById('catList');
+    var html = cats.map(function(cat, ci){
+      var items = todos.filter(function(t){ return t.cat === cat; });
+      items.sort(function(a, b){
+        if(!!a.done !== !!b.done) return a.done ? 1 : -1;       // open first
+        if(a.pri !== b.pri) return a.pri ? -1 : 1;               // priority first
+        return a.created - b.created;
+      });
+      var open = items.filter(function(t){ return !t.done; }).length;
+      var rows = items.length === 0
+        ? '<div class="empty-note">No tasks yet — add one below</div>'
+        : items.map(function(t){
+            return '<li class="todo-item'+(t.done ? ' done' : '')+'" data-id="'+t.id+'">' +
+              '<button class="todo-check" aria-label="Mark done">'+CHECK_SVG+'</button>' +
+              '<span class="todo-text">'+esc(t.text)+'</span>' +
+              '<button class="todo-star'+(t.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
+              '<button class="todo-del" aria-label="Delete task">'+X_SVG+'</button></li>';
+          }).join('');
+      return '<section class="card" data-cat="'+esc(cat)+'">' +
+        '<div class="cat-head"><div class="cat-name">'+esc(cat)+
+        ' <span class="cat-count">'+open+' open</span></div>' +
+        '<button class="cat-del" aria-label="Delete category">'+X_SVG+'</button></div>' +
+        '<ul class="todo-list">'+rows+'</ul>' +
+        '<div class="todo-add"><input type="text" placeholder="Add a task…" maxlength="80"><button>Add</button></div>' +
+        '</section>';
+    }).join('');
+    box.innerHTML = html;
+  }
+
+  document.getElementById('catAdd').addEventListener('click', addCategory);
+  document.getElementById('catInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addCategory(); });
+  function addCategory(){
+    var input = document.getElementById('catInput');
+    var v = input.value.trim();
+    if(!v) return;
+    if(cats.indexOf(v) < 0){ cats.push(v); saveCats(); }
+    input.value = '';
+    renderTodo();
+  }
+
+  document.getElementById('catList').addEventListener('click', function(e){
+    var catCard = e.target.closest('[data-cat]');
+    if(!catCard) return;
+    var cat = catCard.getAttribute('data-cat');
+    var addBtn = e.target.closest('.todo-add button');
+    if(addBtn){
+      var input = catCard.querySelector('.todo-add input');
+      var v = input.value.trim();
+      if(!v) return;
+      todos.push({ id: 't' + Date.now() + Math.floor(Math.random()*1000), cat: cat, text: v, pri: false, done: null, created: Date.now() });
+      saveTodos(); input.value = ''; renderTodo();
+      return;
+    }
+    var delCat = e.target.closest('.cat-del');
+    if(delCat){
+      var openCount = todos.filter(function(t){ return t.cat === cat && !t.done; }).length;
+      if(openCount > 0){ toast('Finish or delete its tasks first'); return; }
+      cats = cats.filter(function(c){ return c !== cat; });
+      todos = todos.filter(function(t){ return t.cat !== cat; });
+      saveCats(); saveTodos(); renderTodo();
+      return;
+    }
+    var row = e.target.closest('.todo-item');
+    if(!row) return;
+    var id = row.getAttribute('data-id');
+    var item = null;
+    for(var i = 0; i < todos.length; i++) if(todos[i].id === id){ item = todos[i]; break; }
+    if(!item) return;
+    if(e.target.closest('.todo-check')){
+      item.done = item.done ? null : Date.now();
+      saveTodos(); renderTodo();
+      if(item.done && navigator.vibrate) navigator.vibrate(12);
+    }else if(e.target.closest('.todo-star')){
+      item.pri = !item.pri; saveTodos(); renderTodo();
+    }else if(e.target.closest('.todo-del')){
+      todos = todos.filter(function(t){ return t.id !== id; });
+      saveTodos(); renderTodo();
+    }
+  });
+  document.getElementById('catList').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var catCard = e.target.closest('[data-cat]');
+    if(catCard && e.target.matches('.todo-add input')){
+      catCard.querySelector('.todo-add button').click();
+    }
+  });
+
+  /* ==================== ROUTINE ==================== */
+  var RT_KEY = 'routines-v1', RTLOG_KEY = 'routine-log-v1';
+  var memRt = null, memRtLog = null;
+  function saveRt(){ memRt = routines; try{ localStorage.setItem(RT_KEY, JSON.stringify(routines)); }catch(e){} }
+  function saveRtLog(){ memRtLog = rtLog; try{ localStorage.setItem(RTLOG_KEY, JSON.stringify(rtLog)); }catch(e){} }
+  var routines = loadJSON(RT_KEY, [], memRt);      // [{id, name}]
+  var rtLog = loadJSON(RTLOG_KEY, {}, memRtLog);   // { 'YYYY-MM-DD': [id, ...] }
+  var histRange = 7;
+
+  function renderRoutine(){
+    var tk = todayKey();
+    var doneToday = rtLog[tk] || [];
+    var list = document.getElementById('rtList');
+    if(routines.length === 0){
+      list.innerHTML = '<div class="empty-note">Add the things you want to do every day</div>';
+    }else{
+      list.innerHTML = routines.map(function(r){
+        var on = doneToday.indexOf(r.id) > -1;
+        return '<li class="rt-item'+(on ? ' done' : '')+'" data-id="'+r.id+'">' +
+          '<button class="rt-check" aria-label="Mark done today">'+CHECK_SVG+'</button>' +
+          '<span class="rt-name">'+esc(r.name)+'</span>' +
+          '<button class="todo-del" aria-label="Delete routine">'+X_SVG+'</button></li>';
+      }).join('');
+    }
+    document.getElementById('rtProg').textContent =
+      routines.length ? (doneToday.length + '/' + routines.length + ' done') : '';
+    renderHist();
+  }
+
+  function dayKeyOffset(offset){
+    var d = new Date(); d.setDate(d.getDate() - offset);
+    return keyOf(d);
+  }
+  function renderHist(){
+    var box = document.getElementById('histViz');
+    if(routines.length === 0){ box.innerHTML = '<div class="empty-note">History appears once you add routines</div>'; return; }
+    if(histRange === 7){
+      /* dot grid: one row per routine, 7 day columns (oldest → today) */
+      var keys = [], labels = [];
+      var DL = ['S','M','T','W','T','F','S'];
+      for(var o = 6; o >= 0; o--){
+        var d = new Date(); d.setDate(d.getDate() - o);
+        keys.push(keyOf(d)); labels.push(o === 0 ? '·' : DL[d.getDay()]);
+      }
+      var rows = routines.map(function(r){
+        var cells = keys.map(function(k, i){
+          var on = (rtLog[k] || []).indexOf(r.id) > -1;
+          return '<span class="hcell'+(on ? ' on' : '')+'"></span>';
+        }).join('');
+        return '<div class="hgrid-row"><span class="hgrid-name">'+esc(r.name)+'</span>' +
+          '<div class="hgrid-cells">'+cells+'</div></div>';
+      }).join('');
+      var dayRow = '<div class="hgrid-days"><span class="hgrid-name">x</span>' +
+        '<div class="hgrid-daycells">'+labels.map(function(l){ return '<span>'+l+'</span>'; }).join('')+'</div></div>';
+      box.innerHTML = '<div class="hgrid">'+rows+dayRow+'</div>' +
+        '<div class="hist-note">Filled dot = done that day · rightmost column is today</div>';
+    }else{
+      /* completion bars: daily for 1M, weekly average for 3M/6M/1Y */
+      var weekly = histRange > 31;
+      var buckets = [];
+      if(!weekly){
+        for(var o2 = histRange - 1; o2 >= 0; o2--){
+          var k2 = dayKeyOffset(o2);
+          buckets.push({ pct: routines.length ? (rtLog[k2] || []).length / routines.length : 0 });
+        }
+      }else{
+        var weeks = Math.round(histRange / 7);
+        for(var w = weeks - 1; w >= 0; w--){
+          var sum = 0;
+          for(var dd = 0; dd < 7; dd++){
+            var k3 = dayKeyOffset(w * 7 + dd);
+            sum += routines.length ? (rtLog[k3] || []).length / routines.length : 0;
+          }
+          buckets.push({ pct: sum / 7 });
+        }
+      }
+      var bars = buckets.map(function(b){
+        var h = b.pct === 0 ? 2 : Math.max(4, Math.round(b.pct * 72));
+        return '<div class="hbar'+(b.pct === 0 ? ' zero' : '')+'" style="height:'+h+'px"></div>';
+      }).join('');
+      var rangeName = histRange === 30 ? '30 days' : histRange === 91 ? '3 months' : histRange === 182 ? '6 months' : '1 year';
+      box.innerHTML = '<div class="hbars" style="grid-template-columns:repeat('+buckets.length+',1fr)">'+bars+'</div>' +
+        '<div class="hbars-x"><span>'+rangeName+' ago</span><span>' +
+        (weekly ? '% of routines done, weekly average' : '% of routines done each day') +
+        '</span><span>now</span></div>';
+    }
+  }
+
+  document.getElementById('rangeRow').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if(!btn) return;
+    histRange = +btn.getAttribute('data-r');
+    var bs = this.querySelectorAll('button');
+    for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === btn);
+    renderHist();
+  });
+
+  document.getElementById('rtAdd').addEventListener('click', addRoutine);
+  document.getElementById('rtInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addRoutine(); });
+  function addRoutine(){
+    var input = document.getElementById('rtInput');
+    var v = input.value.trim();
+    if(!v) return;
+    if(routines.length >= 12){ toast('Keep it focused — max 12 routines'); return; }
+    routines.push({ id: 'r' + Date.now() + Math.floor(Math.random()*1000), name: v });
+    saveRt(); input.value = ''; renderRoutine();
+  }
+
+  document.getElementById('rtList').addEventListener('click', function(e){
+    var row = e.target.closest('.rt-item');
+    if(!row) return;
+    var id = row.getAttribute('data-id');
+    if(e.target.closest('.rt-check')){
+      var tk = todayKey();
+      if(!rtLog[tk]) rtLog[tk] = [];
+      var idx = rtLog[tk].indexOf(id);
+      if(idx > -1) rtLog[tk].splice(idx, 1); else rtLog[tk].push(id);
+      if(rtLog[tk].length === 0) delete rtLog[tk];
+      saveRtLog(); renderRoutine();
+      if(idx === -1 && navigator.vibrate) navigator.vibrate(12);
+    }else if(e.target.closest('.todo-del')){
+      routines = routines.filter(function(r){ return r.id !== id; });
+      saveRt(); renderRoutine();
+    }
+  });
+
+  /* re-render the new tabs too when the app is reopened (day rollover, expiry purge) */
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) return;
+    var now = Date.now();
+    var before = todos.length;
+    todos = todos.filter(function(t){ return !(t.done && now - t.done > DAY_MS); });
+    if(todos.length !== before) saveTodos();
+    renderTodo(); renderRoutine();
+  });
+
+  renderTodo();
+  renderRoutine();
 
   renderAll();
 
