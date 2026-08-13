@@ -20,6 +20,7 @@
     --line:#e5e7ee; --accent:#5a5fe0; --accent-soft:#e8e9fc;
     --ok:#3f7a4e; --tap:#edeef4; --bar:#5a5fe0;
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
+    --pf1:14%; --pf2:22%; --pf3:30%;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
   }
@@ -29,6 +30,7 @@
       --line:#252732; --accent:#7578f0; --accent-soft:#252748;
       --tap:#1f2129; --bar:#7578f0; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
+      --pf1:22%; --pf2:32%; --pf3:42%;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -312,7 +314,28 @@
   .cat-count{font-size:12px; font-weight:600; color:var(--ink-2); background:var(--tap); border-radius:999px; padding:2px 8px}
   .cat-del{border:0; background:transparent; color:var(--ink-2); cursor:pointer; padding:4px; border-radius:8px; display:flex}
   .todo-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
-  .todo-item{display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px; padding:11px 11px; cursor:pointer}
+  .todo-item{
+    display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px;
+    padding:11px 11px; cursor:pointer; position:relative; overflow:hidden;
+  }
+  .todo-item > *{position:relative; z-index:1}
+  .prog-fill{
+    position:absolute; left:0; top:0; bottom:0; z-index:0 !important;
+    border-right:3px solid var(--accent);
+    transition:width .28s cubic-bezier(.4,0,.2,1), background .28s; pointer-events:none;
+  }
+  .prog-fill.p1{background:color-mix(in srgb, var(--accent) var(--pf1), transparent)}
+  .prog-fill.p2{background:color-mix(in srgb, var(--accent) var(--pf2), transparent)}
+  .prog-fill.p3{background:color-mix(in srgb, var(--accent) var(--pf3), transparent)}
+  .prog-fill.p0{border-right:0}
+  .todo-item.done .prog-fill{
+    border-right:0; background:color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .prog-pct{
+    flex:0 0 auto; font-size:12px; font-weight:800; color:#fff; letter-spacing:.01em;
+    background:var(--accent); border-radius:999px; padding:3px 8px;
+    box-shadow:0 1px 4px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
   .todo-check{
     flex:0 0 auto; width:24px; height:24px; border-radius:8px; border:2px solid var(--ink-2);
     background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
@@ -401,7 +424,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v5.0</div>
+      <div class="ver" id="appVer">v5.2</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -1110,9 +1133,13 @@
       var rows = items.length === 0
         ? '<div class="empty-note">No tasks yet — add one below</div>'
         : items.map(function(t){
+            var p = t.p || 0;                                  /* progress: 0..3 quarters */
+            var pct = t.done ? 100 : p * 25;
             return '<li class="todo-item'+(t.done ? ' done' : '')+'" data-id="'+t.id+'">' +
+              '<span class="prog-fill p'+(t.done ? 3 : p)+'" style="width:'+pct+'%"></span>' +
               '<button class="todo-check" aria-label="Mark done">'+CHECK_SVG+'</button>' +
               '<span class="todo-text">'+esc(t.text)+'</span>' +
+              (!t.done && p > 0 ? '<span class="prog-pct">'+pct+'%</span>' : '') +
               '<button class="todo-star'+(t.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
               '<button class="todo-del" aria-label="Delete task">'+X_SVG+'</button></li>';
           }).join('');
@@ -1172,11 +1199,17 @@
     }else if(e.target.closest('.todo-del')){
       todos = todos.filter(function(t){ return t.id !== id; });
       saveTodos(); renderTodo();
-    }else{
-      /* tap anywhere else on the row toggles done */
+    }else if(e.target.closest('.todo-check')){
+      /* checkbox = done / not done */
       item.done = item.done ? null : Date.now();
       saveTodos(); renderTodo();
       if(item.done && navigator.vibrate) navigator.vibrate(12);
+    }else{
+      /* tap on the row = advance progress a quarter (25 → 50 → 75 → back to 0) */
+      if(item.done) return;
+      item.p = ((item.p || 0) + 1) % 4;
+      saveTodos(); renderTodo();
+      if(navigator.vibrate) navigator.vibrate(8);
     }
   });
   document.getElementById('catList').addEventListener('keydown', function(e){
