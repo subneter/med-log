@@ -489,8 +489,17 @@
   }
   .gap-col:active{background:var(--tap)}
   .gap-col b{font-size:11.5px; font-weight:700; line-height:1}
+  .gap-col b em{font-style:normal; font-size:9px; color:var(--ink-2)}
   .gap-col .gb{width:min(22px,70%); background:var(--dot-a); border-radius:4px 4px 0 0}
   .gap-col span{font-size:9.5px; color:var(--ink-2); font-weight:600; line-height:1.2; white-space:nowrap}
+  .gap-col.ex b{color:var(--ink-2); font-weight:600}
+  .gap-col.ex .gb{
+    background:repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--ink-2) 34%, transparent) 0 3px,
+      transparent 3px 6px);
+    border:1px dashed var(--ink-2); border-bottom:0; opacity:.85;
+  }
+  .gap-note{font-size:10.5px; color:var(--ink-2); text-align:center; margin-top:5px; line-height:1.45}
   .gap-avg{
     display:flex; align-items:baseline; gap:6px; justify-content:center;
     font-size:12px; color:var(--ink-2); font-weight:600; margin-top:7px;
@@ -523,7 +532,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v6.0</div>
+      <div class="ver" id="appVer">v6.1</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -1621,6 +1630,10 @@
   var memDot = null;
   function saveDot(){ memDot = dotLog; try{ localStorage.setItem(DOT_KEY, JSON.stringify(dotLog)); }catch(e){} }
   var dotLog = loadJSON(DOT_KEY, [], memDot);        // ['YYYY-MM-DD', ...] — first day of each occurrence
+  var DOTX_KEY = 'dot-gap-excl-v1';
+  var memDotX = null;
+  var dotExcl = loadJSON(DOTX_KEY, {}, memDotX);     // { gapEndKey: true|false } manual include/exclude
+  function saveDotExcl(){ memDotX = dotExcl; try{ localStorage.setItem(DOTX_KEY, JSON.stringify(dotExcl)); }catch(e){} }
   var DOT_CYCLE = 28, DOT_SPAN = 8, DOT_AHEAD_MONTHS = 6;
   var dotView = new Date(); dotView.setDate(1);
 
@@ -1688,15 +1701,50 @@
     }
   }
 
+  function median(nums){
+    var a = nums.slice().sort(function(x, y){ return x - y; }), n = a.length;
+    if(!n) return 0;
+    return n % 2 ? a[(n - 1) / 2] : Math.round((a[n / 2 - 1] + a[n / 2]) / 2);
+  }
+
+  /* A gap far longer than the typical one almost always means an unrecorded
+     occurrence in between, so it is flagged and left out of the average.
+     dotExcl holds manual overrides (tap a bar to include/exclude it). */
   function dotGaps(){
-    var sorted = dotLog.slice().sort(), out = [];
-    for(var i = 1; i < sorted.length; i++){
+    var sorted = dotLog.slice().sort(), out = [], i;
+    for(i = 1; i < sorted.length; i++){
       out.push({
         days: daysBetween(parseKey(sorted[i-1]), parseKey(sorted[i])),
         from: parseKey(sorted[i-1]), to: parseKey(sorted[i])
       });
     }
+    if(!out.length) return out;
+    var med = median(out.map(function(g){ return g.days; })) || DOT_CYCLE;
+    var cut = med * 1.5;
+    for(i = 0; i < out.length; i++){
+      var g = out[i];
+      g.key = keyOf(g.to);
+      g.auto = g.days >= cut;
+      g.excl = (g.key in dotExcl) ? !!dotExcl[g.key] : g.auto;
+      g.mult = Math.max(2, Math.round(g.days / med));
+    }
     return out;
+  }
+
+  function dotStats(){
+    var gaps = dotGaps();
+    var kept = gaps.filter(function(g){ return !g.excl; });
+    var use = kept.length ? kept : gaps;
+    var sum = 0;
+    use.forEach(function(g){ sum += g.days; });
+    return {
+      gaps: gaps,
+      kept: kept,
+      skipped: gaps.length - kept.length,
+      avg: use.length ? Math.round(sum / use.length) : 0,
+      typical: use.length ? median(use.map(function(g){ return g.days; })) : 0,
+      last: kept.length ? kept[kept.length - 1].days : (gaps.length ? gaps[gaps.length - 1].days : 0)
+    };
   }
 
   function renderDotSummary(){
@@ -1717,11 +1765,9 @@
     var inDays = daysBetween(today, next);
     nextEl.textContent = DAYS[next.getDay()].slice(0,3) + ', ' + fmtShort(next) +
       ' · ' + (inDays === 0 ? 'today' : inDays === 1 ? 'tomorrow' : 'in ' + inDays + ' days');
-    var gaps = dotGaps();
-    if(gaps.length){
-      var sum = 0;
-      gaps.forEach(function(g){ sum += g.days; });
-      sideEl.innerHTML = '<b>' + Math.round(sum / gaps.length) + '</b><span>avg days</span>';
+    var st = dotStats();
+    if(st.gaps.length){
+      sideEl.innerHTML = '<b>' + st.avg + '</b><span>avg days</span>';
     }else{
       sideEl.innerHTML = '<b>' + sorted.length + '</b><span>marked</span>';
     }
@@ -1730,27 +1776,31 @@
 
   function renderGapChart(){
     var box = document.getElementById('gapViz');
-    var gaps = dotGaps();
+    var st = dotStats(), gaps = st.gaps;
     if(gaps.length === 0){
       box.innerHTML = '<div class="empty-note">Mark at least two occurrences to see the gaps</div>';
       return;
     }
+    /* scale to the longest counted gap so one missed month can't flatten the rest */
     var max = 1;
-    gaps.forEach(function(g){ if(g.days > max) max = g.days; });
+    (st.kept.length ? st.kept : gaps).forEach(function(g){ if(g.days > max) max = g.days; });
     var cols = gaps.map(function(g, i){
-      var h = Math.max(6, Math.round(g.days / max * 52));
-      return '<button class="gap-col" data-i="'+i+'" aria-label="'+g.days+' days, '+
-        fmtShort(g.from)+' to '+fmtShort(g.to)+'">' +
-        '<b>'+g.days+'</b>' +
+      var h = g.excl ? 56 : Math.max(6, Math.round(Math.min(g.days, max) / max * 52));
+      return '<button class="gap-col'+(g.excl ? ' ex' : '')+'" data-i="'+i+'" aria-label="'+
+        g.days+' days to '+fmtShort(g.to)+(g.excl ? ', not counted' : '')+'">' +
+        '<b>'+g.days+(g.excl ? ' <em>×'+g.mult+'</em>' : '')+'</b>' +
         '<span class="gb" style="height:'+h+'px"></span>' +
         '<span>'+fmtShort(g.to)+'</span></button>';
     }).join('');
-    var sum = 0;
-    gaps.forEach(function(g){ sum += g.days; });
-    var avg = Math.round(sum / gaps.length);
-    var lastGap = gaps[gaps.length - 1].days;
+    var note = st.skipped
+      ? '<div class="gap-note">' + (st.skipped > 1
+          ? st.skipped + ' long gaps look like missed entries and are left out'
+          : '1 long gap looks like a missed entry and is left out') +
+        ' · tap a bar to change that</div>'
+      : '<div class="gap-note">Tap a bar to leave it out of the average</div>';
     box.innerHTML = '<div class="gap-chart">'+cols+'</div>' +
-      '<div class="gap-avg">average <b>'+avg+'</b> days · last <b>'+lastGap+'</b> days</div>';
+      '<div class="gap-avg">average <b>'+st.avg+'</b> days · last <b>'+st.last+'</b> days</div>' +
+      note;
   }
 
   function renderDot(dir){
@@ -1786,7 +1836,10 @@
     var col = e.target.closest('.gap-col');
     if(!col) return;
     var g = dotGaps()[+col.getAttribute('data-i')];
-    if(g) toast(g.days + ' days · ' + fmtShort(g.from) + ' → ' + fmtShort(g.to));
+    if(!g) return;
+    dotExcl[g.key] = !g.excl;                       /* flip counted / not counted */
+    saveDotExcl(); renderDot();
+    toast(g.days + ' days ' + (g.excl ? 'now counted' : 'left out of the average'));
   });
 
   function shiftDotMonth(delta){
