@@ -1,6 +1,6 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v11';
+var CACHE = 'daylog-v13';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -17,6 +17,9 @@ self.addEventListener('activate', function(e){
 
 self.addEventListener('fetch', function(e){
   if(e.request.method !== 'GET') return;
+
+  if(e.request.url.indexOf('gold-api') > -1 || e.request.url.indexOf('goldprice.org') > -1) return;
+
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(function(hit){
       var fetched = fetch(e.request).then(function(res){

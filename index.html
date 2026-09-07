@@ -22,6 +22,7 @@
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
     --dot-a:#d63b60; --dot-p:#b8862c;
+    --gold:#b8862c; --up:#1a7f4b; --down:#c0392b;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
   }
@@ -33,6 +34,7 @@
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
       --dot-a:#e85570; --dot-p:#c2882f;
+      --gold:#c2882f; --up:#1f9e5c; --down:#ea5765;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -297,14 +299,14 @@
     border:1px solid var(--line); padding:13px 15px; flex:0 0 auto;
   }
   .tabbar{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr);
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(5,1fr);
     background:var(--card); border:1px solid var(--line); border-radius:18px;
     box-shadow:var(--shadow); overflow:hidden;
   }
   .tabbar button{
     border:0; background:transparent; cursor:pointer; font:inherit;
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    padding:9px 0 8px; color:var(--ink-2); font-size:11px; font-weight:600;
+    padding:9px 0 8px; color:var(--ink-2); font-size:10px; font-weight:600;
     transition:color .15s, background .15s;
   }
   .tabbar button.on{color:var(--accent); background:var(--accent-soft)}
@@ -506,6 +508,55 @@
   }
   .gap-avg b{font-size:14px; color:var(--ink); font-weight:800}
 
+  /* ---------- gold tab ---------- */
+  .gold-card{
+    background:
+      radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--gold) 13%, transparent), transparent 62%),
+      var(--card);
+    text-align:left;
+  }
+  .gold-lab{
+    font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-2); display:flex; align-items:center; gap:6px;
+  }
+  .gold-lab i{width:8px; height:8px; border-radius:50%; background:var(--gold); display:block}
+  .gold-big{display:flex; align-items:baseline; gap:7px; margin-top:6px}
+  .gold-big .cur{font-size:16px; font-weight:700; color:var(--ink-2)}
+  .gold-big .amt{font-size:40px; font-weight:800; letter-spacing:-1.4px; line-height:1}
+  .gold-sub{display:flex; align-items:center; gap:9px; margin-top:8px; flex-wrap:wrap}
+  .gold-unit{font-size:12.5px; color:var(--ink-2); font-weight:600}
+  .gold-chg{
+    display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:800;
+    border-radius:999px; padding:3px 9px;
+  }
+  .gold-chg.up{color:var(--up); background:color-mix(in srgb, var(--up) 13%, transparent)}
+  .gold-chg.down{color:var(--down); background:color-mix(in srgb, var(--down) 13%, transparent)}
+  .gold-chg.flat{color:var(--ink-2); background:var(--tap)}
+  .gold-meta{font-size:11px; color:var(--ink-2); margin-top:9px; line-height:1.5}
+  .gold-meta a{color:var(--accent); font-weight:700; text-decoration:none; border-bottom:1px solid var(--line)}
+  .gold-add{display:none}
+  .gold-add.show{display:flex}
+
+  .gchart-wrap{position:relative; margin-top:2px}
+  .gchart{display:block; width:100%; height:auto; touch-action:pan-y}
+  .gchart .gline{fill:none; stroke:var(--gold); stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round}
+  .gchart .garea{fill:url(#gfade); stroke:none}
+  .gchart .gdot{fill:var(--gold); stroke:var(--card); stroke-width:2.5}
+  .gchart .gcross{stroke:var(--ink-2); stroke-width:1; stroke-dasharray:3 3; opacity:.75}
+  .gchart .gxl{fill:var(--ink-2); font-size:9.5px; font-weight:600}
+  .gtip{
+    position:absolute; top:0; transform:translateX(-50%); pointer-events:none;
+    background:var(--ink); color:var(--bg); font-size:11.5px; font-weight:700;
+    padding:4px 9px; border-radius:8px; white-space:nowrap; opacity:0; transition:opacity .12s;
+  }
+  .gtip.on{opacity:1}
+  .gstats{display:flex; justify-content:space-between; gap:8px; margin-top:9px}
+  .gstat{flex:1; text-align:center}
+  .gstat b{display:block; font-size:13.5px; font-weight:800; letter-spacing:-.2px}
+  .gstat span{font-size:10px; color:var(--ink-2); font-weight:700; letter-spacing:.05em; text-transform:uppercase}
+  .gstat b.up{color:var(--up)} .gstat b.down{color:var(--down)}
+  .grange-note{font-size:10.5px; color:var(--ink-2); text-align:center; margin-top:8px}
+
   /* ---------- toast ---------- */
   .toast{
     position:fixed; bottom:calc(26px + env(safe-area-inset-bottom)); left:50%; transform:translate(-50%, 20px);
@@ -532,7 +583,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v6.1</div>
+      <div class="ver" id="appVer">v7.1</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -680,6 +731,46 @@
     </section>
   </main>
 
+  <main class="page hide" id="page-gold">
+    <section class="card gold-card">
+      <div class="gold-lab"><i></i>24K gold · Dubai</div>
+      <div class="gold-big"><span class="cur">AED</span><span class="amt" id="goldAmt">—</span></div>
+      <div class="gold-sub">
+        <span class="gold-unit">per gram</span>
+        <span class="gold-chg flat" id="goldChg">—</span>
+      </div>
+      <div class="gold-meta" id="goldMeta">Loading latest rate…</div>
+      <div class="todo-add gold-add" id="goldAdd">
+        <input type="number" inputmode="decimal" step="0.01" id="goldInput" placeholder="AED per gram (24K)">
+        <button id="goldSave">Save</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="cat-head" style="margin-bottom:6px">
+        <div class="cat-name sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Trend
+        </div>
+        <span class="rt-prog" id="goldSpan"></span>
+      </div>
+      <div class="range-row" id="goldRange">
+        <button data-r="7" class="on">7D</button>
+        <button data-r="30">1M</button>
+        <button data-r="90">3M</button>
+        <button data-r="180">6M</button>
+        <button data-r="365">1Y</button>
+        <button data-r="0">All</button>
+      </div>
+      <div class="gchart-wrap" id="goldChartWrap">
+        <div class="gtip" id="goldTip"></div>
+        <div id="goldChart"></div>
+      </div>
+      <div class="gstats" id="goldStats"></div>
+      <div class="grange-note" id="goldNote"></div>
+    </section>
+  </main>
+
   <nav class="tabbar">
     <button id="tab-meds" class="on" aria-label="Medicines">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
@@ -696,6 +787,10 @@
     <button id="tab-dot" aria-label="Dot">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg>
       Dot
+    </button>
+    <button id="tab-gold" aria-label="Gold rate">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Gold
     </button>
   </nav>
 
@@ -1232,7 +1327,7 @@
 
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
-  var TABS = ['meds','todo','routine','dot'];
+  var TABS = ['meds','todo','routine','dot','gold'];
   function showTab(name){
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
@@ -1865,6 +1960,239 @@
     }, {passive:true});
   })();
 
+  /* ==================== GOLD ==================== */
+  /* Ten days of 24K rates (AED per gram, Gulf News / Dubai Gold & Jewellery
+     Group) are baked in as a starting point. From there the app tops the list
+     up itself: once a day it reads the live spot price and converts it at the
+     fixed 3.6725 dirham peg. Anything it collects is kept on the phone. */
+  var GOLD_SEED = [
+    { d:'2026-08-28', v:536.75 }, { d:'2026-08-29', v:536.75 },
+    { d:'2026-08-30', v:536.75 }, { d:'2026-08-31', v:536.25 },
+    { d:'2026-09-01', v:522.00 }, { d:'2026-09-02', v:528.25 },
+    { d:'2026-09-03', v:542.00 }, { d:'2026-09-04', v:532.25 },
+    { d:'2026-09-05', v:533.75 }, { d:'2026-09-06', v:533.75 }
+  ];
+  var GOLD_KEY = 'gold-hist-v1', GOLD_MSG_KEY = 'gold-state-v1';
+  var AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
+  var memGold = null;
+  var goldHist = loadJSON(GOLD_KEY, null, memGold);
+  if(!goldHist || !goldHist.length){ goldHist = GOLD_SEED.slice(); }
+  var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
+  var goldRange = 7, goldFetchedAt = 0;
+
+  function saveGold(){
+    memGold = goldHist;
+    try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
+  }
+  function saveGoldState(){
+    try{ localStorage.setItem(GOLD_MSG_KEY, JSON.stringify(goldState)); }catch(e){}
+  }
+  /* add or replace one day's rate */
+  function putGold(dateKey, val, manual){
+    for(var i = 0; i < goldHist.length; i++){
+      if(goldHist[i].d === dateKey){ goldHist[i].v = val; goldHist[i].m = !!manual; saveGold(); return; }
+    }
+    goldHist.push({ d: dateKey, v: val, m: !!manual });
+    goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    if(goldHist.length > 1200) goldHist = goldHist.slice(-1200);
+    saveGold();
+  }
+  function money(n){
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function goldSeries(){
+    if(!goldHist.length) return [];
+    var h = goldHist.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    if(!goldRange) return h;
+    var cut = keyOf(addDays(new Date(), -goldRange));
+    var out = h.filter(function(r){ return r.d >= cut; });
+    return out.length >= 2 ? out : h.slice(-Math.max(2, Math.min(h.length, goldRange)));
+  }
+
+  function renderGoldHead(){
+    var amtEl = document.getElementById('goldAmt');
+    var chgEl = document.getElementById('goldChg');
+    var metaEl = document.getElementById('goldMeta');
+    if(!goldHist.length){
+      amtEl.textContent = '—';
+      chgEl.className = 'gold-chg flat'; chgEl.textContent = 'no data';
+      metaEl.textContent = 'No rate yet.';
+      return;
+    }
+    var h = goldHist.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    var last = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;
+    amtEl.textContent = money(last.v);
+    if(prev){
+      var diff = last.v - prev.v, pct = (diff / prev.v) * 100;
+      var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : 'flat';
+      chgEl.className = 'gold-chg ' + dir;
+      chgEl.textContent = (dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '● ') +
+        (dir === 'flat' ? '0.00' : money(Math.abs(diff))) +
+        ' (' + (dir === 'flat' ? '0.00' : Math.abs(pct).toFixed(2)) + '%)';
+    }else{
+      chgEl.className = 'gold-chg flat'; chgEl.textContent = 'first reading';
+    }
+    var d = parseKey(last.d);
+    var stale = last.d !== todayKey();
+    metaEl.innerHTML =
+      'Rate for ' + DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
+      ' · ' + h.length + ' days recorded' +
+      (stale ? ' · <b>not updated today</b>' : '') +
+      '<br>' + (goldState.ok ? 'Updates itself once a day' : 'Started from Gulf News rates') +
+      ' · <a href="#" id="goldManual">enter today’s rate</a>';
+    var link = document.getElementById('goldManual');
+    if(link) link.addEventListener('click', function(ev){
+      ev.preventDefault();
+      document.getElementById('goldAdd').classList.toggle('show');
+      var inp = document.getElementById('goldInput');
+      if(document.getElementById('goldAdd').classList.contains('show')) inp.focus();
+    });
+  }
+
+  function renderGoldChart(){
+    var box = document.getElementById('goldChart');
+    var statsEl = document.getElementById('goldStats');
+    var noteEl = document.getElementById('goldNote');
+    var tip = document.getElementById('goldTip');
+    tip.classList.remove('on');
+    var s = goldSeries();
+    document.getElementById('goldSpan').textContent = s.length ? s.length + ' days' : '';
+    if(s.length < 2){
+      box.innerHTML = '<div class="empty-note">Not enough history yet — it grows by a day at a time</div>';
+      statsEl.innerHTML = ''; noteEl.textContent = '';
+      return;
+    }
+    var W = 320, H = 108, PL = 6, PR = 6, PT = 12, PB = 16;
+    var vals = s.map(function(r){ return r.v; });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if(hi === lo){ hi += 1; lo -= 1; }
+    var pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+    var x = function(i){ return PL + (i / (s.length - 1)) * (W - PL - PR); };
+    var y = function(v){ return PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB); };
+
+    var pts = s.map(function(r, i){ return x(i).toFixed(1) + ' ' + y(r.v).toFixed(1); });
+    var line = 'M' + pts.join(' L');
+    var area = line + ' L' + x(s.length - 1).toFixed(1) + ' ' + (H - PB) + ' L' + PL + ' ' + (H - PB) + ' Z';
+    var lastI = s.length - 1;
+    var firstD = parseKey(s[0].d), lastD = parseKey(s[lastI].d);
+
+    box.innerHTML =
+      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="24K gold rate trend">' +
+        '<defs><linearGradient id="gfade" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="var(--gold)" stop-opacity=".26"/>' +
+          '<stop offset="1" stop-color="var(--gold)" stop-opacity="0"/>' +
+        '</linearGradient></defs>' +
+        '<path class="garea" d="'+area+'"/>' +
+        '<path class="gline" d="'+line+'"/>' +
+        '<line class="gcross" id="gCross" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" style="display:none"/>' +
+        '<circle class="gdot" id="gDot" cx="'+x(lastI).toFixed(1)+'" cy="'+y(s[lastI].v).toFixed(1)+'" r="4"/>' +
+        '<text class="gxl" x="'+PL+'" y="'+(H-3)+'">'+fmtShort(firstD)+'</text>' +
+        '<text class="gxl" x="'+(W-PR)+'" y="'+(H-3)+'" text-anchor="end">'+fmtShort(lastD)+'</text>' +
+      '</svg>';
+
+    var first = s[0].v, last = s[lastI].v, diff = last - first;
+    var pct = (diff / first) * 100;
+    var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : '';
+    statsEl.innerHTML =
+      '<div class="gstat"><b>'+money(hi - pad)+'</b><span>high</span></div>' +
+      '<div class="gstat"><b>'+money(lo + pad)+'</b><span>low</span></div>' +
+      '<div class="gstat"><b class="'+dir+'">'+(dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '')+
+        (dir ? Math.abs(pct).toFixed(2) : '0.00')+'%</b><span>change</span></div>';
+    noteEl.textContent = 'Tap the chart to read a day · updates once a day';
+
+    /* tap / drag to read a value */
+    var svg = box.querySelector('.gchart');
+    var cross = document.getElementById('gCross');
+    var dot = document.getElementById('gDot');
+    function readAt(clientX){
+      var rect = svg.getBoundingClientRect();
+      var rel = (clientX - rect.left) / rect.width * W;
+      var i = Math.round((rel - PL) / (W - PL - PR) * (s.length - 1));
+      i = Math.max(0, Math.min(s.length - 1, i));
+      var px = x(i), py = y(s[i].v);
+      cross.setAttribute('x1', px); cross.setAttribute('x2', px);
+      cross.style.display = '';
+      dot.setAttribute('cx', px); dot.setAttribute('cy', py);
+      var dd = parseKey(s[i].d);
+      tip.textContent = money(s[i].v) + ' · ' + fmtShort(dd);
+      tip.style.left = (px / W * 100) + '%';
+      tip.classList.add('on');
+    }
+    function clear(){
+      cross.style.display = 'none';
+      dot.setAttribute('cx', x(lastI)); dot.setAttribute('cy', y(s[lastI].v));
+      tip.classList.remove('on');
+    }
+    svg.addEventListener('pointerdown', function(e){ readAt(e.clientX); });
+    svg.addEventListener('pointermove', function(e){ if(e.buttons) readAt(e.clientX); });
+    svg.addEventListener('pointerup', clear);
+    svg.addEventListener('pointerleave', clear);
+    svg.addEventListener('touchmove', function(e){
+      if(e.touches.length) readAt(e.touches[0].clientX);
+    }, {passive:true});
+    svg.addEventListener('touchend', clear);
+  }
+
+  function renderGold(){ renderGoldHead(); renderGoldChart(); }
+
+  document.getElementById('goldRange').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if(!btn) return;
+    goldRange = +btn.getAttribute('data-r');
+    var bs = this.querySelectorAll('button');
+    for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === btn);
+    renderGoldChart();
+  });
+
+  /* Live spot price -> AED per gram. Two sources, tried in order; if both are
+     unreachable the saved history just stays on screen. */
+  var GOLD_EPS = [
+    { u:'https://api.gold-api.com/price/XAU', pick:function(j){ return j && j.price; } },
+    { u:'https://data-asg.goldprice.org/dbXRates/USD',
+      pick:function(j){ return j && j.items && j.items[0] && j.items[0].xauPrice; } }
+  ];
+  function fetchGold(force){
+    var now = Date.now();
+    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;    /* at most hourly */
+    if(goldState.last === todayKey() && goldState.ok && !force) return;
+    goldFetchedAt = now;
+    var i = 0;
+    (function tryNext(){
+      if(i >= GOLD_EPS.length){ goldState.ok = false; saveGoldState(); renderGoldHead(); return; }
+      var ep = GOLD_EPS[i++];
+      fetch(ep.u, { cache:'no-store' })
+        .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+        .then(function(j){
+          var oz = Number(ep.pick(j));
+          if(!oz || !isFinite(oz)) throw 0;
+          var perGram = Math.round(oz * AED_PER_USD / GRAMS_PER_OZ * 100) / 100;
+          if(perGram < 50 || perGram > 5000) throw 0;
+          putGold(todayKey(), perGram, false);
+          goldState = { last: todayKey(), ok: true }; saveGoldState();
+          renderGold();
+        })
+        .catch(function(){ tryNext(); });
+    })();
+  }
+
+  document.getElementById('goldSave').addEventListener('click', saveManualGold);
+  document.getElementById('goldInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') saveManualGold();
+  });
+  function saveManualGold(){
+    var inp = document.getElementById('goldInput');
+    var v = parseFloat(inp.value);
+    if(!v || v < 50 || v > 5000){ toast('Enter the rate in AED per gram'); return; }
+    putGold(todayKey(), Math.round(v * 100) / 100, true);
+    inp.value = '';
+    document.getElementById('goldAdd').classList.remove('show');
+    renderGold();
+    toast('Saved today’s rate');
+  }
+
+  renderGold();
+  fetchGold(true);
+
   /* ==================== SETTINGS ==================== */
   var SET_KEY = 'settings-v1';
   var memSet = null;
@@ -1969,7 +2297,7 @@
     var before = todos.length;
     todos = todos.filter(function(t){ return !(t.done && now - t.done > DAY_MS); });
     if(todos.length !== before) saveTodos();
-    renderTodo(); renderRoutine(); renderDot();
+    renderTodo(); renderRoutine(); renderDot(); fetchGold();
   });
 
   renderTodo();
