@@ -288,8 +288,8 @@
   .page{flex:1 1 auto; display:flex; flex-direction:column; gap:10px; min-height:0; overflow-y:auto; scrollbar-width:none}
   .page::-webkit-scrollbar{display:none}
   .page.hide{display:none}
-  #catList{display:flex; flex-direction:column; gap:10px}
-  #catList:empty{display:none}
+  #catList, #rtGroupList{display:flex; flex-direction:column; gap:10px}
+  #catList:empty, #rtGroupList:empty{display:none}
   .card{
     background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
     border:1px solid var(--line); padding:13px 15px; flex:0 0 auto;
@@ -318,7 +318,7 @@
     display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px;
     padding:11px 11px; cursor:pointer; position:relative; overflow:hidden;
   }
-  .todo-item > *{position:relative; z-index:1}
+  .todo-item > *:not(.prog-fill){position:relative; z-index:1}
   .prog-fill{
     position:absolute; left:0; top:0; bottom:0; z-index:0 !important;
     border-right:3px solid var(--accent);
@@ -362,16 +362,56 @@
 
   /* ---------- routine tab ---------- */
   .rt-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
-  .rt-item{display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px; padding:11px 11px; cursor:pointer}
+  .rt-item{
+    display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px;
+    padding:11px 11px; cursor:pointer; position:relative; overflow:hidden;
+  }
+  .rt-item > *:not(.prog-fill){position:relative; z-index:1}
   .rt-check{
     flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:2px solid var(--ink-2);
     background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
-    color:transparent; transition:all .15s;
+    color:transparent; transition:all .15s; overflow:hidden; position:relative;
+  }
+  .rt-check svg{position:relative; z-index:1}
+  .rt-item.half .rt-check{border-color:var(--accent)}
+  .rt-item.half .rt-check::after{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent);
   }
   .rt-item.done .rt-check{background:var(--accent); border-color:var(--accent); color:#fff}
+  .rt-item.done .prog-fill{
+    border-right:0; background:color-mix(in srgb, var(--accent) var(--pf2), transparent);
+  }
   .rt-name{flex:1; font-size:15px; font-weight:500; min-width:0; overflow-wrap:break-word}
-  .rt-item.done .rt-name{color:var(--ink-2)}
+  .rt-item.done .rt-name{color:var(--ink); font-weight:600}
+  .rt-state{
+    flex:0 0 auto; font-size:11.5px; font-weight:800; color:#fff;
+    background:var(--accent); border-radius:999px; padding:3px 8px; letter-spacing:.01em;
+  }
   .rt-prog{font-size:12.5px; font-weight:600; color:var(--ink-2)}
+  .rt-move{
+    border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2);
+    display:flex; border-radius:8px;
+  }
+  .rt-move:active{background:var(--line); color:var(--accent)}
+  .rt-move[disabled]{opacity:.25; pointer-events:none}
+  .grp-btn{
+    border:0; background:transparent; color:var(--ink-2); cursor:pointer; padding:4px;
+    border-radius:8px; display:flex;
+  }
+  .grp-btn.on{background:var(--accent); color:#fff}
+  .grp-actions{display:flex; align-items:center; gap:3px}
+  .reorder-hint{
+    font-size:11.5px; color:var(--accent); font-weight:600; text-align:center; padding:5px 0 1px;
+  }
+  .rt-sum{display:flex; align-items:center; gap:10px}
+  .rt-sum-bar{
+    flex:1; height:9px; border-radius:999px; background:var(--tap); overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .rt-sum-fill{
+    height:100%; background:var(--accent); border-radius:999px;
+    transition:width .3s cubic-bezier(.4,0,.2,1);
+  }
   .range-row{display:flex; gap:5px; margin:2px 0 10px}
   .range-row button{
     flex:1; border:1.5px solid var(--line); background:var(--card); color:var(--ink-2);
@@ -385,9 +425,19 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .hgrid-cells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
-  .hcell{width:15px; height:15px; border-radius:50%; background:var(--tap); border:1px solid var(--line)}
+  .hcell{
+    width:15px; height:15px; border-radius:50%; background:var(--tap); border:1px solid var(--line);
+    overflow:hidden; position:relative;
+  }
   .hcell.on{background:var(--accent); border-color:var(--accent)}
+  .hcell.half{border-color:var(--accent)}
+  .hcell.half::after{content:''; position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent)}
   .hcell.na{opacity:.35}
+  .hgrp-label{
+    font-size:11px; font-weight:800; color:var(--ink-2); letter-spacing:.06em;
+    text-transform:uppercase; margin:7px 0 1px;
+  }
+  .hgrp-label:first-child{margin-top:0}
   .hgrid-days{display:flex; align-items:center; gap:4px; margin-top:2px}
   .hgrid-days .hgrid-name{visibility:hidden}
   .hgrid-daycells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
@@ -424,7 +474,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v5.2</div>
+      <div class="ver" id="appVer">v5.3</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -495,18 +545,18 @@
   </main>
 
   <main class="page hide" id="page-routine">
-    <section class="card">
-      <div class="cat-head">
-        <div class="cat-name sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          Today's routine
-        </div>
+    <section class="card" style="padding:11px 15px">
+      <div class="rt-sum">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-2);flex:0 0 auto"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+        <div class="rt-sum-bar"><div class="rt-sum-fill" id="rtSumFill" style="width:0%"></div></div>
         <span class="rt-prog" id="rtProg"></span>
       </div>
-      <ul class="rt-list" id="rtList"></ul>
-      <div class="todo-add">
-        <input type="text" id="rtInput" placeholder="Add a daily routine…" maxlength="40">
-        <button id="rtAdd">Add</button>
+    </section>
+    <div id="rtGroupList"></div>
+    <section class="card">
+      <div class="todo-add" style="margin-top:0">
+        <input type="text" id="rtGroupInput" placeholder="New group (e.g. Morning, Evening)" maxlength="24">
+        <button id="rtGroupAdd">Add</button>
       </div>
     </section>
     <section class="card">
@@ -1221,31 +1271,89 @@
   });
 
   /* ==================== ROUTINE ==================== */
-  var RT_KEY = 'routines-v1', RTLOG_KEY = 'routine-log-v1';
-  var memRt = null, memRtLog = null;
+  var RT_KEY = 'routines-v1', RTLOG_KEY = 'routine-log-v1', RTG_KEY = 'routine-groups-v1';
+  var memRt = null, memRtLog = null, memRtg = null;
   function saveRt(){ memRt = routines; try{ localStorage.setItem(RT_KEY, JSON.stringify(routines)); }catch(e){} }
   function saveRtLog(){ memRtLog = rtLog; try{ localStorage.setItem(RTLOG_KEY, JSON.stringify(rtLog)); }catch(e){} }
-  var routines = loadJSON(RT_KEY, [], memRt);      // [{id, name}]
-  var rtLog = loadJSON(RTLOG_KEY, {}, memRtLog);   // { 'YYYY-MM-DD': [id, ...] }
+  function saveRtg(){ memRtg = rtGroups; try{ localStorage.setItem(RTG_KEY, JSON.stringify(rtGroups)); }catch(e){} }
+  var routines = loadJSON(RT_KEY, [], memRt);        // [{id, name, g}]
+  var rtLog = loadJSON(RTLOG_KEY, {}, memRtLog);     // { 'YYYY-MM-DD': { id: 1|2 } }  1 = half, 2 = done
+  var rtGroups = loadJSON(RTG_KEY, ['Daily'], memRtg);
   var histRange = 7;
+  var reorderGrp = null;
+
+  /* migrate: ungrouped routines -> "Daily"; log arrays -> {id: 2} */
+  (function migrateRt(){
+    var changed = false;
+    for(var i = 0; i < routines.length; i++){
+      if(!routines[i].g){ routines[i].g = 'Daily'; changed = true; }
+      if(rtGroups.indexOf(routines[i].g) < 0){ rtGroups.push(routines[i].g); saveRtg(); }
+    }
+    if(changed) saveRt();
+    var lchanged = false;
+    for(var k in rtLog){
+      if(Object.prototype.toString.call(rtLog[k]) === '[object Array]'){
+        var o = {};
+        for(var j = 0; j < rtLog[k].length; j++) o[rtLog[k][j]] = 2;
+        rtLog[k] = o; lchanged = true;
+      }
+    }
+    if(lchanged) saveRtLog();
+    if(rtGroups.length === 0){ rtGroups = ['Daily']; saveRtg(); }
+  })();
+
+  var UP_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
+  var DOWN_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  var SORT_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/></svg>';
+
+  function dayStates(){ return rtLog[todayKey()] || {}; }
 
   function renderRoutine(){
-    var tk = todayKey();
-    var doneToday = rtLog[tk] || [];
-    var list = document.getElementById('rtList');
-    if(routines.length === 0){
-      list.innerHTML = '<div class="empty-note">Add the things you want to do every day</div>';
-    }else{
-      list.innerHTML = routines.map(function(r){
-        var on = doneToday.indexOf(r.id) > -1;
-        return '<li class="rt-item'+(on ? ' done' : '')+'" data-id="'+r.id+'">' +
-          '<button class="rt-check" aria-label="Mark done today">'+CHECK_SVG+'</button>' +
-          '<span class="rt-name">'+esc(r.name)+'</span>' +
-          '<button class="todo-del" aria-label="Delete routine">'+X_SVG+'</button></li>';
-      }).join('');
-    }
+    var day = dayStates();
+    var box = document.getElementById('rtGroupList');
+    box.innerHTML = rtGroups.map(function(g){
+      var items = routines.filter(function(r){ return r.g === g; });
+      var doneN = 0, halfN = 0;
+      items.forEach(function(r){ if(day[r.id] === 2) doneN++; else if(day[r.id] === 1) halfN++; });
+      var reord = reorderGrp === g;
+      var rows = items.length === 0
+        ? '<div class="empty-note">No routines here yet — add one below</div>'
+        : items.map(function(r, i){
+            var st = day[r.id] || 0;
+            var cls = st === 2 ? ' done' : st === 1 ? ' half' : '';
+            var fill = st === 2 ? 100 : st === 1 ? 50 : 0;
+            var pcls = st === 2 ? 'p3' : st === 1 ? 'p2' : 'p0';
+            return '<li class="rt-item'+cls+'" data-id="'+r.id+'">' +
+              '<span class="prog-fill '+pcls+'" style="width:'+fill+'%"></span>' +
+              '<button class="rt-check" aria-label="Cycle: half, done, clear">'+CHECK_SVG+'</button>' +
+              '<span class="rt-name">'+esc(r.name)+'</span>' +
+              (st === 1 ? '<span class="rt-state">HALF</span>' : '') +
+              (reord
+                ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
+                  '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
+                : '<button class="todo-del" aria-label="Delete routine">'+X_SVG+'</button>') +
+              '</li>';
+          }).join('');
+      return '<section class="card" data-grp="'+esc(g)+'">' +
+        '<div class="cat-head">' +
+          '<div class="cat-name">'+esc(g)+
+            ' <span class="cat-count">'+doneN+'/'+items.length+(halfN ? ' · '+halfN+' half' : '')+'</span></div>' +
+          '<div class="grp-actions">' +
+            '<button class="grp-btn grp-reord'+(reord ? ' on' : '')+'" aria-label="Reorder routines">'+SORT_SVG+'</button>' +
+            '<button class="grp-btn grp-del" aria-label="Delete group">'+X_SVG+'</button>' +
+          '</div></div>' +
+        (reord ? '<div class="reorder-hint">Reordering — tap ⇅ again when finished</div>' : '') +
+        '<ul class="rt-list">'+rows+'</ul>' +
+        '<div class="todo-add"><input type="text" placeholder="Add a routine…" maxlength="40"><button>Add</button></div>' +
+        '</section>';
+    }).join('');
+
+    var total = routines.length, done = 0, half = 0;
+    routines.forEach(function(r){ if(day[r.id] === 2) done++; else if(day[r.id] === 1) half++; });
+    var score = total ? (done + half * 0.5) / total : 0;
+    document.getElementById('rtSumFill').style.width = Math.round(score * 100) + '%';
     document.getElementById('rtProg').textContent =
-      routines.length ? (doneToday.length + '/' + routines.length + ' done') : '';
+      total ? (done + '/' + total + ' done' + (half ? ' · ' + half + ' half' : '')) : 'No routines yet';
     renderHist();
     if(typeof updateBadge === 'function' && settings) updateBadge();
   }
@@ -1265,35 +1373,43 @@
         var d = new Date(); d.setDate(d.getDate() - o);
         keys.push(keyOf(d)); labels.push(o === 0 ? '·' : DL[d.getDay()]);
       }
-      var rows = routines.map(function(r){
-        var cells = keys.map(function(k, i){
-          var on = (rtLog[k] || []).indexOf(r.id) > -1;
-          return '<span class="hcell'+(on ? ' on' : '')+'"></span>';
+      var multi = rtGroups.filter(function(g){
+        return routines.some(function(r){ return r.g === g; });
+      }).length > 1;
+      var rows = rtGroups.map(function(g){
+        var items = routines.filter(function(r){ return r.g === g; });
+        if(items.length === 0) return '';
+        var head = multi ? '<div class="hgrp-label">'+esc(g)+'</div>' : '';
+        return head + items.map(function(r){
+          var cells = keys.map(function(k){
+            var st = (rtLog[k] || {})[r.id] || 0;
+            return '<span class="hcell'+(st === 2 ? ' on' : st === 1 ? ' half' : '')+'"></span>';
+          }).join('');
+          return '<div class="hgrid-row"><span class="hgrid-name">'+esc(r.name)+'</span>' +
+            '<div class="hgrid-cells">'+cells+'</div></div>';
         }).join('');
-        return '<div class="hgrid-row"><span class="hgrid-name">'+esc(r.name)+'</span>' +
-          '<div class="hgrid-cells">'+cells+'</div></div>';
       }).join('');
       var dayRow = '<div class="hgrid-days"><span class="hgrid-name">x</span>' +
         '<div class="hgrid-daycells">'+labels.map(function(l){ return '<span>'+l+'</span>'; }).join('')+'</div></div>';
       box.innerHTML = '<div class="hgrid">'+rows+dayRow+'</div>' +
-        '<div class="hist-note">Filled dot = done that day · rightmost column is today</div>';
+        '<div class="hist-note">Full dot = done · half dot = partly done · last column is today</div>';
     }else{
       /* completion bars: daily for 1M, weekly average for 3M/6M/1Y */
       var weekly = histRange > 31;
       var buckets = [];
+      var dayScore = function(k){
+        if(!routines.length) return 0;
+        var d = rtLog[k] || {}, s = 0;
+        for(var id in d) s += d[id] === 2 ? 1 : d[id] === 1 ? 0.5 : 0;
+        return Math.min(1, s / routines.length);
+      };
       if(!weekly){
-        for(var o2 = histRange - 1; o2 >= 0; o2--){
-          var k2 = dayKeyOffset(o2);
-          buckets.push({ pct: routines.length ? (rtLog[k2] || []).length / routines.length : 0 });
-        }
+        for(var o2 = histRange - 1; o2 >= 0; o2--) buckets.push({ pct: dayScore(dayKeyOffset(o2)) });
       }else{
         var weeks = Math.round(histRange / 7);
         for(var w = weeks - 1; w >= 0; w--){
           var sum = 0;
-          for(var dd = 0; dd < 7; dd++){
-            var k3 = dayKeyOffset(w * 7 + dd);
-            sum += routines.length ? (rtLog[k3] || []).length / routines.length : 0;
-          }
+          for(var dd = 0; dd < 7; dd++) sum += dayScore(dayKeyOffset(w * 7 + dd));
           buckets.push({ pct: sum / 7 });
         }
       }
@@ -1318,34 +1434,88 @@
     renderHist();
   });
 
-  document.getElementById('rtAdd').addEventListener('click', addRoutine);
-  document.getElementById('rtInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addRoutine(); });
-  function addRoutine(){
-    var input = document.getElementById('rtInput');
+  document.getElementById('rtGroupAdd').addEventListener('click', addRtGroup);
+  document.getElementById('rtGroupInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addRtGroup(); });
+  function addRtGroup(){
+    var input = document.getElementById('rtGroupInput');
     var v = input.value.trim();
     if(!v) return;
-    if(routines.length >= 12){ toast('Keep it focused — max 12 routines'); return; }
-    routines.push({ id: 'r' + Date.now() + Math.floor(Math.random()*1000), name: v });
-    saveRt(); input.value = ''; renderRoutine();
+    if(rtGroups.indexOf(v) < 0){ rtGroups.push(v); saveRtg(); }
+    input.value = '';
+    renderRoutine();
   }
 
-  document.getElementById('rtList').addEventListener('click', function(e){
+  /* move a routine up/down among its own group's siblings */
+  function moveRoutine(id, dir){
+    var idx = -1, i;
+    for(i = 0; i < routines.length; i++) if(routines[i].id === id){ idx = i; break; }
+    if(idx < 0) return;
+    var g = routines[idx].g;
+    var j = idx + dir;
+    while(j >= 0 && j < routines.length && routines[j].g !== g) j += dir;
+    if(j < 0 || j >= routines.length) return;
+    var tmp = routines[idx]; routines[idx] = routines[j]; routines[j] = tmp;
+    saveRt(); renderRoutine();
+    if(navigator.vibrate) navigator.vibrate(8);
+  }
+
+  document.getElementById('rtGroupList').addEventListener('click', function(e){
+    var card = e.target.closest('[data-grp]');
+    if(!card) return;
+    var g = card.getAttribute('data-grp');
+
+    var addBtn = e.target.closest('.todo-add button');
+    if(addBtn){
+      var input = card.querySelector('.todo-add input');
+      var v = input.value.trim();
+      if(!v) return;
+      if(routines.length >= 30){ toast('Keep it focused — max 30 routines'); return; }
+      routines.push({ id: 'r' + Date.now() + Math.floor(Math.random()*1000), name: v, g: g });
+      saveRt(); input.value = ''; renderRoutine();
+      return;
+    }
+    if(e.target.closest('.grp-reord')){
+      reorderGrp = reorderGrp === g ? null : g;
+      renderRoutine();
+      return;
+    }
+    if(e.target.closest('.grp-del')){
+      var has = routines.filter(function(r){ return r.g === g; }).length;
+      if(has > 0){ toast('Remove its routines first'); return; }
+      if(rtGroups.length === 1){ toast('Keep at least one group'); return; }
+      rtGroups = rtGroups.filter(function(x){ return x !== g; });
+      if(reorderGrp === g) reorderGrp = null;
+      saveRtg(); renderRoutine();
+      return;
+    }
+
     var row = e.target.closest('.rt-item');
     if(!row) return;
     var id = row.getAttribute('data-id');
+    var mv = e.target.closest('.rt-move');
+    if(mv){ moveRoutine(id, +mv.getAttribute('data-dir')); return; }
     if(e.target.closest('.todo-del')){
       routines = routines.filter(function(r){ return r.id !== id; });
       saveRt(); renderRoutine();
-    }else{
-      /* tap anywhere else on the row toggles done for today */
-      var tk = todayKey();
-      if(!rtLog[tk]) rtLog[tk] = [];
-      var idx = rtLog[tk].indexOf(id);
-      if(idx > -1) rtLog[tk].splice(idx, 1); else rtLog[tk].push(id);
-      if(rtLog[tk].length === 0) delete rtLog[tk];
-      saveRtLog(); renderRoutine();
-      if(idx === -1 && navigator.vibrate) navigator.vibrate(12);
+      return;
     }
+    if(reorderGrp === g) return;                  /* don't change status while reordering */
+    /* tap the row: none -> half -> done -> none */
+    var tk = todayKey();
+    if(!rtLog[tk]) rtLog[tk] = {};
+    var st = rtLog[tk][id] || 0;
+    var next = (st + 1) % 3;
+    if(next === 0) delete rtLog[tk][id]; else rtLog[tk][id] = next;
+    var empty = true;
+    for(var kk in rtLog[tk]){ empty = false; break; }
+    if(empty) delete rtLog[tk];
+    saveRtLog(); renderRoutine();
+    if(navigator.vibrate) navigator.vibrate(next === 2 ? 14 : 8);
+  });
+  document.getElementById('rtGroupList').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var card = e.target.closest('[data-grp]');
+    if(card && e.target.matches('.todo-add input')) card.querySelector('.todo-add button').click();
   });
 
   /* ==================== SETTINGS ==================== */
@@ -1373,7 +1543,9 @@
   function updateBadge(){
     if(!('setAppBadge' in navigator)) return;
     var openTodos = todos.filter(function(t){ return !t.done; }).length;
-    var openRt = routines.length - (rtLog[todayKey()] || []).length;
+    var dayR = rtLog[todayKey()] || {}, doneR = 0;
+    for(var rid in dayR) if(dayR[rid] === 2) doneR++;
+    var openRt = routines.length - doneR;
     var n = openTodos + Math.max(0, openRt);
     if(settings.badge !== false && n > 0) navigator.setAppBadge(n).catch(function(){});
     else if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
