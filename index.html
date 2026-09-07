@@ -21,6 +21,7 @@
     --ok:#3f7a4e; --tap:#edeef4; --bar:#5a5fe0;
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
+    --dot-a:#d63b60; --dot-p:#b8862c;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
   }
@@ -31,6 +32,7 @@
       --tap:#1f2129; --bar:#7578f0; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
+      --dot-a:#e85570; --dot-p:#c2882f;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -295,14 +297,14 @@
     border:1px solid var(--line); padding:13px 15px; flex:0 0 auto;
   }
   .tabbar{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(3,1fr);
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr);
     background:var(--card); border:1px solid var(--line); border-radius:18px;
     box-shadow:var(--shadow); overflow:hidden;
   }
   .tabbar button{
     border:0; background:transparent; cursor:pointer; font:inherit;
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    padding:9px 0 8px; color:var(--ink-2); font-size:12px; font-weight:600;
+    padding:9px 0 8px; color:var(--ink-2); font-size:11px; font-weight:600;
     transition:color .15s, background .15s;
   }
   .tabbar button.on{color:var(--accent); background:var(--accent-soft)}
@@ -448,6 +450,53 @@
   .hbars-x{display:flex; justify-content:space-between; margin-top:4px; font-size:11px; color:var(--ink-2); font-weight:600}
   .hist-note{font-size:11.5px; color:var(--ink-2); margin-top:6px; text-align:center}
 
+  /* ---------- dot tab ---------- */
+  .dot-sum{display:flex; align-items:center; gap:11px}
+  .dot-sum-ring{
+    flex:0 0 auto; width:34px; height:34px; border-radius:50%;
+    border:2.5px dashed var(--dot-p); display:flex; align-items:center; justify-content:center;
+  }
+  .dot-sum-ring i{width:11px; height:11px; border-radius:50%; background:var(--dot-a); display:block}
+  .dot-sum-main{flex:1; min-width:0}
+  .dot-sum-lab{font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2)}
+  .dot-sum-val{font-size:15px; font-weight:700; letter-spacing:-.2px; margin-top:2px}
+  .dot-sum-side{text-align:right; flex:0 0 auto}
+  .dot-sum-side b{display:block; font-size:17px; font-weight:800; letter-spacing:-.3px}
+  .dot-sum-side span{font-size:11px; color:var(--ink-2); font-weight:600}
+
+  .day.d-fut{opacity:1; pointer-events:auto}
+  .day.d-fut .num{color:var(--ink-2)}
+  .day.d-logspan{background:color-mix(in srgb, var(--dot-a) 17%, transparent)}
+  .day.d-predspan{background:color-mix(in srgb, var(--dot-p) 15%, transparent)}
+  .day.d-log .num{background:var(--dot-a); color:#fff; font-weight:800}
+  .day.d-pred .num{
+    border:2px dashed var(--dot-p); color:var(--ink); font-weight:800; background:transparent;
+  }
+  .dot-legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:9px 2px 1px}
+  .dot-key{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--ink-2)}
+  .dot-key i{width:14px; height:14px; border-radius:50%; display:block; flex:0 0 auto}
+  .dot-key i.k-log{background:var(--dot-a)}
+  .dot-key i.k-logspan{background:color-mix(in srgb, var(--dot-a) 30%, transparent); border:1px solid var(--dot-a)}
+  .dot-key i.k-pred{border:2px dashed var(--dot-p)}
+  .dot-hint{font-size:11.5px; color:var(--ink-2); text-align:center; padding:7px 4px 0; line-height:1.45}
+
+  .gap-chart{display:flex; align-items:flex-end; gap:5px; height:88px; padding-top:4px; overflow-x:auto; scrollbar-width:none}
+  .gap-chart::-webkit-scrollbar{display:none}
+  .gap-col{
+    flex:1 1 0; min-width:26px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    justify-content:flex-end; height:100%; border:0; background:transparent; font:inherit;
+    color:var(--ink); cursor:pointer; padding:0; border-radius:8px;
+  }
+  .gap-col:active{background:var(--tap)}
+  .gap-col b{font-size:11.5px; font-weight:700; line-height:1}
+  .gap-col .gb{width:min(22px,70%); background:var(--dot-a); border-radius:4px 4px 0 0}
+  .gap-col span{font-size:9.5px; color:var(--ink-2); font-weight:600; line-height:1.2; white-space:nowrap}
+  .gap-avg{
+    display:flex; align-items:baseline; gap:6px; justify-content:center;
+    font-size:12px; color:var(--ink-2); font-weight:600; margin-top:7px;
+  }
+  .gap-avg b{font-size:14px; color:var(--ink); font-weight:800}
+
   /* ---------- toast ---------- */
   .toast{
     position:fixed; bottom:calc(26px + env(safe-area-inset-bottom)); left:50%; transform:translate(-50%, 20px);
@@ -474,7 +523,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v5.3</div>
+      <div class="ver" id="appVer">v6.0</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -577,6 +626,51 @@
     </section>
   </main>
 
+  <main class="page hide" id="page-dot">
+    <section class="card" style="padding:12px 15px">
+      <div class="dot-sum">
+        <div class="dot-sum-ring"><i></i></div>
+        <div class="dot-sum-main">
+          <div class="dot-sum-lab">Next expected</div>
+          <div class="dot-sum-val" id="dotNext">—</div>
+        </div>
+        <div class="dot-sum-side" id="dotAvgBox"></div>
+      </div>
+    </section>
+
+    <section class="cal-card" id="dotCalCard">
+      <div class="cal-head">
+        <div class="cal-title sec-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span id="dotMonth"></span><small id="dotYear"></small>
+        </div>
+        <div class="nav">
+          <button class="today-jump" id="dotToday" aria-label="Jump to current month">Today</button>
+          <button id="dotPrev" aria-label="Previous month"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button id="dotNextM" aria-label="Next month"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      <div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+      <div class="grid-wrap"><div class="grid" id="dotGrid"></div></div>
+      <div class="dot-legend">
+        <span class="dot-key"><i class="k-log"></i>Marked</span>
+        <span class="dot-key"><i class="k-logspan"></i>Following days</span>
+        <span class="dot-key"><i class="k-pred"></i>Anticipated</span>
+      </div>
+      <div class="dot-hint" id="dotHint"></div>
+    </section>
+
+    <section class="card">
+      <div class="cat-head" style="margin-bottom:4px">
+        <div class="cat-name sec-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+          Days between
+        </div>
+      </div>
+      <div id="gapViz"></div>
+    </section>
+  </main>
+
   <nav class="tabbar">
     <button id="tab-meds" class="on" aria-label="Medicines">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
@@ -589,6 +683,10 @@
     <button id="tab-routine" aria-label="Daily routine">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
       Routine
+    </button>
+    <button id="tab-dot" aria-label="Dot">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg>
+      Dot
     </button>
   </nav>
 
@@ -1125,7 +1223,7 @@
 
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
-  var TABS = ['meds','todo','routine'];
+  var TABS = ['meds','todo','routine','dot'];
   function showTab(name){
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
@@ -1518,6 +1616,202 @@
     if(card && e.target.matches('.todo-add input')) card.querySelector('.todo-add button').click();
   });
 
+  /* ==================== DOT ==================== */
+  var DOT_KEY = 'dot-log-v1';
+  var memDot = null;
+  function saveDot(){ memDot = dotLog; try{ localStorage.setItem(DOT_KEY, JSON.stringify(dotLog)); }catch(e){} }
+  var dotLog = loadJSON(DOT_KEY, [], memDot);        // ['YYYY-MM-DD', ...] — first day of each occurrence
+  var DOT_CYCLE = 28, DOT_SPAN = 8, DOT_AHEAD_MONTHS = 6;
+  var dotView = new Date(); dotView.setDate(1);
+
+  function parseKey(k){ var p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(d, n){ var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+  function daysBetween(a, b){ return Math.round((b.getTime() - a.getTime()) / 86400000); }
+  function midnight(){ var t = new Date(); t.setHours(0,0,0,0); return t; }
+  function fmtShort(d){ return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3); }
+
+  /* date key -> { t:'log'|'pred', s:startOfRun } for the whole visible range */
+  function dotMap(){
+    var m = {}, i, j;
+    var sorted = dotLog.slice().sort();
+    for(i = 0; i < sorted.length; i++){
+      var d = parseKey(sorted[i]);
+      for(j = 0; j < DOT_SPAN; j++) m[keyOf(addDays(d, j))] = { t:'log', s: j === 0 };
+    }
+    if(sorted.length){
+      var today = midnight();
+      var horizon = new Date(); horizon.setMonth(horizon.getMonth() + DOT_AHEAD_MONTHS);
+      var next = addDays(parseKey(sorted[sorted.length - 1]), DOT_CYCLE);
+      var guard = 0;
+      while(next <= horizon && guard++ < 400){
+        for(j = 0; j < DOT_SPAN; j++){
+          var pd = addDays(next, j), pk = keyOf(pd);
+          if(!m[pk] && pd >= today) m[pk] = { t:'pred', s: j === 0 };
+        }
+        next = addDays(next, DOT_CYCLE);
+      }
+    }
+    return m;
+  }
+
+  function renderDotCal(dir){
+    var y = dotView.getFullYear(), m = dotView.getMonth();
+    document.getElementById('dotMonth').textContent = MONTHS[m];
+    document.getElementById('dotYear').textContent = y;
+    var first = new Date(y, m, 1);
+    var startBlank = (first.getDay() + 6) % 7;
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var tk = todayKey(), today = midnight();
+    var map = dotMap();
+    var html = '', b, d;
+    for(b = 0; b < startBlank; b++) html += '<button class="day blank"></button>';
+    for(d = 1; d <= daysInMonth; d++){
+      var date = new Date(y, m, d), k = keyOf(date), st = map[k];
+      var cls = 'day';
+      if(k === tk) cls += ' is-today';
+      if(date > today) cls += ' d-fut';
+      var lab = d + ' ' + MONTHS[m];
+      if(st){
+        if(st.t === 'log') cls += st.s ? ' d-log d-logspan' : ' d-logspan';
+        else cls += st.s ? ' d-pred d-predspan' : ' d-predspan';
+        lab += st.t === 'log' ? ', marked' : ', anticipated';
+      }
+      html += '<button class="'+cls+'" data-key="'+k+'" aria-label="'+lab+'">' +
+        '<span class="num">'+d+'</span></button>';
+    }
+    var grid = document.getElementById('dotGrid');
+    grid.innerHTML = html;
+    if(dir){
+      grid.classList.remove('anim-left','anim-right');
+      void grid.offsetWidth;
+      grid.classList.add(dir === 1 ? 'anim-left' : 'anim-right');
+    }
+  }
+
+  function dotGaps(){
+    var sorted = dotLog.slice().sort(), out = [];
+    for(var i = 1; i < sorted.length; i++){
+      out.push({
+        days: daysBetween(parseKey(sorted[i-1]), parseKey(sorted[i])),
+        from: parseKey(sorted[i-1]), to: parseKey(sorted[i])
+      });
+    }
+    return out;
+  }
+
+  function renderDotSummary(){
+    var sorted = dotLog.slice().sort();
+    var nextEl = document.getElementById('dotNext');
+    var sideEl = document.getElementById('dotAvgBox');
+    var hintEl = document.getElementById('dotHint');
+    if(!sorted.length){
+      nextEl.textContent = 'Nothing marked yet';
+      sideEl.innerHTML = '';
+      hintEl.textContent = 'Tap any past day to mark it. The 8 days from each mark are shaded, and the next dates are anticipated every ' + DOT_CYCLE + ' days for ' + DOT_AHEAD_MONTHS + ' months.';
+      return;
+    }
+    var today = midnight();
+    var next = addDays(parseKey(sorted[sorted.length - 1]), DOT_CYCLE);
+    var guard = 0;
+    while(next < today && guard++ < 400) next = addDays(next, DOT_CYCLE);
+    var inDays = daysBetween(today, next);
+    nextEl.textContent = DAYS[next.getDay()].slice(0,3) + ', ' + fmtShort(next) +
+      ' · ' + (inDays === 0 ? 'today' : inDays === 1 ? 'tomorrow' : 'in ' + inDays + ' days');
+    var gaps = dotGaps();
+    if(gaps.length){
+      var sum = 0;
+      gaps.forEach(function(g){ sum += g.days; });
+      sideEl.innerHTML = '<b>' + Math.round(sum / gaps.length) + '</b><span>avg days</span>';
+    }else{
+      sideEl.innerHTML = '<b>' + sorted.length + '</b><span>marked</span>';
+    }
+    hintEl.textContent = 'Tap a day to mark or unmark it · anticipated dates assume ' + DOT_CYCLE + ' days';
+  }
+
+  function renderGapChart(){
+    var box = document.getElementById('gapViz');
+    var gaps = dotGaps();
+    if(gaps.length === 0){
+      box.innerHTML = '<div class="empty-note">Mark at least two occurrences to see the gaps</div>';
+      return;
+    }
+    var max = 1;
+    gaps.forEach(function(g){ if(g.days > max) max = g.days; });
+    var cols = gaps.map(function(g, i){
+      var h = Math.max(6, Math.round(g.days / max * 52));
+      return '<button class="gap-col" data-i="'+i+'" aria-label="'+g.days+' days, '+
+        fmtShort(g.from)+' to '+fmtShort(g.to)+'">' +
+        '<b>'+g.days+'</b>' +
+        '<span class="gb" style="height:'+h+'px"></span>' +
+        '<span>'+fmtShort(g.to)+'</span></button>';
+    }).join('');
+    var sum = 0;
+    gaps.forEach(function(g){ sum += g.days; });
+    var avg = Math.round(sum / gaps.length);
+    var lastGap = gaps[gaps.length - 1].days;
+    box.innerHTML = '<div class="gap-chart">'+cols+'</div>' +
+      '<div class="gap-avg">average <b>'+avg+'</b> days · last <b>'+lastGap+'</b> days</div>';
+  }
+
+  function renderDot(dir){
+    renderDotCal(dir);
+    renderDotSummary();
+    renderGapChart();
+  }
+
+  function toggleDot(k){
+    var d = parseKey(k), today = midnight();
+    if(d > today){ toast('Only past days can be marked'); return; }
+    var idx = dotLog.indexOf(k);
+    if(idx > -1){
+      dotLog.splice(idx, 1); saveDot(); renderDot();
+      toast('Unmarked ' + fmtShort(d));
+      return;
+    }
+    for(var i = 0; i < dotLog.length; i++){
+      var diff = daysBetween(parseKey(dotLog[i]), d);
+      if(diff > 0 && diff < DOT_SPAN){ toast('Already inside a marked stretch'); return; }
+    }
+    dotLog.push(k); dotLog.sort(); saveDot(); renderDot();
+    if(navigator.vibrate) navigator.vibrate(14);
+    toast('Marked ' + fmtShort(d));
+  }
+
+  document.getElementById('dotGrid').addEventListener('click', function(e){
+    var btn = e.target.closest('.day');
+    if(!btn || btn.classList.contains('blank')) return;
+    toggleDot(btn.getAttribute('data-key'));
+  });
+  document.getElementById('gapViz').addEventListener('click', function(e){
+    var col = e.target.closest('.gap-col');
+    if(!col) return;
+    var g = dotGaps()[+col.getAttribute('data-i')];
+    if(g) toast(g.days + ' days · ' + fmtShort(g.from) + ' → ' + fmtShort(g.to));
+  });
+
+  function shiftDotMonth(delta){
+    dotView.setMonth(dotView.getMonth() + delta);
+    renderDotCal(delta > 0 ? 1 : -1);
+  }
+  document.getElementById('dotPrev').addEventListener('click', function(){ shiftDotMonth(-1); });
+  document.getElementById('dotNextM').addEventListener('click', function(){ shiftDotMonth(1); });
+  document.getElementById('dotToday').addEventListener('click', function(){
+    dotView = new Date(); dotView.setDate(1); renderDotCal(1);
+  });
+  (function(){
+    var sx = null, sy = null;
+    var card = document.getElementById('dotCalCard');
+    card.addEventListener('touchstart', function(e){
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, {passive:true});
+    card.addEventListener('touchend', function(e){
+      if(sx === null) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = null;
+      if(Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) shiftDotMonth(dx < 0 ? 1 : -1);
+    }, {passive:true});
+  })();
+
   /* ==================== SETTINGS ==================== */
   var SET_KEY = 'settings-v1';
   var memSet = null;
@@ -1622,11 +1916,12 @@
     var before = todos.length;
     todos = todos.filter(function(t){ return !(t.done && now - t.done > DAY_MS); });
     if(todos.length !== before) saveTodos();
-    renderTodo(); renderRoutine();
+    renderTodo(); renderRoutine(); renderDot();
   });
 
   renderTodo();
   renderRoutine();
+  renderDot();
 
   renderAll();
 
