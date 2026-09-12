@@ -21,7 +21,7 @@
     --ok:#3f7a4e; --tap:#edeef4; --bar:#5a5fe0;
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
-    --dot-a:#d63b60; --dot-p:#b8862c;
+    --dot-a:#d63b60; --dot-p:#b8862c; --danger:#d13c34;
     --gold:#b8862c; --up:#1a7f4b; --down:#c0392b;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
@@ -33,7 +33,7 @@
       --tap:#1f2129; --bar:#7578f0; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
-      --dot-a:#e85570; --dot-p:#c2882f;
+      --dot-a:#e85570; --dot-p:#c2882f; --danger:#ef5f56;
       --gold:#c2882f; --up:#1f9e5c; --down:#ea5765;
     }
   }
@@ -99,6 +99,8 @@
     font:inherit; font-size:14.5px; font-weight:700; padding:11px; border-radius:13px; cursor:pointer;
   }
   .set-note{font-size:12px; color:var(--ink-2); line-height:1.45; margin:12px 0 0}
+  .set-pair{display:flex; gap:9px; margin-top:10px}
+  .set-pair .set-test{flex:1}
 
   /* ---------- today card ---------- */
   .today-card{
@@ -352,6 +354,18 @@
   .todo-star.on{color:#e8a13c}
   .todo-star.on svg{fill:#e8a13c}
   .todo-del{border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2); display:flex; border-radius:8px}
+  /* two-tap delete: the first tap arms the control, the second removes */
+  .armed{
+    background:var(--danger) !important; color:#fff !important;
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--danger) 26%, transparent);
+    animation:armPulse 1s ease-in-out infinite;
+  }
+  .armed svg{stroke-width:2.6}
+  @keyframes armPulse{0%,100%{opacity:1}50%{opacity:.62}}
+  .arm-row{
+    outline:2px solid var(--danger); outline-offset:-2px;
+    background:color-mix(in srgb, var(--danger) 12%, var(--tap)) !important;
+  }
   .todo-add{display:flex; gap:7px; margin-top:8px}
   .todo-add input{
     flex:1; min-width:0; border:1.5px solid var(--line); background:var(--card); color:var(--ink);
@@ -407,6 +421,21 @@
   .reorder-hint{
     font-size:11.5px; color:var(--accent); font-weight:600; text-align:center; padding:5px 0 1px;
   }
+  .rt-daynav{display:flex; align-items:center; gap:7px; margin-bottom:9px}
+  .nav-arrow{
+    flex:0 0 auto; border:0; background:var(--tap); color:var(--ink); width:30px; height:30px;
+    border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .nav-arrow:active{transform:scale(.92)}
+  .nav-arrow[disabled]{opacity:.3; pointer-events:none}
+  .rt-daylabel{flex:1; text-align:center; font-size:14.5px; font-weight:700; letter-spacing:-.2px}
+  .rt-back{
+    display:none; border:0; background:var(--accent); color:#fff; border-radius:999px;
+    padding:5px 11px; font:inherit; font-size:11.5px; font-weight:700; cursor:pointer; flex:0 0 auto;
+  }
+  .rt-back.show{display:block}
+  #rtDayBar.past{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 6%, var(--card))}
+  #rtDayBar.past .rt-daylabel{color:var(--accent)}
   .rt-sum{display:flex; align-items:center; gap:10px}
   .rt-sum-bar{
     flex:1; height:9px; border-radius:999px; background:var(--tap); overflow:hidden;
@@ -446,6 +475,13 @@
   .hgrid-days .hgrid-name{visibility:hidden}
   .hgrid-daycells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
   .hgrid-daycells span{font-size:10.5px; font-weight:700; color:var(--ink-2)}
+  .hcell.sel{box-shadow:0 0 0 2px var(--accent)}
+  .hday{
+    border:0; background:transparent; color:var(--ink-2); font:inherit; font-size:10.5px;
+    font-weight:700; cursor:pointer; width:19px; height:19px; border-radius:50%; padding:0;
+  }
+  .hday.sel{background:var(--accent); color:#fff}
+  .hday:active{background:var(--tap)}
   .hbars{display:grid; align-items:end; gap:2px; height:76px}
   .hbar{background:var(--bar); border-radius:3px 3px 0 0; min-height:2px}
   .hbar.zero{background:var(--line)}
@@ -536,6 +572,14 @@
   .gold-meta a{color:var(--accent); font-weight:700; text-decoration:none; border-bottom:1px solid var(--line)}
   .gold-add{display:none}
   .gold-add.show{display:flex}
+  .gold-actions{display:flex; align-items:center; gap:9px; margin-top:10px; flex-wrap:wrap}
+  .gold-check{
+    display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--line);
+    background:var(--card); color:var(--ink); font:inherit; font-size:13px; font-weight:700;
+    border-radius:11px; padding:7px 12px; cursor:pointer;
+  }
+  .gold-check:active{background:var(--tap); transform:scale(.97)}
+  .gold-status{font-size:11.5px; color:var(--ink-2); font-weight:600}
 
   .gchart-wrap{position:relative; margin-top:2px}
   .gchart{display:block; width:100%; height:auto; touch-action:pan-y}
@@ -583,7 +627,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v7.1</div>
+      <div class="ver" id="appVer">v7.2</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -654,7 +698,13 @@
   </main>
 
   <main class="page hide" id="page-routine">
-    <section class="card" style="padding:11px 15px">
+    <section class="card" style="padding:9px 12px 11px" id="rtDayBar">
+      <div class="rt-daynav">
+        <button class="nav-arrow" id="rtPrevDay" aria-label="Previous day"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="rt-daylabel" id="rtDayLabel">Today</div>
+        <button class="nav-arrow" id="rtNextDay" aria-label="Next day"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="rt-back" id="rtBackToday">Today</button>
+      </div>
       <div class="rt-sum">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-2);flex:0 0 auto"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         <div class="rt-sum-bar"><div class="rt-sum-fill" id="rtSumFill" style="width:0%"></div></div>
@@ -740,6 +790,13 @@
         <span class="gold-chg flat" id="goldChg">—</span>
       </div>
       <div class="gold-meta" id="goldMeta">Loading latest rate…</div>
+      <div class="gold-actions">
+        <button class="gold-check" id="goldCheck">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+          Check now
+        </button>
+        <span class="gold-status" id="goldStatus"></span>
+      </div>
       <div class="todo-add gold-add" id="goldAdd">
         <input type="number" inputmode="decimal" step="0.01" id="goldInput" placeholder="AED per gram (24K)">
         <button id="goldSave">Save</button>
@@ -836,6 +893,14 @@
     <label class="switch"><input type="checkbox" id="optBadge"><span></span></label>
   </div>
   <button class="set-test" id="testNotif">Send a test notification</button>
+  <div class="set-row" style="border-top:1px solid var(--line); margin-top:12px">
+    <div><div class="set-name">Your data</div><div class="set-sub">Save a copy you keep, or restore one</div></div>
+  </div>
+  <div class="set-pair">
+    <button class="set-test" id="btnBackup" style="margin-top:0">Save a backup</button>
+    <button class="set-test" id="btnRestore" style="margin-top:0">Restore…</button>
+  </div>
+  <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
 </div>
 
@@ -844,6 +909,72 @@
 <script>
 (function(){
   'use strict';
+  /* ---------- durability ----------
+     Everything lives in localStorage, which a browser can clear when it is
+     short of space or when site data is wiped. Three defences:
+       1. ask for persistent storage so the browser stops evicting us,
+       2. keep a mirror of every key in Cache Storage and restore from it
+          automatically if localStorage ever comes back empty,
+       3. Settings has Backup / Restore for a file you keep yourself. */
+  var DATA_KEYS = [
+    'paracetamol-log-v1', 'paracetamol-sample-v1', 'paracetamol-meds-v1', 'paracetamol-last-med',
+    'todos-v1', 'todo-cats-v1',
+    'routines-v1', 'routine-groups-v1', 'routine-log-v1',
+    'dot-log-v1', 'dot-gap-excl-v1',
+    'gold-hist-v1', 'gold-state-v1',
+    'settings-v1', 'active-tab-v1'
+  ];
+  var BACKUP_CACHE = 'daylog-backup', lastMirror = '';
+
+  function snapshotData(){
+    var o = {};
+    for(var i = 0; i < DATA_KEYS.length; i++){
+      try{
+        var v = localStorage.getItem(DATA_KEYS[i]);
+        if(v !== null) o[DATA_KEYS[i]] = v;
+      }catch(e){}
+    }
+    return o;
+  }
+  function hasAnyData(){
+    for(var i = 0; i < DATA_KEYS.length; i++){
+      try{ if(localStorage.getItem(DATA_KEYS[i]) !== null) return true; }catch(e){}
+    }
+    return false;
+  }
+  function mirrorData(){
+    if(!('caches' in window) || location.protocol === 'file:') return;
+    var json = JSON.stringify(snapshotData());
+    if(json === lastMirror || json === '{}') return;
+    lastMirror = json;
+    caches.open(BACKUP_CACHE).then(function(c){
+      return c.put('data', new Response(json, { headers:{ 'content-type':'application/json' } }));
+    }).catch(function(){});
+  }
+  (function restoreIfWiped(){
+    if(!('caches' in window) || location.protocol === 'file:') return;
+    if(hasAnyData()) return;                       /* nothing lost */
+    var once = false;
+    try{ once = sessionStorage.getItem('daylog-restored') === '1'; }catch(e){}
+    if(once) return;                               /* never loop */
+    caches.open(BACKUP_CACHE).then(function(c){ return c.match('data'); })
+      .then(function(res){ return res ? res.json() : null; })
+      .then(function(obj){
+        if(!obj) return;
+        var n = 0;
+        for(var k in obj){ try{ localStorage.setItem(k, obj[k]); n++; }catch(e){} }
+        if(!n) return;
+        try{ sessionStorage.setItem('daylog-restored', '1'); }catch(e){}
+        location.reload();
+      }).catch(function(){});
+  })();
+  if(navigator.storage && navigator.storage.persist){
+    navigator.storage.persisted().then(function(p){ if(!p) navigator.storage.persist(); }).catch(function(){});
+  }
+  setInterval(mirrorData, 20000);
+  window.addEventListener('pagehide', mirrorData);
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) mirrorData(); });
+
   var STORE_KEY = 'paracetamol-log-v1';
 
   /* ---------- storage (localStorage with in-memory fallback) ---------- */
@@ -1154,6 +1285,39 @@
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
   }
 
+  /* ---------- two-tap delete ----------
+     Nothing is removed on a single tap. The first tap arms the control (it
+     turns red); a second tap on the same control within 4 seconds carries the
+     delete out. Anything else — another control, a tab change, the timeout —
+     disarms it. The armed item is held as a key so it survives re-rendering. */
+  var armedKey = null, armTimer = null;
+  function isArmed(key){ return armedKey === key; }
+  function disarm(rerender){
+    if(armedKey === null) return;
+    armedKey = null;
+    clearTimeout(armTimer);
+    if(rerender !== false) rerenderAll();
+  }
+  /* Returns true when the caller should go ahead and delete. */
+  function confirmDelete(key, label){
+    if(armedKey === key){
+      armedKey = null; clearTimeout(armTimer);
+      return true;
+    }
+    armedKey = key;
+    clearTimeout(armTimer);
+    armTimer = setTimeout(function(){ armedKey = null; rerenderAll(); }, 4000);
+    rerenderAll();
+    toast('Tap again to delete' + (label ? ' ' + label : ''));
+    return false;
+  }
+  function rerenderAll(){
+    if(typeof renderTodo === 'function') renderTodo();
+    if(typeof renderRoutine === 'function') renderRoutine();
+    if(typeof renderDot === 'function') renderDot();
+    if(sheetKey) renderSheet();
+  }
+
   /* ---------- quick add (today) ---------- */
   document.getElementById('quickAdd').addEventListener('click', function(){
     var t = nowTime();
@@ -1259,7 +1423,8 @@
         return '<li>'+pillSVG(18, medColor(e.med))+
           '<span class="t">'+fmtTime12(e.t)+'</span>'+
           '<span class="lbl">'+e.med+'</span>'+
-          '<button class="del" data-i="'+i+'" aria-label="Remove this dose">' +
+          '<button class="del'+(isArmed('dose:'+sheetKey+':'+i) ? ' armed' : '')+'" data-i="'+i+'" aria-label="'+
+          (isArmed('dose:'+sheetKey+':'+i) ? 'Tap again to remove' : 'Remove this dose')+'">' +
           '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></li>';
       }).join('');
     }
@@ -1275,7 +1440,9 @@
   document.getElementById('doseList').addEventListener('click', function(e){
     var del = e.target.closest('.del');
     if(!del || !sheetKey) return;
-    removeDose(sheetKey, +del.getAttribute('data-i'));
+    var idx = +del.getAttribute('data-i');
+    if(!confirmDelete('dose:' + sheetKey + ':' + idx, 'this dose')) return;
+    removeDose(sheetKey, idx);
     renderAll();
     toast('Removed');
   });
@@ -1393,12 +1560,14 @@
               '<span class="todo-text">'+esc(t.text)+'</span>' +
               (!t.done && p > 0 ? '<span class="prog-pct">'+pct+'%</span>' : '') +
               '<button class="todo-star'+(t.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
-              '<button class="todo-del" aria-label="Delete task">'+X_SVG+'</button></li>';
+              '<button class="todo-del'+(isArmed('todo:'+t.id) ? ' armed' : '')+'" aria-label="'+
+                (isArmed('todo:'+t.id) ? 'Tap again to delete' : 'Delete task')+'">'+X_SVG+'</button></li>';
           }).join('');
       return '<section class="card" data-cat="'+esc(cat)+'">' +
         '<div class="cat-head"><div class="cat-name">'+esc(cat)+
         ' <span class="cat-count">'+open+' open</span></div>' +
-        '<button class="cat-del" aria-label="Delete category">'+X_SVG+'</button></div>' +
+        '<button class="cat-del'+(isArmed('cat:'+cat) ? ' armed' : '')+'" aria-label="'+
+          (isArmed('cat:'+cat) ? 'Tap again to delete' : 'Delete category')+'">'+X_SVG+'</button></div>' +
         '<ul class="todo-list">'+rows+'</ul>' +
         '<div class="todo-add"><input type="text" placeholder="Add a task…" maxlength="80"><button>Add</button></div>' +
         '</section>';
@@ -1434,7 +1603,8 @@
     var delCat = e.target.closest('.cat-del');
     if(delCat){
       var openCount = todos.filter(function(t){ return t.cat === cat && !t.done; }).length;
-      if(openCount > 0){ toast('Finish or delete its tasks first'); return; }
+      if(openCount > 0){ disarm(); toast('Finish or delete its tasks first'); return; }
+      if(!confirmDelete('cat:' + cat, 'this category')) return;
       cats = cats.filter(function(c){ return c !== cat; });
       todos = todos.filter(function(t){ return t.cat !== cat; });
       saveCats(); saveTodos(); renderTodo();
@@ -1446,11 +1616,15 @@
     var item = null;
     for(var i = 0; i < todos.length; i++) if(todos[i].id === id){ item = todos[i]; break; }
     if(!item) return;
-    if(e.target.closest('.todo-star')){
-      item.pri = !item.pri; saveTodos(); renderTodo();
-    }else if(e.target.closest('.todo-del')){
+    if(e.target.closest('.todo-del')){
+      if(!confirmDelete('todo:' + id, 'this task')) return;
       todos = todos.filter(function(t){ return t.id !== id; });
       saveTodos(); renderTodo();
+      return;
+    }
+    disarm(false);
+    if(e.target.closest('.todo-star')){
+      item.pri = !item.pri; saveTodos(); renderTodo();
     }else if(e.target.closest('.todo-check')){
       /* checkbox = done / not done */
       item.done = item.done ? null : Date.now();
@@ -1458,7 +1632,7 @@
       if(item.done && navigator.vibrate) navigator.vibrate(12);
     }else{
       /* tap on the row = advance progress a quarter (25 → 50 → 75 → back to 0) */
-      if(item.done) return;
+      if(item.done){ renderTodo(); return; }
       item.p = ((item.p || 0) + 1) % 4;
       saveTodos(); renderTodo();
       if(navigator.vibrate) navigator.vibrate(8);
@@ -1508,10 +1682,33 @@
   var DOWN_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   var SORT_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/></svg>';
 
-  function dayStates(){ return rtLog[todayKey()] || {}; }
+  /* rtDate is the day being edited — today unless you step back */
+  var rtDate = todayKey();
+  function dayStates(){ return rtLog[rtDate] || {}; }
+  function rtIsToday(){ return rtDate === todayKey(); }
+  function shiftRtDate(delta){
+    var d = addDays(parseKey(rtDate), delta);
+    if(d > midnight()) return;                      /* never past today */
+    rtDate = keyOf(d); disarm(false); renderRoutine();
+  }
+  function setRtDate(k){
+    if(parseKey(k) > midnight()) return;
+    rtDate = k; disarm(false); renderRoutine();
+    document.getElementById('rtDayBar').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function renderRtDayBar(){
+    var d = parseKey(rtDate), today = rtIsToday();
+    document.getElementById('rtDayLabel').textContent =
+      today ? 'Today' : DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d);
+    document.getElementById('rtNextDay').disabled = today;
+    document.getElementById('rtBackToday').classList.toggle('show', !today);
+    document.getElementById('rtDayBar').classList.toggle('past', !today);
+  }
 
   function renderRoutine(){
     var day = dayStates();
+    renderRtDayBar();
     var box = document.getElementById('rtGroupList');
     box.innerHTML = rtGroups.map(function(g){
       var items = routines.filter(function(r){ return r.g === g; });
@@ -1533,7 +1730,8 @@
               (reord
                 ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
                   '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
-                : '<button class="todo-del" aria-label="Delete routine">'+X_SVG+'</button>') +
+                : '<button class="todo-del'+(isArmed('rt:'+r.id) ? ' armed' : '')+'" aria-label="'+
+                  (isArmed('rt:'+r.id) ? 'Tap again to delete' : 'Delete routine')+'">'+X_SVG+'</button>') +
               '</li>';
           }).join('');
       return '<section class="card" data-grp="'+esc(g)+'">' +
@@ -1542,7 +1740,8 @@
             ' <span class="cat-count">'+doneN+'/'+items.length+(halfN ? ' · '+halfN+' half' : '')+'</span></div>' +
           '<div class="grp-actions">' +
             '<button class="grp-btn grp-reord'+(reord ? ' on' : '')+'" aria-label="Reorder routines">'+SORT_SVG+'</button>' +
-            '<button class="grp-btn grp-del" aria-label="Delete group">'+X_SVG+'</button>' +
+            '<button class="grp-btn grp-del'+(isArmed('grp:'+g) ? ' armed' : '')+'" aria-label="'+
+              (isArmed('grp:'+g) ? 'Tap again to delete' : 'Delete group')+'">'+X_SVG+'</button>' +
           '</div></div>' +
         (reord ? '<div class="reorder-hint">Reordering — tap ⇅ again when finished</div>' : '') +
         '<ul class="rt-list">'+rows+'</ul>' +
@@ -1585,16 +1784,20 @@
         return head + items.map(function(r){
           var cells = keys.map(function(k){
             var st = (rtLog[k] || {})[r.id] || 0;
-            return '<span class="hcell'+(st === 2 ? ' on' : st === 1 ? ' half' : '')+'"></span>';
+            return '<span class="hcell'+(st === 2 ? ' on' : st === 1 ? ' half' : '')+
+              (k === rtDate ? ' sel' : '')+'"></span>';
           }).join('');
           return '<div class="hgrid-row"><span class="hgrid-name">'+esc(r.name)+'</span>' +
             '<div class="hgrid-cells">'+cells+'</div></div>';
         }).join('');
       }).join('');
       var dayRow = '<div class="hgrid-days"><span class="hgrid-name">x</span>' +
-        '<div class="hgrid-daycells">'+labels.map(function(l){ return '<span>'+l+'</span>'; }).join('')+'</div></div>';
+        '<div class="hgrid-daycells">'+labels.map(function(l, i){
+          return '<button class="hday'+(keys[i] === rtDate ? ' sel' : '')+'" data-k="'+keys[i]+
+            '" aria-label="Edit '+keys[i]+'">'+l+'</button>';
+        }).join('')+'</div></div>';
       box.innerHTML = '<div class="hgrid">'+rows+dayRow+'</div>' +
-        '<div class="hist-note">Full dot = done · half dot = partly done · last column is today</div>';
+        '<div class="hist-note">Full dot = done · half dot = partly done · tap a day letter to edit that day</div>';
     }else{
       /* completion bars: daily for 1M, weekly average for 3M/6M/1Y */
       var weekly = histRange > 31;
@@ -1627,6 +1830,11 @@
     }
   }
 
+  document.getElementById('histViz').addEventListener('click', function(e){
+    var day = e.target.closest('.hday');
+    if(day) setRtDate(day.getAttribute('data-k'));
+  });
+
   document.getElementById('rangeRow').addEventListener('click', function(e){
     var btn = e.target.closest('button');
     if(!btn) return;
@@ -1635,6 +1843,11 @@
     for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === btn);
     renderHist();
   });
+
+  document.getElementById('rtPrevDay').addEventListener('click', function(){ shiftRtDate(-1); });
+  document.getElementById('rtNextDay').addEventListener('click', function(){ shiftRtDate(1); });
+  document.getElementById('rtBackToday').addEventListener('click', function(){ setRtDate(todayKey()); });
+  document.getElementById('rtDayLabel').addEventListener('click', function(){ setRtDate(todayKey()); });
 
   document.getElementById('rtGroupAdd').addEventListener('click', addRtGroup);
   document.getElementById('rtGroupInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addRtGroup(); });
@@ -1678,13 +1891,14 @@
     }
     if(e.target.closest('.grp-reord')){
       reorderGrp = reorderGrp === g ? null : g;
-      renderRoutine();
+      disarm(false); renderRoutine();
       return;
     }
     if(e.target.closest('.grp-del')){
       var has = routines.filter(function(r){ return r.g === g; }).length;
-      if(has > 0){ toast('Remove its routines first'); return; }
-      if(rtGroups.length === 1){ toast('Keep at least one group'); return; }
+      if(has > 0){ disarm(); toast('Remove its routines first'); return; }
+      if(rtGroups.length === 1){ disarm(); toast('Keep at least one group'); return; }
+      if(!confirmDelete('grp:' + g, 'this group')) return;
       rtGroups = rtGroups.filter(function(x){ return x !== g; });
       if(reorderGrp === g) reorderGrp = null;
       saveRtg(); renderRoutine();
@@ -1697,13 +1911,15 @@
     var mv = e.target.closest('.rt-move');
     if(mv){ moveRoutine(id, +mv.getAttribute('data-dir')); return; }
     if(e.target.closest('.todo-del')){
+      if(!confirmDelete('rt:' + id, 'this routine')) return;
       routines = routines.filter(function(r){ return r.id !== id; });
       saveRt(); renderRoutine();
       return;
     }
-    if(reorderGrp === g) return;                  /* don't change status while reordering */
-    /* tap the row: none -> half -> done -> none */
-    var tk = todayKey();
+    disarm(false);
+    if(reorderGrp === g){ renderRoutine(); return; }  /* no status changes while reordering */
+    /* tap the row: none -> half -> done -> none, on whichever day is selected */
+    var tk = rtDate;
     if(!rtLog[tk]) rtLog[tk] = {};
     var st = rtLog[tk][id] || 0;
     var next = (st + 1) % 3;
@@ -1784,6 +2000,7 @@
         else cls += st.s ? ' d-pred d-predspan' : ' d-predspan';
         lab += st.t === 'log' ? ', marked' : ', anticipated';
       }
+      if(isArmed('dot:' + k)){ cls += ' arm-row'; lab += ', tap again to unmark'; }
       html += '<button class="'+cls+'" data-key="'+k+'" aria-label="'+lab+'">' +
         '<span class="num">'+d+'</span></button>';
     }
@@ -1909,13 +2126,15 @@
     if(d > today){ toast('Only past days can be marked'); return; }
     var idx = dotLog.indexOf(k);
     if(idx > -1){
+      if(!confirmDelete('dot:' + k, 'this mark')) return;
       dotLog.splice(idx, 1); saveDot(); renderDot();
       toast('Unmarked ' + fmtShort(d));
       return;
     }
+    disarm(false);
     for(var i = 0; i < dotLog.length; i++){
       var diff = daysBetween(parseKey(dotLog[i]), d);
-      if(diff > 0 && diff < DOT_SPAN){ toast('Already inside a marked stretch'); return; }
+      if(diff > 0 && diff < DOT_SPAN){ renderDot(); toast('Already inside a marked stretch'); return; }
     }
     dotLog.push(k); dotLog.sort(); saveDot(); renderDot();
     if(navigator.vibrate) navigator.vibrate(14);
@@ -1966,17 +2185,46 @@
      up itself: once a day it reads the live spot price and converts it at the
      fixed 3.6725 dirham peg. Anything it collects is kept on the phone. */
   var GOLD_SEED = [
-    { d:'2026-08-28', v:536.75 }, { d:'2026-08-29', v:536.75 },
-    { d:'2026-08-30', v:536.75 }, { d:'2026-08-31', v:536.25 },
-    { d:'2026-09-01', v:522.00 }, { d:'2026-09-02', v:528.25 },
-    { d:'2026-09-03', v:542.00 }, { d:'2026-09-04', v:532.25 },
-    { d:'2026-09-05', v:533.75 }, { d:'2026-09-06', v:533.75 }
+    {d:"2026-06-15",v:521.25}, {d:"2026-06-16",v:522.25}, {d:"2026-06-17",v:508.25}, {d:"2026-06-18",v:509.25},
+    {d:"2026-06-19",v:500}, {d:"2026-06-20",v:500.75}, {d:"2026-06-21",v:500.75}, {d:"2026-06-22",v:506},
+    {d:"2026-06-23",v:498.75}, {d:"2026-06-24",v:486.5}, {d:"2026-06-25",v:486}, {d:"2026-06-26",v:490.75},
+    {d:"2026-06-27",v:492.75}, {d:"2026-06-28",v:492.75}, {d:"2026-06-29",v:485.75}, {d:"2026-06-30",v:485.25},
+    {d:"2026-07-01",v:489.75}, {d:"2026-07-02",v:494.75}, {d:"2026-07-03",v:501.75}, {d:"2026-07-04",v:503},
+    {d:"2026-07-05",v:503}, {d:"2026-07-06",v:499}, {d:"2026-07-07",v:493.5}, {d:"2026-07-08",v:490},
+    {d:"2026-07-09",v:497.25}, {d:"2026-07-10",v:493.75}, {d:"2026-07-11",v:496.5}, {d:"2026-07-12",v:496.5},
+    {d:"2026-07-13",v:483.5}, {d:"2026-07-14",v:487.5}, {d:"2026-07-15",v:489.75}, {d:"2026-07-16",v:481.5},
+    {d:"2026-07-17",v:481.5}, {d:"2026-07-18",v:484.25}, {d:"2026-07-19",v:484.25}, {d:"2026-07-20",v:483},
+    {d:"2026-07-21",v:492}, {d:"2026-07-22",v:500.75}, {d:"2026-07-23",v:487.5}, {d:"2026-07-24",v:490},
+    {d:"2026-07-25",v:488.5}, {d:"2026-07-26",v:488.5}, {d:"2026-07-27",v:491}, {d:"2026-07-28",v:485},
+    {d:"2026-07-29",v:491.5}, {d:"2026-07-30",v:495.5}, {d:"2026-07-31",v:485.25}, {d:"2026-08-01",v:487.25},
+    {d:"2026-08-02",v:487.25}, {d:"2026-08-03",v:485.5}, {d:"2026-08-04",v:492.25}, {d:"2026-08-05",v:514},
+    {d:"2026-08-06",v:510.5}, {d:"2026-08-07",v:523.75}, {d:"2026-08-08",v:523.25}, {d:"2026-08-09",v:523.25},
+    {d:"2026-08-10",v:528.25}, {d:"2026-08-11",v:528.75}, {d:"2026-08-12",v:533.25}, {d:"2026-08-13",v:523.5},
+    {d:"2026-08-14",v:529.25}, {d:"2026-08-15",v:527.5}, {d:"2026-08-16",v:527.5}, {d:"2026-08-17",v:530.75},
+    {d:"2026-08-18",v:526}, {d:"2026-08-19",v:540.75}, {d:"2026-08-20",v:544}, {d:"2026-08-21",v:556},
+    {d:"2026-08-22",v:554.75}, {d:"2026-08-23",v:554.75}, {d:"2026-08-24",v:558}, {d:"2026-08-25",v:560},
+    {d:"2026-08-26",v:554.25}, {d:"2026-08-27",v:554.5}, {d:"2026-08-28",v:536.75}, {d:"2026-08-29",v:536.75},
+    {d:"2026-08-30",v:536.75}, {d:"2026-08-31",v:536.25}, {d:"2026-09-01",v:522}, {d:"2026-09-02",v:528.25},
+    {d:"2026-09-03",v:542}, {d:"2026-09-04",v:532.25}, {d:"2026-09-05",v:533.75}, {d:"2026-09-06",v:533.75},
+    {d:"2026-09-07",v:530.75}, {d:"2026-09-08",v:526.5}, {d:"2026-09-09",v:532}, {d:"2026-09-10",v:522.5},
+    {d:"2026-09-11",v:526.75}
   ];
   var GOLD_KEY = 'gold-hist-v1', GOLD_MSG_KEY = 'gold-state-v1';
   var AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
   var memGold = null;
-  var goldHist = loadJSON(GOLD_KEY, null, memGold);
-  if(!goldHist || !goldHist.length){ goldHist = GOLD_SEED.slice(); }
+  var goldHist = loadJSON(GOLD_KEY, null, memGold) || [];
+  /* fill in any seed day we don't already hold, keeping everything collected so far */
+  (function mergeSeed(){
+    var have = {}, added = 0, i;
+    for(i = 0; i < goldHist.length; i++) have[goldHist[i].d] = 1;
+    for(i = 0; i < GOLD_SEED.length; i++){
+      if(!have[GOLD_SEED[i].d]){ goldHist.push({ d:GOLD_SEED[i].d, v:GOLD_SEED[i].v }); added++; }
+    }
+    if(added){
+      goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+      try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
+    }
+  })();
   var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
   var goldRange = 7, goldFetchedAt = 0;
 
@@ -2038,7 +2286,7 @@
       'Rate for ' + DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
       ' · ' + h.length + ' days recorded' +
       (stale ? ' · <b>not updated today</b>' : '') +
-      '<br>' + (goldState.ok ? 'Updates itself once a day' : 'Started from Gulf News rates') +
+      '<br>' + (goldState.ok ? 'Checked automatically once a day' : 'Source: dubaicityofgold.com') +
       ' · <a href="#" id="goldManual">enter today’s rate</a>';
     var link = document.getElementById('goldManual');
     if(link) link.addEventListener('click', function(ev){
@@ -2144,36 +2392,69 @@
     renderGoldChart();
   });
 
-  /* Live spot price -> AED per gram. Two sources, tried in order; if both are
-     unreachable the saved history just stays on screen. */
-  var GOLD_EPS = [
-    { u:'https://api.gold-api.com/price/XAU', pick:function(j){ return j && j.price; } },
-    { u:'https://data-asg.goldprice.org/dbXRates/USD',
-      pick:function(j){ return j && j.items && j.items[0] && j.items[0].xauPrice; } }
+  /* The rate comes from dubaicityofgold.com — "Today's Suggested Retail Gold
+     Jewellery Price · Rates in AED / Gram · 24K Gold". A browser can't read
+     another site directly, so the page is tried first and then through a
+     couple of public read-through services. If none answer, the Check now
+     button says so and you can type the number in. */
+  var GOLD_PAGE = 'https://dubaicityofgold.com/';
+  var GOLD_WAYS = [
+    function(){ return fetch(GOLD_PAGE, { cache:'no-store' }); },
+    function(){ return fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }); },
+    function(){ return fetch('https://corsproxy.io/?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }); },
+    function(){ return fetch('https://r.jina.ai/' + GOLD_PAGE, { cache:'no-store' }); }
   ];
+  function parseGoldPage(html){
+    var text = String(html)
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;|&#160;/gi, ' ')
+      .replace(/,/g, '')
+      .replace(/\s+/g, ' ');
+    var m = text.match(/24\s*[Kk](?:\s*(?:Gold|Carat))?[^0-9]{0,40}?(\d{3}(?:\.\d{1,2})?)/) ||
+            text.match(/(\d{3}(?:\.\d{1,2})?)[^0-9]{0,20}?24\s*[Kk]/);
+    if(!m) return null;
+    var v = parseFloat(m[1]);
+    return (v >= 100 && v <= 5000) ? Math.round(v * 100) / 100 : null;
+  }
+  var goldChecking = false;
+  function setGoldStatus(msg){
+    var el = document.getElementById('goldStatus');
+    if(el) el.textContent = msg || '';
+  }
   function fetchGold(force){
     var now = Date.now();
-    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;    /* at most hourly */
-    if(goldState.last === todayKey() && goldState.ok && !force) return;
-    goldFetchedAt = now;
+    if(goldChecking) return;
+    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;     /* at most hourly */
+    if(!force && goldState.last === todayKey() && goldState.ok) return;
+    goldFetchedAt = now; goldChecking = true;
+    if(force) setGoldStatus('Checking…');
     var i = 0;
     (function tryNext(){
-      if(i >= GOLD_EPS.length){ goldState.ok = false; saveGoldState(); renderGoldHead(); return; }
-      var ep = GOLD_EPS[i++];
-      fetch(ep.u, { cache:'no-store' })
-        .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-        .then(function(j){
-          var oz = Number(ep.pick(j));
-          if(!oz || !isFinite(oz)) throw 0;
-          var perGram = Math.round(oz * AED_PER_USD / GRAMS_PER_OZ * 100) / 100;
-          if(perGram < 50 || perGram > 5000) throw 0;
-          putGold(todayKey(), perGram, false);
+      if(i >= GOLD_WAYS.length){
+        goldChecking = false;
+        goldState.ok = false; saveGoldState(); renderGoldHead();
+        if(force){ setGoldStatus('Couldn’t reach the rate — type it in below'); document.getElementById('goldAdd').classList.add('show'); }
+        return;
+      }
+      var way = GOLD_WAYS[i++];
+      way()
+        .then(function(r){ if(!r.ok) throw 0; return r.text(); })
+        .then(function(t){
+          var v = parseGoldPage(t);
+          if(!v) throw 0;
+          putGold(todayKey(), v, false);
           goldState = { last: todayKey(), ok: true }; saveGoldState();
+          goldChecking = false;
           renderGold();
+          setGoldStatus(force ? 'Updated just now' : '');
+          if(force) toast('Rate updated — AED ' + money(v));
         })
         .catch(function(){ tryNext(); });
     })();
   }
+  document.getElementById('goldCheck').addEventListener('click', function(){ fetchGold(true); });
 
   document.getElementById('goldSave').addEventListener('click', saveManualGold);
   document.getElementById('goldInput').addEventListener('keydown', function(e){
@@ -2284,6 +2565,40 @@
         new Notification('DayLog', { body:'This is how your daily reminder will look.' });
       }
     });
+  });
+
+  /* backup to a file / restore from one */
+  document.getElementById('btnBackup').addEventListener('click', function(){
+    var payload = { app:'DayLog', version:'7.2', saved:new Date().toISOString(), data:snapshotData() };
+    var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' }));
+    var a = document.createElement('a');
+    a.href = url; a.download = 'daylog-backup-' + todayKey() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    toast('Backup saved to your downloads');
+  });
+  document.getElementById('btnRestore').addEventListener('click', function(){
+    document.getElementById('restoreFile').click();
+  });
+  document.getElementById('restoreFile').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    var fr = new FileReader();
+    fr.onload = function(){
+      var obj;
+      try{ obj = JSON.parse(fr.result); }catch(e){ toast('That file isn’t a DayLog backup'); return; }
+      var data = obj && obj.data ? obj.data : obj;
+      var n = 0;
+      for(var k in data){
+        if(DATA_KEYS.indexOf(k) < 0) continue;
+        try{ localStorage.setItem(k, data[k]); n++; }catch(e){}
+      }
+      if(!n){ toast('Nothing in that file to restore'); return; }
+      toast('Restored ' + n + ' items — reloading');
+      setTimeout(function(){ location.reload(); }, 900);
+    };
+    fr.readAsText(f);
+    this.value = '';
   });
 
   applySettings();
