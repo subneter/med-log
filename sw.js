@@ -1,6 +1,6 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v15';
+var CACHE = 'daylog-v16';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -10,7 +10,10 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k !== CACHE && k !== 'daylog-settings'; }).map(function(k){ return caches.delete(k); }));
+      /* KEEP is everything that holds data rather than page assets — deleting
+         these on an update is what destroyed the backup in v7.2. */
+      var KEEP = [CACHE, 'daylog-settings', 'daylog-backup'];
+      return Promise.all(keys.filter(function(k){ return KEEP.indexOf(k) < 0; }).map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
 });

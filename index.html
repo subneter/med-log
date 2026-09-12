@@ -635,6 +635,10 @@
   .gchart .gdot{fill:var(--gold); stroke:var(--card); stroke-width:2.5}
   .gchart .gcross{stroke:var(--ink-2); stroke-width:1; stroke-dasharray:3 3; opacity:.75}
   .gchart .gxl{fill:var(--ink-2); font-size:9.5px; font-weight:600}
+  .gchart .ggrid{stroke:var(--line); stroke-width:1}
+  .gchart .gyl{fill:var(--ink-2); font-size:9.5px; font-weight:600}
+  .gchart .gyl.now{fill:var(--gold); font-weight:800; font-size:10px}
+  .gchart .gref{stroke:var(--gold); stroke-width:1.2; stroke-dasharray:4 3; opacity:.85}
   .gtip{
     position:absolute; top:0; transform:translateX(-50%); pointer-events:none;
     background:var(--ink); color:var(--bg); font-size:11.5px; font-weight:700;
@@ -674,7 +678,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v7.3</div>
+      <div class="ver" id="appVer">v7.4</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -860,8 +864,8 @@
         <span class="rt-prog" id="goldSpan"></span>
       </div>
       <div class="range-row" id="goldRange">
-        <button data-r="7" class="on">7D</button>
-        <button data-r="30">1M</button>
+        <button data-r="7">7D</button>
+        <button data-r="30" class="on">1M</button>
         <button data-r="90">3M</button>
         <button data-r="180">6M</button>
         <button data-r="365">1Y</button>
@@ -962,6 +966,8 @@
     <button class="set-test" id="btnBackup" style="margin-top:0">Save a backup</button>
     <button class="set-test" id="btnRestore" style="margin-top:0">Restore…</button>
   </div>
+  <button class="set-test" id="btnRecover">Recover from the app's own backup</button>
+  <div class="set-note" id="recoverNote"></div>
   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
 </div>
@@ -986,7 +992,13 @@
     'gold-hist-v1', 'gold-state-v1', 'lib-items-v1', 'lib-shelves-v1',
     'settings-v1', 'active-tab-v1'
   ];
-  var BACKUP_CACHE = 'daylog-backup', lastMirror = '';
+  /* Keys that hold things you actually typed. The backup is scored on these,
+     so a wiped app can never overwrite a good backup with an empty one. */
+  var CONTENT_KEYS = [
+    'paracetamol-log-v1', 'todos-v1', 'routines-v1', 'routine-log-v1',
+    'dot-log-v1', 'lib-items-v1', 'todo-cats-v1', 'routine-groups-v1', 'lib-shelves-v1'
+  ];
+  var BACKUP_CACHE = 'daylog-backup', lastMirror = '', mirrorTimer = null;
 
   function snapshotData(){
     var o = {};
@@ -998,37 +1010,91 @@
     }
     return o;
   }
-  function hasAnyData(){
-    for(var i = 0; i < DATA_KEYS.length; i++){
-      try{ if(localStorage.getItem(DATA_KEYS[i]) !== null) return true; }catch(e){}
+  /* how much real content a snapshot holds — used to protect the backup */
+  function weigh(obj){
+    var w = 0;
+    for(var i = 0; i < CONTENT_KEYS.length; i++){
+      var v = obj[CONTENT_KEYS[i]];
+      if(!v) continue;
+      if(v === '[]' || v === '{}') continue;
+      w += v.length;
     }
-    return false;
+    return w;
+  }
+  function hasContent(){
+    var snap = snapshotData();
+    return weigh(snap) > 0;
   }
   function mirrorData(){
     if(!('caches' in window) || location.protocol === 'file:') return;
-    var json = JSON.stringify(snapshotData());
-    if(json === lastMirror || json === '{}') return;
+    var snap = snapshotData();
+    var json = JSON.stringify(snap);
+    if(json === lastMirror) return;
     lastMirror = json;
+    var w = weigh(snap);
     caches.open(BACKUP_CACHE).then(function(c){
-      return c.put('data', new Response(json, { headers:{ 'content-type':'application/json' } }));
+      var writes = [c.put('latest', new Response(json, { headers:{ 'content-type':'application/json' } }))];
+      /* 'best' only ever moves forward, so a wipe can't erase it */
+      return c.match('best').then(function(prev){
+        return (prev ? prev.json() : Promise.resolve(null)).then(function(pobj){
+          if(!pobj || w >= weigh(pobj)){
+            writes.push(c.put('best', new Response(json, { headers:{ 'content-type':'application/json' } })));
+          }
+          return Promise.all(writes);
+        });
+      });
     }).catch(function(){});
   }
+  function scheduleMirror(){
+    clearTimeout(mirrorTimer);
+    mirrorTimer = setTimeout(mirrorData, 1200);
+  }
+  /* back up within a second of any change, rather than on a 20s tick */
+  try{
+    var _origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(k, v){
+      _origSet.call(this, k, v);
+      try{ if(this === window.localStorage && DATA_KEYS.indexOf(k) > -1) scheduleMirror(); }catch(e){}
+    };
+  }catch(e){}
+  /* richest snapshot we hold, whichever slot it is in */
+  function readBackup(){
+    if(!('caches' in window) || location.protocol === 'file:') return Promise.resolve(null);
+    return caches.open(BACKUP_CACHE).then(function(c){
+      return Promise.all([
+        c.match('best').then(function(r){ return r ? r.json() : null; }).catch(function(){ return null; }),
+        c.match('latest').then(function(r){ return r ? r.json() : null; }).catch(function(){ return null; }),
+        c.match('data').then(function(r){ return r ? r.json() : null; }).catch(function(){ return null; })  /* v7.2 slot */
+      ]);
+    }).then(function(all){
+      var best = null, bw = -1;
+      for(var i = 0; i < all.length; i++){
+        if(!all[i]) continue;
+        var w = weigh(all[i]);
+        if(w > bw){ bw = w; best = all[i]; }
+      }
+      return bw > 0 ? best : null;
+    }).catch(function(){ return null; });
+  }
+  function applyBackup(obj){
+    var n = 0;
+    for(var k in obj){
+      if(DATA_KEYS.indexOf(k) < 0) continue;
+      try{ localStorage.setItem(k, obj[k]); n++; }catch(e){}
+    }
+    return n;
+  }
   (function restoreIfWiped(){
-    if(!('caches' in window) || location.protocol === 'file:') return;
-    if(hasAnyData()) return;                       /* nothing lost */
+    if(hasContent()) return;                       /* nothing lost */
     var once = false;
     try{ once = sessionStorage.getItem('daylog-restored') === '1'; }catch(e){}
     if(once) return;                               /* never loop */
-    caches.open(BACKUP_CACHE).then(function(c){ return c.match('data'); })
-      .then(function(res){ return res ? res.json() : null; })
-      .then(function(obj){
-        if(!obj) return;
-        var n = 0;
-        for(var k in obj){ try{ localStorage.setItem(k, obj[k]); n++; }catch(e){} }
-        if(!n) return;
-        try{ sessionStorage.setItem('daylog-restored', '1'); }catch(e){}
-        location.reload();
-      }).catch(function(){});
+    readBackup().then(function(obj){
+      if(!obj) return;
+      if(!applyBackup(obj)) return;
+      try{ sessionStorage.setItem('daylog-restored', '1'); }catch(e){}
+      location.reload();
+    });
   })();
   if(navigator.storage && navigator.storage.persist){
     navigator.storage.persisted().then(function(p){ if(!p) navigator.storage.persist(); }).catch(function(){});
@@ -1119,61 +1185,25 @@
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
+  /* Demo doses are gone for good: nothing is ever seeded now, and anything
+     seeded by an earlier version is stripped out of the log on this load. */
   var sample = loadSample();
-  if(sample === null){
-    // first run: seed the previous 5 months with realistic demo doses
-    sample = {};
-    var rng = mulberry32(42);
-    var base = new Date();
-    for(var mi = 5; mi >= 1; mi--){
-      var md = new Date(base.getFullYear(), base.getMonth() - mi, 1);
-      var dim = new Date(md.getFullYear(), md.getMonth() + 1, 0).getDate();
-      var n = 3 + Math.floor(rng() * 4);          // 3–6 tabs that month
-      for(var si = 0; si < n; si++){
-        var day = 1 + Math.floor(rng() * dim);
-        var entry = {
-          t: pad(8 + Math.floor(rng() * 14)) + ':' + pad(Math.floor(rng() * 60)),
-          med: PRESETS[Math.floor(rng() * PRESETS.length)]
-        };
-        var sk = md.getFullYear() + '-' + pad(md.getMonth() + 1) + '-' + pad(day);
-        if(!sample[sk]) sample[sk] = [];
-        sample[sk].push(entry);
-        if(!log[sk]) log[sk] = [];
-        log[sk].push(entry);
-        sortDoses(log[sk]);
-      }
-    }
-    saveLog(log);
-    saveSample(sample);
-  }else{
-    // migrate old sample format (plain time strings)
-    var sChanged = false;
+  if(sample && typeof sample === 'object'){
     for(var sk2 in sample){
+      if(!log[sk2]) continue;
       for(var s2 = 0; s2 < sample[sk2].length; s2++){
-        if(typeof sample[sk2][s2] === 'string'){ sample[sk2][s2] = normEntry(sample[sk2][s2]); sChanged = true; }
-      }
-    }
-    if(sChanged) saveSample(sample);
-  }
-  function hasSample(){
-    for(var k in sample) return true;
-    return false;
-  }
-  function clearSample(){
-    for(var k in sample){
-      if(!log[k]) continue;
-      for(var i = 0; i < sample[k].length; i++){
-        var s = sample[k][i];
-        for(var j = 0; j < log[k].length; j++){
-          if(log[k][j].t === s.t && log[k][j].med === s.med){ log[k].splice(j, 1); break; }
+        var se = normEntry(sample[sk2][s2]);
+        for(var lj = 0; lj < log[sk2].length; lj++){
+          if(log[sk2][lj].t === se.t && log[sk2][lj].med === se.med){ log[sk2].splice(lj, 1); break; }
         }
       }
-      if(log[k].length === 0) delete log[k];
+      if(log[sk2].length === 0) delete log[sk2];
     }
-    sample = {};
     saveLog(log);
-    saveSample(sample);
+    try{ localStorage.removeItem(SAMPLE_KEY); }catch(e){}
   }
+  sample = {};
+  function hasSample(){ return false; }
 
   /* ---------- date helpers ---------- */
   function pad(n){ return (n<10?'0':'')+n; }
@@ -1543,12 +1573,6 @@
     document.getElementById('calCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
   });
 
-  /* remove the demo sample data */
-  document.getElementById('sampleClear').addEventListener('click', function(){
-    clearSample();
-    renderAll();
-    toast('Sample data removed');
-  });
 
   /* refresh "today" when the app is reopened past midnight */
   document.addEventListener('visibilitychange', function(){
@@ -2455,7 +2479,7 @@
     }
   })();
   var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
-  var goldRange = 7, goldFetchedAt = 0;
+  var goldRange = 30, goldFetchedAt = 0;
 
   function saveGold(){
     memGold = goldHist;
@@ -2539,7 +2563,7 @@
       statsEl.innerHTML = ''; noteEl.textContent = '';
       return;
     }
-    var W = 320, H = 108, PL = 6, PR = 6, PT = 12, PB = 16;
+    var W = 320, H = 124, PL = 42, PR = 8, PT = 12, PB = 17;
     var vals = s.map(function(r){ return r.v; });
     var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
     if(hi === lo){ hi += 1; lo -= 1; }
@@ -2550,8 +2574,24 @@
     var pts = s.map(function(r, i){ return x(i).toFixed(1) + ' ' + y(r.v).toFixed(1); });
     var line = 'M' + pts.join(' L');
     var area = line + ' L' + x(s.length - 1).toFixed(1) + ' ' + (H - PB) + ' L' + PL + ' ' + (H - PB) + ' Z';
-    var lastI = s.length - 1;
+    var lastI = s.length - 1, lastV = s[lastI].v;
     var firstD = parseKey(s[0].d), lastD = parseKey(s[lastI].d);
+
+    /* price scale: four ticks across the range, labelled down the left */
+    var refY = y(lastV);
+    var ticks = '', TICKS = 4, ti, tv, ty;
+    for(ti = 0; ti < TICKS; ti++){
+      tv = lo + pad + (hi - pad - (lo + pad)) * (ti / (TICKS - 1));
+      ty = y(tv);
+      ticks += '<line class="ggrid" x1="'+PL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+ty.toFixed(1)+'"/>';
+      /* leave the label out when the current-price label would sit on top of it */
+      if(Math.abs(ty - refY) > 9){
+        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+Math.round(tv)+'</text>';
+      }
+    }
+    /* dashed marker at the newest price, so every point reads against it */
+    var ref = '<line class="gref" x1="'+PL+'" y1="'+refY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+refY.toFixed(1)+'"/>' +
+      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+money(lastV)+'</text>';
 
     box.innerHTML =
       '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="24K gold rate trend">' +
@@ -2559,10 +2599,12 @@
           '<stop offset="0" stop-color="var(--gold)" stop-opacity=".26"/>' +
           '<stop offset="1" stop-color="var(--gold)" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
+        ticks +
         '<path class="garea" d="'+area+'"/>' +
         '<path class="gline" d="'+line+'"/>' +
+        ref +
         '<line class="gcross" id="gCross" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" style="display:none"/>' +
-        '<circle class="gdot" id="gDot" cx="'+x(lastI).toFixed(1)+'" cy="'+y(s[lastI].v).toFixed(1)+'" r="4"/>' +
+        '<circle class="gdot" id="gDot" cx="'+x(lastI).toFixed(1)+'" cy="'+refY.toFixed(1)+'" r="4"/>' +
         '<text class="gxl" x="'+PL+'" y="'+(H-3)+'">'+fmtShort(firstD)+'</text>' +
         '<text class="gxl" x="'+(W-PR)+'" y="'+(H-3)+'" text-anchor="end">'+fmtShort(lastD)+'</text>' +
       '</svg>';
@@ -2753,6 +2795,7 @@
   var setSheet = document.getElementById('setSheet');
   document.getElementById('setBtn').addEventListener('click', function(){
     setSheet.classList.add('open'); overlay.classList.add('open');
+    refreshRecoverNote();
   });
   overlay.addEventListener('click', function(){ setSheet.classList.remove('open'); });
 
@@ -2798,7 +2841,7 @@
 
   /* backup to a file / restore from one */
   document.getElementById('btnBackup').addEventListener('click', function(){
-    var payload = { app:'DayLog', version:'7.2', saved:new Date().toISOString(), data:snapshotData() };
+    var payload = { app:'DayLog', version:'7.4', saved:new Date().toISOString(), data:snapshotData() };
     var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' }));
     var a = document.createElement('a');
     a.href = url; a.download = 'daylog-backup-' + todayKey() + '.json';
@@ -2809,6 +2852,28 @@
   document.getElementById('btnRestore').addEventListener('click', function(){
     document.getElementById('restoreFile').click();
   });
+  document.getElementById('btnRecover').addEventListener('click', function(){
+    var note = document.getElementById('recoverNote');
+    note.textContent = 'Looking…';
+    readBackup().then(function(obj){
+      if(!obj){ note.textContent = 'No internal backup found on this device.'; return; }
+      var n = applyBackup(obj);
+      if(!n){ note.textContent = 'The backup held nothing to restore.'; return; }
+      note.textContent = 'Restored ' + n + ' items — reloading.';
+      try{ sessionStorage.setItem('daylog-restored', '1'); }catch(e){}
+      setTimeout(function(){ location.reload(); }, 800);
+    });
+  });
+  /* show whether an internal backup exists whenever Settings opens */
+  function refreshRecoverNote(){
+    var note = document.getElementById('recoverNote');
+    if(!note) return;
+    readBackup().then(function(obj){
+      note.textContent = obj
+        ? 'An internal backup is available on this device.'
+        : 'No internal backup yet — it builds as you use the app.';
+    });
+  }
   document.getElementById('restoreFile').addEventListener('change', function(){
     var f = this.files && this.files[0];
     if(!f) return;
