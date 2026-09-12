@@ -21,7 +21,7 @@
     --ok:#3f7a4e; --tap:#edeef4; --bar:#5a5fe0;
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
-    --dot-a:#d63b60; --dot-p:#b8862c; --danger:#d13c34;
+    --dot-a:#d63b60; --dot-p:#b8862c; --danger:#d13c34; --fri:#2f9e8f;
     --gold:#b8862c; --up:#1a7f4b; --down:#c0392b;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
@@ -33,7 +33,7 @@
       --tap:#1f2129; --bar:#7578f0; --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.4);
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
-      --dot-a:#e85570; --dot-p:#c2882f; --danger:#ef5f56;
+      --dot-a:#e85570; --dot-p:#c2882f; --danger:#ef5f56; --fri:#3bb6a4;
       --gold:#c2882f; --up:#1f9e5c; --down:#ea5765;
     }
   }
@@ -301,14 +301,14 @@
     border:1px solid var(--line); padding:13px 15px; flex:0 0 auto;
   }
   .tabbar{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(5,1fr);
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr);
     background:var(--card); border:1px solid var(--line); border-radius:18px;
     box-shadow:var(--shadow); overflow:hidden;
   }
   .tabbar button{
     border:0; background:transparent; cursor:pointer; font:inherit;
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    padding:9px 0 8px; color:var(--ink-2); font-size:10px; font-weight:600;
+    padding:8px 0 7px; color:var(--ink-2); font-size:9px; font-weight:600; letter-spacing:-.1px;
     transition:color .15s, background .15s;
   }
   .tabbar button.on{color:var(--accent); background:var(--accent-soft)}
@@ -457,7 +457,9 @@
     flex:0 0 92px; font-size:12px; font-weight:600; color:var(--ink-2);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .hgrid-cells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
+  .hgrid-cells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:2px}
+  .hslot{display:flex; align-items:center; justify-content:center; padding:3px 0; border-radius:5px}
+  .hslot.fri{background:color-mix(in srgb, var(--fri) 20%, transparent)}
   .hcell{
     width:15px; height:15px; border-radius:50%; background:var(--tap); border:1px solid var(--line);
     overflow:hidden; position:relative;
@@ -473,15 +475,26 @@
   .hgrp-label:first-child{margin-top:0}
   .hgrid-days{display:flex; align-items:center; gap:4px; margin-top:2px}
   .hgrid-days .hgrid-name{visibility:hidden}
-  .hgrid-daycells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; justify-items:center}
+  .hgrid-daycells{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:2px}
   .hgrid-daycells span{font-size:10.5px; font-weight:700; color:var(--ink-2)}
   .hcell.sel{box-shadow:0 0 0 2px var(--accent)}
   .hday{
     border:0; background:transparent; color:var(--ink-2); font:inherit; font-size:10.5px;
     font-weight:700; cursor:pointer; width:19px; height:19px; border-radius:50%; padding:0;
   }
+  .hday.fri{color:var(--fri); font-weight:800}
   .hday.sel{background:var(--accent); color:#fff}
   .hday:active{background:var(--tap)}
+  /* Friday marker on the day bar */
+  .fri-tag{
+    display:none; align-items:center; gap:4px; font-size:10.5px; font-weight:800;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--fri);
+    background:color-mix(in srgb, var(--fri) 15%, transparent);
+    border-radius:999px; padding:3px 9px; flex:0 0 auto;
+  }
+  .fri-tag.show{display:inline-flex}
+  #rtDayBar.isfri{border-color:var(--fri); background:color-mix(in srgb, var(--fri) 7%, var(--card))}
+  #rtDayBar.isfri .rt-daylabel{color:var(--fri)}
   .hbars{display:grid; align-items:end; gap:2px; height:76px}
   .hbar{background:var(--bar); border-radius:3px 3px 0 0; min-height:2px}
   .hbar.zero{background:var(--line)}
@@ -543,6 +556,40 @@
     font-size:12px; color:var(--ink-2); font-weight:600; margin-top:7px;
   }
   .gap-avg b{font-size:14px; color:var(--ink); font-weight:800}
+
+  /* ---------- library tab ---------- */
+  #libList{display:flex; flex-direction:column; gap:10px}
+  #libList:empty{display:none}
+  .lib-item{
+    display:flex; align-items:center; gap:10px; background:var(--tap); border-radius:12px;
+    padding:9px 10px; cursor:pointer;
+  }
+  .lib-ico{
+    flex:0 0 auto; width:32px; height:32px; border-radius:9px; display:flex;
+    align-items:center; justify-content:center; color:#fff;
+  }
+  .lib-ico.video{background:#c0392b}
+  .lib-ico.audio{background:#6d5ae0}
+  .lib-ico.link{background:var(--ink-2)}
+  .lib-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .lib-title{
+    display:block; font-size:14.5px; font-weight:600; line-height:1.25;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .lib-host{display:block; font-size:11px; color:var(--ink-2); font-weight:600;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lib-add{display:flex; flex-direction:column; gap:7px; margin-top:9px}
+  .lib-add input{
+    border:1.5px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:11px; padding:10px 12px; font:inherit; font-size:14px; width:100%;
+  }
+  .lib-add input:focus{outline:none; border-color:var(--accent)}
+  .lib-add-row{display:flex; gap:7px}
+  .lib-add-row input{flex:1; min-width:0}
+  .lib-add-row button{
+    border:0; background:var(--accent); color:#fff; border-radius:11px; padding:0 16px;
+    font:inherit; font-size:14px; font-weight:700; cursor:pointer; flex:0 0 auto;
+  }
 
   /* ---------- gold tab ---------- */
   .gold-card{
@@ -627,7 +674,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v7.2</div>
+      <div class="ver" id="appVer">v7.3</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -702,6 +749,7 @@
       <div class="rt-daynav">
         <button class="nav-arrow" id="rtPrevDay" aria-label="Previous day"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
         <div class="rt-daylabel" id="rtDayLabel">Today</div>
+        <span class="fri-tag" id="rtFriTag">Friday</span>
         <button class="nav-arrow" id="rtNextDay" aria-label="Next day"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
         <button class="rt-back" id="rtBackToday">Today</button>
       </div>
@@ -828,6 +876,16 @@
     </section>
   </main>
 
+  <main class="page hide" id="page-lib">
+    <div id="libList"></div>
+    <section class="card">
+      <div class="todo-add" style="margin-top:0">
+        <input type="text" id="libCatInput" placeholder="New shelf (e.g. Talks, Music)" maxlength="24">
+        <button id="libCatAdd">Add</button>
+      </div>
+    </section>
+  </main>
+
   <nav class="tabbar">
     <button id="tab-meds" class="on" aria-label="Medicines">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
@@ -848,6 +906,10 @@
     <button id="tab-gold" aria-label="Gold rate">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
       Gold
+    </button>
+    <button id="tab-lib" aria-label="Library">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m10 7 5 3-5 3z" fill="currentColor" stroke="none"/></svg>
+      Library
     </button>
   </nav>
 
@@ -921,7 +983,7 @@
     'todos-v1', 'todo-cats-v1',
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
-    'gold-hist-v1', 'gold-state-v1',
+    'gold-hist-v1', 'gold-state-v1', 'lib-items-v1', 'lib-shelves-v1',
     'settings-v1', 'active-tab-v1'
   ];
   var BACKUP_CACHE = 'daylog-backup', lastMirror = '';
@@ -1315,6 +1377,7 @@
     if(typeof renderTodo === 'function') renderTodo();
     if(typeof renderRoutine === 'function') renderRoutine();
     if(typeof renderDot === 'function') renderDot();
+    if(typeof renderLib === 'function') renderLib();
     if(sheetKey) renderSheet();
   }
 
@@ -1494,7 +1557,7 @@
 
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
-  var TABS = ['meds','todo','routine','dot','gold'];
+  var TABS = ['meds','todo','routine','dot','gold','lib'];
   function showTab(name){
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
@@ -1703,7 +1766,10 @@
       today ? 'Today' : DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d);
     document.getElementById('rtNextDay').disabled = today;
     document.getElementById('rtBackToday').classList.toggle('show', !today);
-    document.getElementById('rtDayBar').classList.toggle('past', !today);
+    var isFriday = d.getDay() === 5;
+    document.getElementById('rtFriTag').classList.toggle('show', isFriday);
+    document.getElementById('rtDayBar').classList.toggle('past', !today && !isFriday);
+    document.getElementById('rtDayBar').classList.toggle('isfri', isFriday);
   }
 
   function renderRoutine(){
@@ -1768,11 +1834,12 @@
     if(routines.length === 0){ box.innerHTML = '<div class="empty-note">History appears once you add routines</div>'; return; }
     if(histRange === 7){
       /* dot grid: one row per routine, 7 day columns (oldest → today) */
-      var keys = [], labels = [];
+      var keys = [], labels = [], isFri = [];
       var DL = ['S','M','T','W','T','F','S'];
       for(var o = 6; o >= 0; o--){
         var d = new Date(); d.setDate(d.getDate() - o);
         keys.push(keyOf(d)); labels.push(o === 0 ? '·' : DL[d.getDay()]);
+        isFri.push(d.getDay() === 5);
       }
       var multi = rtGroups.filter(function(g){
         return routines.some(function(r){ return r.g === g; });
@@ -1782,10 +1849,11 @@
         if(items.length === 0) return '';
         var head = multi ? '<div class="hgrp-label">'+esc(g)+'</div>' : '';
         return head + items.map(function(r){
-          var cells = keys.map(function(k){
+          var cells = keys.map(function(k, ci){
             var st = (rtLog[k] || {})[r.id] || 0;
-            return '<span class="hcell'+(st === 2 ? ' on' : st === 1 ? ' half' : '')+
-              (k === rtDate ? ' sel' : '')+'"></span>';
+            return '<span class="hslot'+(isFri[ci] ? ' fri' : '')+'">' +
+              '<span class="hcell'+(st === 2 ? ' on' : st === 1 ? ' half' : '')+
+              (k === rtDate ? ' sel' : '')+'"></span></span>';
           }).join('');
           return '<div class="hgrid-row"><span class="hgrid-name">'+esc(r.name)+'</span>' +
             '<div class="hgrid-cells">'+cells+'</div></div>';
@@ -1793,8 +1861,10 @@
       }).join('');
       var dayRow = '<div class="hgrid-days"><span class="hgrid-name">x</span>' +
         '<div class="hgrid-daycells">'+labels.map(function(l, i){
-          return '<button class="hday'+(keys[i] === rtDate ? ' sel' : '')+'" data-k="'+keys[i]+
-            '" aria-label="Edit '+keys[i]+'">'+l+'</button>';
+          return '<span class="hslot'+(isFri[i] ? ' fri' : '')+'">' +
+            '<button class="hday'+(keys[i] === rtDate ? ' sel' : '')+(isFri[i] ? ' fri' : '')+
+            '" data-k="'+keys[i]+'" aria-label="Edit '+keys[i]+(isFri[i] ? ', Friday' : '')+'">'+l+
+            '</button></span>';
         }).join('')+'</div></div>';
       box.innerHTML = '<div class="hgrid">'+rows+dayRow+'</div>' +
         '<div class="hist-note">Full dot = done · half dot = partly done · tap a day letter to edit that day</div>';
@@ -2178,6 +2248,165 @@
       if(Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) shiftDotMonth(dx < 0 ? 1 : -1);
     }, {passive:true});
   })();
+
+  /* ==================== LIBRARY ====================
+     Saved links — audio, video, anything — kept on shelves. Priority
+     items float to the top of their shelf; the arrows order the rest. */
+  var LIB_KEY = 'lib-items-v1', LIBC_KEY = 'lib-shelves-v1';
+  var memLib = null, memLibC = null;
+  function saveLib(){ memLib = libItems; try{ localStorage.setItem(LIB_KEY, JSON.stringify(libItems)); }catch(e){} }
+  function saveLibC(){ memLibC = libShelves; try{ localStorage.setItem(LIBC_KEY, JSON.stringify(libShelves)); }catch(e){} }
+  var libItems = loadJSON(LIB_KEY, [], memLib);        // [{id, s, title, url, pri}]
+  var libShelves = loadJSON(LIBC_KEY, ['Saved'], memLibC);
+  var libReorder = null;
+
+  var PLAY_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  var NOTE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+  var LINK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.8-1.7"/></svg>';
+
+  function libKind(url){
+    var u = String(url).toLowerCase();
+    if(/youtube\.com|youtu\.be|vimeo\.com|dailymotion|\.mp4|\.mkv|\.webm|\.mov/.test(u)) return 'video';
+    if(/spotify|soundcloud|anchor\.fm|podcast|apple\.com\/.*podcast|\.mp3|\.m4a|\.wav|\.ogg|\.aac/.test(u)) return 'audio';
+    return 'link';
+  }
+  function libHost(url){
+    try{ return new URL(url).hostname.replace(/^www\./, ''); }
+    catch(e){ return url.replace(/^https?:\/\//, '').split('/')[0]; }
+  }
+  function normUrl(u){
+    u = u.trim();
+    if(!u) return '';
+    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  function renderLib(){
+    var box = document.getElementById('libList');
+    box.innerHTML = libShelves.map(function(s){
+      var items = libItems.filter(function(it){ return it.s === s; });
+      items.sort(function(a, b){ return a.pri === b.pri ? 0 : a.pri ? -1 : 1; });
+      var reord = libReorder === s;
+      var rows = items.length === 0
+        ? '<div class="empty-note">Nothing here yet — paste a link below</div>'
+        : items.map(function(it, i){
+            var k = libKind(it.url);
+            return '<li class="lib-item" data-id="'+it.id+'">' +
+              '<span class="lib-ico '+k+'">'+(k === 'video' ? PLAY_SVG : k === 'audio' ? NOTE_SVG : LINK_SVG)+'</span>' +
+              '<span class="lib-main"><span class="lib-title">'+esc(it.title)+'</span>' +
+              '<span class="lib-host">'+esc(libHost(it.url))+'</span></span>' +
+              (reord
+                ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
+                  '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
+                : '<button class="todo-star'+(it.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
+                  '<button class="todo-del'+(isArmed('lib:'+it.id) ? ' armed' : '')+'" aria-label="'+
+                  (isArmed('lib:'+it.id) ? 'Tap again to delete' : 'Delete')+'">'+X_SVG+'</button>') +
+              '</li>';
+          }).join('');
+      return '<section class="card" data-shelf="'+esc(s)+'">' +
+        '<div class="cat-head">' +
+          '<div class="cat-name">'+esc(s)+' <span class="cat-count">'+items.length+'</span></div>' +
+          '<div class="grp-actions">' +
+            '<button class="grp-btn lib-reord'+(reord ? ' on' : '')+'" aria-label="Reorder">'+SORT_SVG+'</button>' +
+            '<button class="grp-btn lib-sdel'+(isArmed('shelf:'+s) ? ' armed' : '')+'" aria-label="'+
+              (isArmed('shelf:'+s) ? 'Tap again to delete' : 'Delete shelf')+'">'+X_SVG+'</button>' +
+          '</div></div>' +
+        (reord ? '<div class="reorder-hint">Reordering — tap ⇅ again when finished</div>' : '') +
+        '<ul class="todo-list">'+rows+'</ul>' +
+        '<div class="lib-add">' +
+          '<input type="text" class="lib-t" placeholder="Name it (e.g. Friday talk)" maxlength="80">' +
+          '<div class="lib-add-row"><input type="url" class="lib-u" inputmode="url" placeholder="Paste the link"><button>Add</button></div>' +
+        '</div></section>';
+    }).join('');
+  }
+
+  function moveLib(id, dir){
+    var idx = -1, i;
+    for(i = 0; i < libItems.length; i++) if(libItems[i].id === id){ idx = i; break; }
+    if(idx < 0) return;
+    var s = libItems[idx].s, pri = libItems[idx].pri;
+    var j = idx + dir;
+    /* stay within the same shelf and the same priority band, since priority sorts first */
+    while(j >= 0 && j < libItems.length && (libItems[j].s !== s || !!libItems[j].pri !== !!pri)) j += dir;
+    if(j < 0 || j >= libItems.length) return;
+    var t = libItems[idx]; libItems[idx] = libItems[j]; libItems[j] = t;
+    saveLib(); renderLib();
+    if(navigator.vibrate) navigator.vibrate(8);
+  }
+
+  document.getElementById('libCatAdd').addEventListener('click', addShelf);
+  document.getElementById('libCatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addShelf(); });
+  function addShelf(){
+    var inp = document.getElementById('libCatInput');
+    var v = inp.value.trim();
+    if(!v) return;
+    if(libShelves.indexOf(v) < 0){ libShelves.push(v); saveLibC(); }
+    inp.value = ''; renderLib();
+  }
+
+  document.getElementById('libList').addEventListener('click', function(e){
+    var card = e.target.closest('[data-shelf]');
+    if(!card) return;
+    var s = card.getAttribute('data-shelf');
+
+    if(e.target.closest('.lib-add-row button')){
+      var tEl = card.querySelector('.lib-t'), uEl = card.querySelector('.lib-u');
+      var url = normUrl(uEl.value);
+      if(!url){ toast('Paste a link first'); return; }
+      var title = tEl.value.trim() || libHost(url);
+      libItems.push({ id:'l' + Date.now() + Math.floor(Math.random()*1000), s:s, title:title, url:url, pri:false });
+      saveLib(); tEl.value = ''; uEl.value = ''; renderLib();
+      toast('Saved to ' + s);
+      return;
+    }
+    if(e.target.closest('.lib-reord')){
+      libReorder = libReorder === s ? null : s;
+      disarm(false); renderLib();
+      return;
+    }
+    if(e.target.closest('.lib-sdel')){
+      if(libItems.some(function(it){ return it.s === s; })){ disarm(); toast('Empty the shelf first'); return; }
+      if(libShelves.length === 1){ disarm(); toast('Keep at least one shelf'); return; }
+      if(!confirmDelete('shelf:' + s, 'this shelf')) return;
+      libShelves = libShelves.filter(function(x){ return x !== s; });
+      if(libReorder === s) libReorder = null;
+      saveLibC(); renderLib();
+      return;
+    }
+
+    var row = e.target.closest('.lib-item');
+    if(!row) return;
+    var id = row.getAttribute('data-id');
+    var item = null;
+    for(var i = 0; i < libItems.length; i++) if(libItems[i].id === id){ item = libItems[i]; break; }
+    if(!item) return;
+
+    var mv = e.target.closest('.rt-move');
+    if(mv){ moveLib(id, +mv.getAttribute('data-dir')); return; }
+    if(e.target.closest('.todo-del')){
+      if(!confirmDelete('lib:' + id, 'this link')) return;
+      libItems = libItems.filter(function(it){ return it.id !== id; });
+      saveLib(); renderLib();
+      return;
+    }
+    disarm(false);
+    if(e.target.closest('.todo-star')){
+      item.pri = !item.pri; saveLib(); renderLib();
+      return;
+    }
+    if(libReorder === s){ renderLib(); return; }
+    renderLib();
+    window.open(item.url, '_blank', 'noopener');
+  });
+  document.getElementById('libList').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var card = e.target.closest('[data-shelf]');
+    if(card && (e.target.matches('.lib-t') || e.target.matches('.lib-u'))){
+      card.querySelector('.lib-add-row button').click();
+    }
+  });
+
+  renderLib();
 
   /* ==================== GOLD ==================== */
   /* Ten days of 24K rates (AED per gram, Gulf News / Dubai Gold & Jewellery
