@@ -1,6 +1,6 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v16';
+var CACHE = 'daylog-v17';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -22,6 +22,27 @@ self.addEventListener('fetch', function(e){
   if(e.request.method !== 'GET') return;
 
   if(/dubaicityofgold\.com|allorigins|corsproxy|r\.jina\.ai/.test(e.request.url)) return;
+
+  /* The page itself is fetched from the network first, so a new version shows
+     up the moment you open the app rather than one launch later. The cached
+     copy is still there for when you are offline. */
+  var url = e.request.url;
+  if(e.request.mode === 'navigate' || /\/index\.html(\?|$)/.test(url) || /\/med-log\/(\?|$)/.test(url)){
+    e.respondWith(
+      fetch(e.request).then(function(res){
+        if(res && res.ok){
+          var copy = res.clone();
+          caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
+        }
+        return res;
+      }).catch(function(){
+        return caches.match(e.request, { ignoreSearch: true }).then(function(hit){
+          return hit || caches.match('./index.html', { ignoreSearch: true });
+        });
+      })
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(function(hit){
