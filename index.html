@@ -429,14 +429,33 @@
     display:flex; border-radius:8px;
   }
   .rt-hist:active{background:var(--line); color:var(--accent)}
+  /* one week per row, so a column is always the same weekday */
+  .cal-dow{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:5px}
+  .cal-dow span{text-align:center; font-size:10px; font-weight:700; color:var(--ink-2)}
   .icell-grid{
-    display:grid; grid-template-columns:repeat(15,1fr); gap:3px; margin-top:12px;
-    max-height:34vh; overflow-y:auto;
+    display:grid; grid-template-columns:repeat(7,1fr); gap:4px;
+    max-height:40vh; overflow-y:auto;
   }
   .icell{
-    width:100%; aspect-ratio:1; border-radius:3px; background:var(--tap);
+    width:100%; aspect-ratio:1; border-radius:6px; background:var(--tap);
     border:1px solid var(--line); position:relative; overflow:hidden;
   }
+  .icell.pad{background:transparent; border-color:transparent}
+  /* the 1W view */
+  .wk-row{display:grid; grid-template-columns:repeat(7,1fr); gap:5px}
+  .wk-day{display:flex; flex-direction:column; align-items:center; gap:4px}
+  .wk-lab{font-size:10px; font-weight:700; color:var(--ink-2); letter-spacing:.02em}
+  .wk-box{
+    width:100%; aspect-ratio:1; border-radius:10px; background:var(--tap);
+    border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center;
+    color:#fff; position:relative; overflow:hidden;
+  }
+  .wk-box.done{background:var(--accent); border-color:var(--accent)}
+  .wk-box.half{border-color:var(--accent)}
+  .wk-box.half i{position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent)}
+  .wk-num{font-size:11px; font-weight:600; color:var(--ink-2)}
+  .wk-day.today .wk-num{color:var(--accent); font-weight:800}
+  .wk-day.today .wk-box{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent)}
   .icell.on{background:var(--accent); border-color:var(--accent)}
   .icell.half::after{content:''; position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent)}
   .icell.half{border-color:var(--accent)}
@@ -635,6 +654,20 @@
     font:inherit; font-size:14px; font-weight:700; cursor:pointer; flex:0 0 auto;
   }
 
+  .backup-nag{
+    display:none; align-items:center; gap:9px; flex:0 0 auto;
+    background:color-mix(in srgb, var(--dot-p) 16%, var(--card));
+    border:1px solid color-mix(in srgb, var(--dot-p) 40%, transparent);
+    border-radius:14px; padding:9px 11px; font-size:12px; line-height:1.4; color:var(--ink);
+  }
+  .backup-nag.show{display:flex}
+  .backup-nag span{flex:1; min-width:0}
+  .backup-nag button{
+    border:0; background:var(--accent); color:#fff; font:inherit; font-size:12px; font-weight:700;
+    border-radius:9px; padding:7px 11px; cursor:pointer; flex:0 0 auto;
+  }
+  .backup-nag .nag-x{background:transparent; color:var(--ink-2); padding:6px 4px; font-size:13px}
+
   /* ---------- news tab ---------- */
   .news-top{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
   .news-src{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
@@ -774,7 +807,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v8.1</div>
+      <div class="ver" id="appVer">v8.2</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -987,6 +1020,12 @@
     </section>
   </main>
 
+  <div class="backup-nag" id="backupNag">
+    <span>No backup saved for a while — a file copy survives anything.</span>
+    <button id="nagBackup">Back up</button>
+    <button class="nag-x" id="nagHide" aria-label="Not now">✕</button>
+  </div>
+
   <main class="page hide" id="page-news">
     <section class="card" style="padding:11px 14px">
       <div class="news-top">
@@ -997,9 +1036,16 @@
         <span class="gold-status" id="newsStatus"></span>
       </div>
       <div class="news-src" id="newsSrcList"></div>
-      <div class="news-hint">
-        Fetched each morning from the list in your repo ·
-        <a href="#" id="newsEditSrc">change who you follow</a>
+      <div class="lib-add" style="margin-top:9px">
+        <div class="lib-add-row">
+          <input type="text" id="newsInput" placeholder="YouTube channel link or @handle, or a name">
+          <button id="newsAdd">Add</button>
+        </div>
+      </div>
+      <div class="news-hint" id="newsHint"></div>
+      <div class="set-pair" id="newsSyncRow" style="display:none">
+        <button class="set-test" id="newsSync" style="margin-top:0">Send list to repo</button>
+        <button class="set-test" id="newsCopy" style="margin-top:0">Copy list</button>
       </div>
     </section>
     <div id="newsFeed"></div>
@@ -1063,15 +1109,15 @@
   <h2 id="rtItemTitle"></h2>
   <p class="sub" id="rtItemSub"></p>
   <div class="range-row" id="rtItemRange" style="margin-top:12px">
-    <button data-r="14">2W</button>
-    <button data-r="30" class="on">1M</button>
+    <button data-r="7" class="on">1W</button>
+    <button data-r="30">1M</button>
     <button data-r="90">3M</button>
     <button data-r="180">6M</button>
     <button data-r="365">1Y</button>
   </div>
-  <div class="icell-grid" id="rtItemGrid"></div>
+  <div class="gstats" id="rtItemStats" style="margin:4px 0 14px"></div>
+  <div id="rtItemGrid"></div>
   <div class="hist-note" id="rtItemNote"></div>
-  <div class="gstats" id="rtItemStats" style="margin-top:12px"></div>
 </div>
 
 <div class="sheet" id="dotSheet" role="dialog" aria-modal="true">
@@ -1122,6 +1168,15 @@
   </div>
   <button class="set-test" id="btnRecover">Recover from the app's own backup</button>
   <div class="set-note" id="recoverNote"></div>
+
+  <div class="set-row" style="border-top:1px solid var(--line); margin-top:12px">
+    <div><div class="set-name">GitHub token</div><div class="set-sub">Lets the News tab send your source list to the repo</div></div>
+  </div>
+  <div class="lib-add-row" style="margin-top:9px">
+    <input type="password" id="ghTokInput" placeholder="github_pat_…" autocomplete="off">
+    <button id="ghTokSave">Save</button>
+  </div>
+  <p class="set-note">Optional. Only needs <b>Contents: read and write</b> on this one repo. It is stored on this phone and used for nothing else — leave it blank and the News tab will copy the list for you to paste instead.</p>
   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
   <div class="sheet-done"><button id="setDone">Done</button></div>
@@ -1145,7 +1200,7 @@
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
     'gold-hist-v1', 'gold-state-v1', 'lib-items-v1', 'lib-shelves-v1',
-    'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'news-sources-v1', 'news-cache-v1'
+    'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'news-sources-v1', 'news-cache-v1', 'news-seen-v1', 'last-backup-v1'
   ];
   /* Keys that hold things you actually typed. The backup is scored on these,
      so a wiped app can never overwrite a good backup with an empty one. */
@@ -2220,7 +2275,7 @@
     if(navigator.vibrate) navigator.vibrate(next === 2 ? 14 : 8);
   });
   /* ---- one routine's own history ---- */
-  var rtItemId = null, rtItemRange = 30;
+  var rtItemId = null, rtItemRange = 7;
   function openRtItem(id){
     rtItemId = id;
     renderRtItem();
@@ -2265,13 +2320,36 @@
       '<div class="gstat"><b>'+best+'</b><span>best</span></div>' +
       '<div class="gstat"><b>'+done+'</b><span>days</span></div>';
 
-    var cells = days.map(function(x){
+    var grid = document.getElementById('rtItemGrid');
+    var note = document.getElementById('rtItemNote');
+
+    if(rtItemRange <= 7){
+      /* a week reads best as one row of named days */
+      grid.innerHTML = '<div class="wk-row">' + days.map(function(x){
+        var cls = x.st === 2 ? 'done' : x.st === 1 ? 'half' : 'none';
+        var mark = x.st === 2 ? CHECK_SVG : x.st === 1 ? '<i></i>' : '';
+        return '<div class="wk-day'+(x.k === todayKey() ? ' today' : '')+'">' +
+          '<span class="wk-lab">'+DAYS[x.d.getDay()].slice(0,3)+'</span>' +
+          '<span class="wk-box '+cls+'">'+mark+'</span>' +
+          '<span class="wk-num">'+x.d.getDate()+'</span></div>';
+      }).join('') + '</div>';
+      note.textContent = 'Tick = done · half bar = partly done';
+      return;
+    }
+
+    /* longer ranges: calendar-style weeks, Monday down the left */
+    var pre = (days[0].d.getDay() + 6) % 7;                 /* pad to a Monday */
+    var cells = '';
+    for(var b = 0; b < pre; b++) cells += '<span class="icell pad"></span>';
+    days.forEach(function(x){
       var cls = x.st === 2 ? ' on' : x.st === 1 ? ' half' : '';
-      return '<span class="icell'+cls+(x.k === todayKey() ? ' today' : '')+'" title="'+x.k+'"></span>';
-    }).join('');
-    document.getElementById('rtItemGrid').innerHTML = cells;
-    document.getElementById('rtItemNote').textContent =
-      fmtShort(days[0].d) + ' → today · full = done, half = partly';
+      var t = x.d.getDate() + ' ' + MONTHS[x.d.getMonth()].slice(0,3);
+      cells += '<span class="icell'+cls+(x.k === todayKey() ? ' today' : '')+'" title="'+t+'"></span>';
+    });
+    grid.innerHTML =
+      '<div class="cal-dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>' +
+      '<div class="icell-grid">'+cells+'</div>';
+    note.textContent = fmtShort(days[0].d) + ' → today · filled = done, half-filled = partly';
     var bs = document.getElementById('rtItemRange').querySelectorAll('button');
     for(i = 0; i < bs.length; i++) bs[i].classList.toggle('on', +bs[i].getAttribute('data-r') === rtItemRange);
   }
@@ -2862,7 +2940,13 @@
      and no key, so it just works; the last copy is cached for offline. The
      sources live in news-sources.json, which the job reads. */
   var NEWSC_KEY = 'news-cache-v1', NEWSSEEN_KEY = 'news-seen-v1';
-  var memNewsC = null;
+  var NEWSSRC_KEY = 'news-sources-v1', GHTOK_KEY = 'gh-token-v1';
+  var memNewsC = null, memNewsS = null;
+  /* Your own list, kept on the phone. The morning job reads the repo's copy,
+     so "Send list to repo" pushes this list there in one tap. */
+  var newsWanted = loadJSON(NEWSSRC_KEY, null, memNewsS);
+  function saveWanted(){ memNewsS = newsWanted; try{ localStorage.setItem(NEWSSRC_KEY, JSON.stringify(newsWanted)); }catch(e){} }
+  function ghToken(){ try{ return localStorage.getItem(GHTOK_KEY) || ''; }catch(e){ return ''; } }
   function saveNewsCache(){ memNewsC = newsCache; try{ localStorage.setItem(NEWSC_KEY, JSON.stringify(newsCache)); }catch(e){} }
   var newsCache = loadJSON(NEWSC_KEY, { at:0, items:[], sources:[] }, memNewsC);
   var newsSeen = 0;
@@ -2943,18 +3027,97 @@
     return d + (d === 1 ? ' day ago' : ' days ago');
   }
 
+  /* the list the app shows: yours, annotated with how the last fetch went */
+  function newsList(){
+    if(!newsWanted){
+      /* first run — adopt whatever the repo already fetched */
+      newsWanted = (newsCache.sources || []).map(function(s){
+        return { kind: s.kind === 'name' ? 'name' : 'yt', label: s.label, q: s.label };
+      });
+      saveWanted();
+    }
+    return newsWanted;
+  }
+  function srcStatus(label){
+    var srcs = newsCache.sources || [];
+    for(var i = 0; i < srcs.length; i++) if(srcs[i].label === label) return srcs[i];
+    return null;
+  }
+  function wantedJSON(){
+    var list = newsList();
+    return JSON.stringify({
+      _comment: 'The News tab reads only what is listed here.',
+      youtube: list.filter(function(s){ return s.kind === 'yt'; })
+        .map(function(s){ return { name: s.label, url: s.q }; }),
+      names: list.filter(function(s){ return s.kind === 'name'; })
+        .map(function(s){ return s.q; })
+    }, null, 2) + '\n';
+  }
+  function newsDirty(){
+    var list = newsList(), srcs = newsCache.sources || [];
+    if(list.length !== srcs.length) return true;
+    for(var i = 0; i < list.length; i++) if(!srcStatus(list[i].label)) return true;
+    return false;
+  }
+
   function renderNewsSources(){
     var box = document.getElementById('newsSrcList');
-    var srcs = newsCache.sources || [];
-    if(!srcs.length){
-      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">No sources set yet</div>';
+    var list = newsList();
+    if(!list.length){
+      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">No sources yet — add one below</div>';
+    }else{
+      box.innerHTML = list.map(function(s, i){
+        var st = srcStatus(s.label);
+        var note = !st ? ' <em>not fetched yet</em>' : (st.ok ? '' : ' <em>no posts</em>');
+        return '<span class="news-chip'+(st && st.ok ? '' : ' dim')+(isArmed('news:'+i) ? ' armed' : '')+'" data-i="'+i+'">' +
+          '<i class="'+(s.kind === 'name' ? 'nm' : 'yt')+'"></i>'+esc(s.label)+note+
+          '<button aria-label="Remove">'+X_SVG+'</button></span>';
+      }).join('');
+    }
+    var dirty = newsDirty();
+    document.getElementById('newsSyncRow').style.display = dirty ? 'flex' : 'none';
+    document.getElementById('newsHint').innerHTML = dirty
+      ? 'This list differs from the one your morning job uses — send it over so tomorrow’s fetch includes it.'
+      : 'Fetched each morning from the list in your repo · <a href="#" id="newsEditSrc">open the file</a>';
+    var link = document.getElementById('newsEditSrc');
+    if(link) link.addEventListener('click', function(e){
+      e.preventDefault(); window.open(REPO_SOURCES_URL, '_blank', 'noopener');
+    });
+  }
+
+  /* commit news-sources.json straight to the repo, if a token is saved */
+  function syncNewsSources(){
+    var tok = ghToken();
+    var status = document.getElementById('newsStatus');
+    if(!tok){
+      toast('Add a GitHub token in Settings first');
+      document.getElementById('newsCopy').click();
       return;
     }
-    box.innerHTML = srcs.map(function(s){
-      return '<span class="news-chip'+(s.ok ? '' : ' dim')+'">' +
-        '<i class="'+(s.kind === 'name' ? 'nm' : 'yt')+'"></i>'+esc(s.label)+
-        (s.ok ? '' : ' <em>no posts</em>')+'</span>';
-    }).join('');
+    status.textContent = 'Sending…';
+    var api = 'https://api.github.com/repos/subneter/med-log/contents/news-sources.json';
+    var hdr = { 'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json' };
+    fetch(api, { headers: hdr, cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .then(function(cur){
+        var body = {
+          message: 'news: update sources from the app',
+          content: btoa(unescape(encodeURIComponent(wantedJSON()))),
+          branch: 'main'
+        };
+        if(cur && cur.sha) body.sha = cur.sha;
+        return fetch(api, { method:'PUT', headers: hdr, body: JSON.stringify(body) });
+      })
+      .then(function(r){
+        if(!r.ok) throw 0;
+        status.textContent = 'Sent — the morning job will use it';
+        toast('Sources sent to your repo');
+        renderNews();
+      })
+      .catch(function(){
+        status.textContent = 'Couldn’t send — check the token';
+        toast('Sending failed');
+      });
   }
 
   function renderNews(){
@@ -2997,9 +3160,42 @@
   }
 
   document.getElementById('newsRefresh').addEventListener('click', function(){ fetchNews(true); });
-  document.getElementById('newsEditSrc').addEventListener('click', function(e){
-    e.preventDefault();
-    window.open(REPO_SOURCES_URL, '_blank', 'noopener');
+  document.getElementById('newsSync').addEventListener('click', syncNewsSources);
+  document.getElementById('newsCopy').addEventListener('click', function(){
+    var txt = wantedJSON();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        toast('Copied — paste it into news-sources.json');
+        window.open(REPO_SOURCES_URL, '_blank', 'noopener');
+      }).catch(function(){ toast('Couldn’t copy'); });
+    }else{ toast('Couldn’t copy on this browser'); }
+  });
+
+  document.getElementById('newsAdd').addEventListener('click', addNewsWanted);
+  document.getElementById('newsInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addNewsWanted(); });
+  function addNewsWanted(){
+    var inp = document.getElementById('newsInput');
+    var v = inp.value.trim();
+    if(!v) return;
+    var list = newsList(), item;
+    if(/youtube\.com|youtu\.be/i.test(v) || v.charAt(0) === '@'){
+      var nice = (v.match(/@([\w.\-]+)/) || [])[1] ||
+                 (v.match(/channel\/(UC[\w-]{22})/) || [])[1] || 'YouTube channel';
+      item = { kind:'yt', label: nice.charAt(0) === 'U' ? nice : '@' + nice, q: v };
+    }else{
+      item = { kind:'name', label: v, q: v };
+    }
+    for(var i = 0; i < list.length; i++) if(list[i].label === item.label){ toast('Already on the list'); return; }
+    list.push(item); saveWanted(); inp.value = '';
+    renderNews();
+    toast('Added — send the list to your repo when ready');
+  }
+  document.getElementById('newsSrcList').addEventListener('click', function(e){
+    var chip = e.target.closest('.news-chip');
+    if(!chip || !e.target.closest('button')) return;
+    var i = +chip.getAttribute('data-i');
+    if(!confirmDelete('news:' + i, 'this source')) return;
+    newsList().splice(i, 1); saveWanted(); renderNews();
   });
 
   renderNews();
@@ -3075,13 +3271,40 @@
   function money(n){
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+  /* One point per day. Days with no reading carry the previous day's rate
+     forward — markets are shut at weekends anyway — and are flagged so the
+     readout can say so, rather than the line skipping days. */
   function goldSeries(){
     if(!goldHist.length) return [];
     var h = goldHist.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-    if(!goldRange) return h;
-    var cut = keyOf(addDays(new Date(), -goldRange));
-    var out = h.filter(function(r){ return r.d >= cut; });
-    return out.length >= 2 ? out : h.slice(-Math.max(2, Math.min(h.length, goldRange)));
+    var have = {};
+    for(var i = 0; i < h.length; i++) have[h[i].d] = h[i].v;
+
+    var last = parseKey(h[h.length - 1].d);
+    var today = midnight();
+    var endD = last > today ? last : today;
+    var startD;
+    if(!goldRange){
+      startD = parseKey(h[0].d);
+    }else{
+      startD = addDays(endD, -(goldRange - 1));
+      var firstD = parseKey(h[0].d);
+      if(startD < firstD) startD = firstD;
+    }
+
+    var out = [], cur = null;
+    /* seed with the newest reading at or before the start */
+    for(i = 0; i < h.length; i++){
+      if(parseKey(h[i].d) <= startD) cur = h[i].v; else break;
+    }
+    var d = new Date(startD.getTime()), guard = 0;
+    while(d <= endD && guard++ < 1500){
+      var k = keyOf(d);
+      if(k in have){ cur = have[k]; out.push({ d:k, v:cur, real:true }); }
+      else if(cur !== null){ out.push({ d:k, v:cur, real:false }); }
+      d = addDays(d, 1);
+    }
+    return out.length >= 2 ? out : h.map(function(r){ return { d:r.d, v:r.v, real:true }; }).slice(-2);
   }
 
   function renderGoldHead(){
@@ -3207,7 +3430,7 @@
       cross.style.display = '';
       dot.setAttribute('cx', px); dot.setAttribute('cy', py);
       var dd = parseKey(s[i].d);
-      tip.textContent = money(s[i].v) + ' · ' + fmtShort(dd);
+      tip.textContent = money(s[i].v) + ' · ' + fmtShort(dd) + (s[i].real === false ? ' (carried)' : '');
       tip.style.left = (px / W * 100) + '%';
       tip.classList.add('on');
     }
@@ -3449,17 +3672,51 @@
   });
 
   /* backup to a file / restore from one */
+  /* nudge for a file backup — the only copy a site-data wipe can't touch */
+  var BK_KEY = 'last-backup-v1';
+  function lastBackup(){ try{ return +(localStorage.getItem(BK_KEY) || 0); }catch(e){ return 0; } }
+  function noteBackup(){
+    try{ localStorage.setItem(BK_KEY, String(Date.now())); }catch(e){}
+    paintNag();
+  }
+  function paintNag(){
+    var nag = document.getElementById('backupNag');
+    if(!nag) return;
+    var due = hasContent() && Date.now() - lastBackup() > 7 * 86400000;
+    var snoozed = false;
+    try{ snoozed = sessionStorage.getItem('nag-off') === '1'; }catch(e){}
+    nag.classList.toggle('show', due && !snoozed);
+  }
+  document.getElementById('nagBackup').addEventListener('click', function(){
+    document.getElementById('btnBackup').click();
+  });
+  document.getElementById('nagHide').addEventListener('click', function(){
+    try{ sessionStorage.setItem('nag-off', '1'); }catch(e){}
+    paintNag();
+  });
+
   document.getElementById('btnBackup').addEventListener('click', function(){
-    var payload = { app:'DayLog', version:'8.1', saved:new Date().toISOString(), data:snapshotData() };
+    var payload = { app:'DayLog', version:'8.2', saved:new Date().toISOString(), data:snapshotData() };
     var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' }));
     var a = document.createElement('a');
     a.href = url; a.download = 'daylog-backup-' + todayKey() + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    noteBackup();
     toast('Backup saved to your downloads');
   });
   document.getElementById('btnRestore').addEventListener('click', function(){
     document.getElementById('restoreFile').click();
+  });
+  document.getElementById('ghTokSave').addEventListener('click', function(){
+    var el = document.getElementById('ghTokInput');
+    var v = el.value.trim();
+    try{
+      if(v) localStorage.setItem(GHTOK_KEY, v); else localStorage.removeItem(GHTOK_KEY);
+    }catch(e){}
+    el.value = '';
+    toast(v ? 'Token saved on this phone' : 'Token cleared');
+    if(typeof renderNews === 'function') renderNews();
   });
   document.getElementById('setDone').addEventListener('click', function(){
     setSheet.classList.remove('open'); overlay.classList.remove('open');
@@ -3508,6 +3765,7 @@
   });
 
   applySettings();
+  paintNag();
   saveSettings();                    /* mirror current settings to the SW cache on every launch */
   if(settings.rem) registerPeriodic();
 
