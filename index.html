@@ -101,6 +101,12 @@
   .set-note{font-size:12px; color:var(--ink-2); line-height:1.45; margin:12px 0 0}
   .set-pair{display:flex; gap:9px; margin-top:10px}
   .set-pair .set-test{flex:1}
+  .tabtoggles{display:flex; flex-wrap:wrap; gap:7px; padding:11px 0 2px}
+  .tabtoggles button{
+    border:1.5px solid var(--line); background:var(--card); color:var(--ink-2);
+    border-radius:999px; padding:7px 13px; font:inherit; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .tabtoggles button.on{background:var(--accent); border-color:var(--accent); color:#fff}
 
   /* ---------- today card ---------- */
   .today-card{
@@ -258,8 +264,19 @@
     border-top:1px solid var(--line);
     padding:10px 20px calc(24px + env(safe-area-inset-bottom));
     transform:translateY(105%); transition:transform .28s cubic-bezier(.32,.72,.28,1);
+    max-height:86dvh; overflow-y:auto; overscroll-behavior:contain;
   }
   .sheet.open{transform:none}
+  .sheet-done{
+    position:sticky; bottom:-24px; margin:16px -20px calc(-24px - env(safe-area-inset-bottom));
+    padding:12px 20px calc(16px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, var(--card) 72%, transparent);
+    display:flex; justify-content:center;
+  }
+  .sheet-done button{
+    border:0; background:var(--tap); color:var(--ink); font:inherit; font-size:14.5px; font-weight:700;
+    border-radius:12px; padding:11px 30px; cursor:pointer;
+  }
   .grabber{width:38px; height:4px; border-radius:2px; background:var(--line); margin:4px auto 14px}
   .sheet h2{margin:0; font-size:20px; font-weight:700; letter-spacing:-.3px}
   .sheet .sub{margin:4px 0 0; font-size:14.5px; color:var(--ink-2)}
@@ -312,6 +329,7 @@
     transition:color .15s, background .15s;
   }
   .tabbar button.on{color:var(--accent); background:var(--accent-soft)}
+  .tabbar button.tab-off{display:none}
   .tabbar button:active{filter:brightness(.95)}
 
   /* ---------- to-do tab ---------- */
@@ -406,6 +424,23 @@
     background:var(--accent); border-radius:999px; padding:3px 8px; letter-spacing:.01em;
   }
   .rt-prog{font-size:12.5px; font-weight:600; color:var(--ink-2)}
+  .rt-hist{
+    border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2);
+    display:flex; border-radius:8px;
+  }
+  .rt-hist:active{background:var(--line); color:var(--accent)}
+  .icell-grid{
+    display:grid; grid-template-columns:repeat(15,1fr); gap:3px; margin-top:12px;
+    max-height:34vh; overflow-y:auto;
+  }
+  .icell{
+    width:100%; aspect-ratio:1; border-radius:3px; background:var(--tap);
+    border:1px solid var(--line); position:relative; overflow:hidden;
+  }
+  .icell.on{background:var(--accent); border-color:var(--accent)}
+  .icell.half::after{content:''; position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent)}
+  .icell.half{border-color:var(--accent)}
+  .icell.today{box-shadow:0 0 0 2px var(--ink-2)}
   .rt-move{
     border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2);
     display:flex; border-radius:8px;
@@ -523,12 +558,17 @@
   .day.d-pred .num{
     border:2px dashed var(--dot-p); color:var(--ink); font-weight:800; background:transparent;
   }
+  .day.d-soon{background:color-mix(in srgb, var(--dot-p) 7%, transparent)}
+  .day.d-end .num{box-shadow:inset 0 0 0 2px var(--dot-a); border-radius:50%}
+  .dot-clear{display:none}
+  .dot-clear.show{display:block}
   .dot-legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:9px 2px 1px}
   .dot-key{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--ink-2)}
   .dot-key i{width:14px; height:14px; border-radius:50%; display:block; flex:0 0 auto}
   .dot-key i.k-log{background:var(--dot-a)}
   .dot-key i.k-logspan{background:color-mix(in srgb, var(--dot-a) 30%, transparent); border:1px solid var(--dot-a)}
   .dot-key i.k-pred{border:2px dashed var(--dot-p)}
+  .dot-key i.k-soon{background:color-mix(in srgb, var(--dot-p) 22%, transparent); border:1px solid var(--line)}
   .dot-hint{font-size:11.5px; color:var(--ink-2); text-align:center; padding:7px 4px 0; line-height:1.45}
 
   .gap-chart{display:flex; align-items:flex-end; gap:5px; height:88px; padding-top:4px; overflow-x:auto; scrollbar-width:none}
@@ -571,6 +611,10 @@
   .lib-ico.video{background:#c0392b}
   .lib-ico.audio{background:#6d5ae0}
   .lib-ico.link{background:var(--ink-2)}
+  .lib-ico.thumb{
+    width:46px; height:32px; border-radius:7px; background-size:cover; background-position:center;
+    background-color:var(--line);
+  }
   .lib-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
   .lib-title{
     display:block; font-size:14.5px; font-weight:600; line-height:1.25;
@@ -590,6 +634,45 @@
     border:0; background:var(--accent); color:#fff; border-radius:11px; padding:0 16px;
     font:inherit; font-size:14px; font-weight:700; cursor:pointer; flex:0 0 auto;
   }
+
+  /* ---------- news tab ---------- */
+  .news-top{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+  .news-src{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+  .news-src:empty{display:none}
+  .news-chip{
+    display:inline-flex; align-items:center; gap:5px; background:var(--tap);
+    border-radius:999px; padding:5px 6px 5px 10px; font-size:12.5px; font-weight:600; color:var(--ink);
+  }
+  .news-chip i{width:7px; height:7px; border-radius:50%; display:block; flex:0 0 auto}
+  .news-chip i.yt{background:#c0392b}
+  .news-chip i.nm{background:var(--accent)}
+  .news-chip button{
+    border:0; background:transparent; color:var(--ink-2); cursor:pointer; padding:2px;
+    display:flex; border-radius:6px;
+  }
+  #newsFeed{display:flex; flex-direction:column; gap:10px}
+  .news-day{padding:11px 13px}
+  .news-dayhead{
+    font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-2); margin-bottom:9px; display:flex; align-items:center; gap:7px;
+  }
+  .news-dayhead span{
+    background:var(--tap); border-radius:999px; padding:1px 7px; font-size:11px; letter-spacing:0;
+  }
+  .news-item{
+    display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--line);
+    text-decoration:none; color:inherit;
+  }
+  .news-item:first-of-type{border-top:0; padding-top:0}
+  .news-th{
+    flex:0 0 auto; width:76px; height:52px; border-radius:9px; background-size:cover;
+    background-position:center; background-color:var(--line);
+  }
+  .news-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+  .news-by{font-size:11px; font-weight:800; color:var(--accent); letter-spacing:.02em}
+  .news-title{font-size:14px; font-weight:600; line-height:1.3}
+  .news-blurb{font-size:12px; color:var(--ink-2); line-height:1.4;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 
   /* ---------- gold tab ---------- */
   .gold-card{
@@ -678,7 +761,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v7.5</div>
+      <div class="ver" id="appVer">v8.0</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -818,6 +901,7 @@
         <span class="dot-key"><i class="k-log"></i>Marked</span>
         <span class="dot-key"><i class="k-logspan"></i>Following days</span>
         <span class="dot-key"><i class="k-pred"></i>Anticipated</span>
+        <span class="dot-key"><i class="k-soon"></i>Due soon</span>
       </div>
       <div class="dot-hint" id="dotHint"></div>
     </section>
@@ -890,6 +974,26 @@
     </section>
   </main>
 
+  <main class="page hide" id="page-news">
+    <section class="card" style="padding:11px 14px">
+      <div class="news-top">
+        <button class="gold-check" id="newsRefresh">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+          Refresh
+        </button>
+        <span class="gold-status" id="newsStatus"></span>
+      </div>
+      <div class="news-src" id="newsSrcList"></div>
+      <div class="lib-add" style="margin-top:9px">
+        <div class="lib-add-row">
+          <input type="text" id="newsInput" placeholder="YouTube channel link, or a person's name">
+          <button id="newsAdd">Add</button>
+        </div>
+      </div>
+    </section>
+    <div id="newsFeed"></div>
+  </main>
+
   <nav class="tabbar">
     <button id="tab-meds" class="on" aria-label="Medicines">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
@@ -915,6 +1019,10 @@
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m10 7 5 3-5 3z" fill="currentColor" stroke="none"/></svg>
       Library
     </button>
+    <button id="tab-news" aria-label="News">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9h4"/><path d="M18 14h-8M10 6h8v4h-8z"/><path d="M10 18h8"/></svg>
+      News
+    </button>
   </nav>
 
 </div>
@@ -939,6 +1047,37 @@
   </div>
 </div>
 
+<div class="sheet" id="rtItemSheet" role="dialog" aria-modal="true">
+  <div class="grabber"></div>
+  <h2 id="rtItemTitle"></h2>
+  <p class="sub" id="rtItemSub"></p>
+  <div class="range-row" id="rtItemRange" style="margin-top:12px">
+    <button data-r="14">2W</button>
+    <button data-r="30" class="on">1M</button>
+    <button data-r="90">3M</button>
+    <button data-r="180">6M</button>
+    <button data-r="365">1Y</button>
+  </div>
+  <div class="icell-grid" id="rtItemGrid"></div>
+  <div class="hist-note" id="rtItemNote"></div>
+  <div class="gstats" id="rtItemStats" style="margin-top:12px"></div>
+</div>
+
+<div class="sheet" id="dotSheet" role="dialog" aria-modal="true">
+  <div class="grabber"></div>
+  <h2 id="dotSheetTitle"></h2>
+  <p class="sub" id="dotSheetSub"></p>
+  <div class="set-row" style="border-bottom:0">
+    <div><div class="set-name">Last day</div><div class="set-sub">Leave it until you know</div></div>
+    <input type="date" id="dotEndInput" class="set-time">
+  </div>
+  <div class="set-pair">
+    <button class="set-test" id="dotEndSave" style="margin-top:0">Save end date</button>
+    <button class="set-test dot-clear" id="dotClearEnd" style="margin-top:0">Clear end</button>
+  </div>
+  <button class="set-test" id="dotRemove">Remove this occurrence</button>
+</div>
+
 <div class="sheet" id="setSheet" role="dialog" aria-modal="true">
   <div class="grabber"></div>
   <h2>Settings</h2>
@@ -958,6 +1097,10 @@
     <div><div class="set-name">App icon badge</div><div class="set-sub">Show how many items are still open today</div></div>
     <label class="switch"><input type="checkbox" id="optBadge"><span></span></label>
   </div>
+  <div class="set-row" style="border-top:1px solid var(--line)">
+    <div><div class="set-name">Tabs to show</div><div class="set-sub">Hide the ones you don't use</div></div>
+  </div>
+  <div class="tabtoggles" id="tabToggles"></div>
   <button class="set-test" id="testNotif">Send a test notification</button>
   <div class="set-row" style="border-top:1px solid var(--line); margin-top:12px">
     <div><div class="set-name">Your data</div><div class="set-sub">Save a copy you keep, or restore one</div></div>
@@ -970,6 +1113,7 @@
   <div class="set-note" id="recoverNote"></div>
   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
+  <div class="sheet-done"><button id="setDone">Done</button></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -990,7 +1134,7 @@
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
     'gold-hist-v1', 'gold-state-v1', 'lib-items-v1', 'lib-shelves-v1',
-    'settings-v1', 'active-tab-v1'
+    'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'news-sources-v1', 'news-cache-v1'
   ];
   /* Keys that hold things you actually typed. The backup is scored on these,
      so a wiped app can never overwrite a good backup with an empty one. */
@@ -1408,6 +1552,7 @@
     if(typeof renderRoutine === 'function') renderRoutine();
     if(typeof renderDot === 'function') renderDot();
     if(typeof renderLib === 'function') renderLib();
+    if(typeof renderNews === 'function') renderNews();
     if(sheetKey) renderSheet();
   }
 
@@ -1581,21 +1726,56 @@
 
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
-  var TABS = ['meds','todo','routine','dot','gold','lib'];
+  var TABS = ['meds','todo','routine','dot','gold','lib','news'];
+  var TAB_NAMES = { meds:'Meds', todo:'To-Do', routine:'Routine', dot:'Dot', gold:'Gold', lib:'Library', news:'News' };
+  var HIDE_KEY = 'tabs-hidden-v1';
+  var hiddenTabs = loadJSON(HIDE_KEY, [], null) || [];
+  function saveHidden(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify(hiddenTabs)); }catch(e){} }
+  function visibleTabs(){
+    var v = TABS.filter(function(t){ return hiddenTabs.indexOf(t) < 0; });
+    return v.length ? v : ['meds'];               /* never leave the bar empty */
+  }
+  var activeTab = 'meds';
   function showTab(name){
+    var vis = visibleTabs();
+    if(vis.indexOf(name) < 0) name = vis[0];
+    activeTab = name;
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
-      document.getElementById('tab-'+t).classList.toggle('on', t === name);
+      var btn = document.getElementById('tab-'+t);
+      btn.classList.toggle('on', t === name);
+      btn.classList.toggle('tab-off', vis.indexOf(t) < 0);
     });
+    document.querySelector('.tabbar').style.gridTemplateColumns = 'repeat(' + vis.length + ',1fr)';
     try{ localStorage.setItem(TAB_KEY, name); }catch(e){}
   }
   TABS.forEach(function(t){
     document.getElementById('tab-'+t).addEventListener('click', function(){ showTab(t); });
   });
+  function renderTabToggles(){
+    var box = document.getElementById('tabToggles');
+    if(!box) return;
+    box.innerHTML = TABS.map(function(t){
+      return '<button data-t="'+t+'" class="'+(hiddenTabs.indexOf(t) < 0 ? 'on' : '')+'">'+TAB_NAMES[t]+'</button>';
+    }).join('');
+  }
+  document.getElementById('tabToggles').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if(!btn) return;
+    var t = btn.getAttribute('data-t');
+    var i = hiddenTabs.indexOf(t);
+    if(i > -1) hiddenTabs.splice(i, 1);
+    else{
+      if(visibleTabs().length <= 1){ toast('Keep at least one tab'); return; }
+      hiddenTabs.push(t);
+    }
+    saveHidden(); renderTabToggles(); showTab(activeTab);
+  });
   (function(){
     var last = null;
     try{ last = localStorage.getItem(TAB_KEY); }catch(e){}
-    if(last && TABS.indexOf(last) > -1) showTab(last);
+    showTab(last && TABS.indexOf(last) > -1 ? last : 'meds');
+    renderTabToggles();
   })();
 
   /* ==================== TO-DO ==================== */
@@ -1768,6 +1948,7 @@
   var UP_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
   var DOWN_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   var SORT_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/></svg>';
+  var MINI_CHART_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>';
 
   /* rtDate is the day being edited — today unless you step back */
   var rtDate = todayKey();
@@ -1820,7 +2001,8 @@
               (reord
                 ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
                   '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
-                : '<button class="todo-del'+(isArmed('rt:'+r.id) ? ' armed' : '')+'" aria-label="'+
+                : '<button class="rt-hist" aria-label="History for this routine">'+MINI_CHART_SVG+'</button>' +
+                  '<button class="todo-del'+(isArmed('rt:'+r.id) ? ' armed' : '')+'" aria-label="'+
                   (isArmed('rt:'+r.id) ? 'Tap again to delete' : 'Delete routine')+'">'+X_SVG+'</button>') +
               '</li>';
           }).join('');
@@ -2004,6 +2186,7 @@
     var id = row.getAttribute('data-id');
     var mv = e.target.closest('.rt-move');
     if(mv){ moveRoutine(id, +mv.getAttribute('data-dir')); return; }
+    if(e.target.closest('.rt-hist')){ disarm(false); openRtItem(id); return; }
     if(e.target.closest('.todo-del')){
       if(!confirmDelete('rt:' + id, 'this routine')) return;
       routines = routines.filter(function(r){ return r.id !== id; });
@@ -2024,6 +2207,69 @@
     saveRtLog(); renderRoutine();
     if(navigator.vibrate) navigator.vibrate(next === 2 ? 14 : 8);
   });
+  /* ---- one routine's own history ---- */
+  var rtItemId = null, rtItemRange = 30;
+  function openRtItem(id){
+    rtItemId = id;
+    renderRtItem();
+    document.getElementById('rtItemSheet').classList.add('open');
+    overlay.classList.add('open');
+  }
+  function closeRtItem(){
+    rtItemId = null;
+    document.getElementById('rtItemSheet').classList.remove('open');
+  }
+  function renderRtItem(){
+    if(!rtItemId) return;
+    var r = null;
+    for(var i = 0; i < routines.length; i++) if(routines[i].id === rtItemId) r = routines[i];
+    if(!r){ closeRtItem(); return; }
+    document.getElementById('rtItemTitle').textContent = r.name;
+    document.getElementById('rtItemSub').textContent = r.g;
+
+    var days = [], o;
+    for(o = rtItemRange - 1; o >= 0; o--){
+      var k = dayKeyOffset(o);
+      days.push({ k: k, st: (rtLog[k] || {})[r.id] || 0, d: parseKey(k) });
+    }
+    var done = 0, half = 0;
+    days.forEach(function(x){ if(x.st === 2) done++; else if(x.st === 1) half++; });
+    var pct = Math.round(((done + half * 0.5) / days.length) * 100);
+
+    /* streaks counted on full days, walking back from today */
+    var cur = 0, best = 0, run = 0;
+    for(i = 0; i < days.length; i++){
+      if(days[i].st === 2){ run++; if(run > best) best = run; } else run = 0;
+    }
+    for(i = days.length - 1; i >= 0; i--){
+      if(days[i].st === 2) cur++;
+      else if(i === days.length - 1) continue;      /* today not ticked yet doesn't break it */
+      else break;
+    }
+
+    document.getElementById('rtItemStats').innerHTML =
+      '<div class="gstat"><b>'+pct+'%</b><span>done</span></div>' +
+      '<div class="gstat"><b>'+cur+'</b><span>streak</span></div>' +
+      '<div class="gstat"><b>'+best+'</b><span>best</span></div>' +
+      '<div class="gstat"><b>'+done+'</b><span>days</span></div>';
+
+    var cells = days.map(function(x){
+      var cls = x.st === 2 ? ' on' : x.st === 1 ? ' half' : '';
+      return '<span class="icell'+cls+(x.k === todayKey() ? ' today' : '')+'" title="'+x.k+'"></span>';
+    }).join('');
+    document.getElementById('rtItemGrid').innerHTML = cells;
+    document.getElementById('rtItemNote').textContent =
+      fmtShort(days[0].d) + ' → today · full = done, half = partly';
+    var bs = document.getElementById('rtItemRange').querySelectorAll('button');
+    for(i = 0; i < bs.length; i++) bs[i].classList.toggle('on', +bs[i].getAttribute('data-r') === rtItemRange);
+  }
+  document.getElementById('rtItemRange').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if(!btn) return;
+    rtItemRange = +btn.getAttribute('data-r');
+    renderRtItem();
+  });
+
   document.getElementById('rtGroupList').addEventListener('keydown', function(e){
     if(e.key !== 'Enter') return;
     var card = e.target.closest('[data-grp]');
@@ -2034,13 +2280,45 @@
   var DOT_KEY = 'dot-log-v1';
   var memDot = null;
   function saveDot(){ memDot = dotLog; try{ localStorage.setItem(DOT_KEY, JSON.stringify(dotLog)); }catch(e){} }
-  var dotLog = loadJSON(DOT_KEY, [], memDot);        // ['YYYY-MM-DD', ...] — first day of each occurrence
+  /* [{d:'YYYY-MM-DD', e:'YYYY-MM-DD'|null}] — start day, and end day once known */
+  var dotLog = loadJSON(DOT_KEY, [], memDot);
+  (function migrateDot(){
+    var changed = false;
+    for(var i = 0; i < dotLog.length; i++){
+      if(typeof dotLog[i] === 'string'){ dotLog[i] = { d: dotLog[i], e: null }; changed = true; }
+    }
+    dotLog.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    if(changed){ try{ localStorage.setItem(DOT_KEY, JSON.stringify(dotLog)); }catch(e){} }
+  })();
+  function dotStarts(){ return dotLog.map(function(r){ return r.d; }).sort(); }
+  function dotFind(k){
+    for(var i = 0; i < dotLog.length; i++) if(dotLog[i].d === k) return dotLog[i];
+    return null;
+  }
   var DOTX_KEY = 'dot-gap-excl-v1';
   var memDotX = null;
   var dotExcl = loadJSON(DOTX_KEY, {}, memDotX);     // { gapEndKey: true|false } manual include/exclude
   function saveDotExcl(){ memDotX = dotExcl; try{ localStorage.setItem(DOTX_KEY, JSON.stringify(dotExcl)); }catch(e){} }
-  var DOT_CYCLE = 28, DOT_SPAN = 8, DOT_AHEAD_MONTHS = 6;
+  var DOT_CYCLE = 28, DOT_SPAN = 7, DOT_AHEAD_MONTHS = 6, DOT_WARN = 7;
   var dotView = new Date(); dotView.setDate(1);
+  var dotSheetKey = null;
+
+  /* Averages replace the fixed 28/7 as soon as there is enough recorded.
+     Length comes from runs with an end date; the gap comes from the same
+     outlier-aware figures the chart uses, so a missed month can't skew it. */
+  function dotAvgSpan(){
+    var tot = 0, n = 0;
+    for(var i = 0; i < dotLog.length; i++){
+      if(!dotLog[i].e) continue;
+      var len = daysBetween(parseKey(dotLog[i].d), parseKey(dotLog[i].e)) + 1;
+      if(len > 0 && len <= 20){ tot += len; n++; }
+    }
+    return n ? Math.max(1, Math.round(tot / n)) : DOT_SPAN;
+  }
+  function dotAvgCycle(){
+    var st = typeof dotStats === 'function' ? dotStats() : null;
+    return (st && st.avg) ? st.avg : DOT_CYCLE;
+  }
 
   function parseKey(k){ var p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function addDays(d, n){ var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
@@ -2048,25 +2326,36 @@
   function midnight(){ var t = new Date(); t.setHours(0,0,0,0); return t; }
   function fmtShort(d){ return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3); }
 
-  /* date key -> { t:'log'|'pred', s:startOfRun } for the whole visible range */
+  /* date key -> { t:'log'|'pred'|'soon', s:startOfRun, end:isLastDay } */
   function dotMap(){
     var m = {}, i, j;
-    var sorted = dotLog.slice().sort();
-    for(i = 0; i < sorted.length; i++){
-      var d = parseKey(sorted[i]);
-      for(j = 0; j < DOT_SPAN; j++) m[keyOf(addDays(d, j))] = { t:'log', s: j === 0 };
+    var span = dotAvgSpan(), cycle = dotAvgCycle();
+    for(i = 0; i < dotLog.length; i++){
+      var d = parseKey(dotLog[i].d);
+      /* a recorded end wins; otherwise fall back to the average length */
+      var len = dotLog[i].e
+        ? Math.max(1, daysBetween(d, parseKey(dotLog[i].e)) + 1)
+        : span;
+      for(j = 0; j < len; j++){
+        m[keyOf(addDays(d, j))] = { t:'log', s: j === 0, end: !!dotLog[i].e && j === len - 1 };
+      }
     }
-    if(sorted.length){
+    if(dotLog.length){
       var today = midnight();
       var horizon = new Date(); horizon.setMonth(horizon.getMonth() + DOT_AHEAD_MONTHS);
-      var next = addDays(parseKey(sorted[sorted.length - 1]), DOT_CYCLE);
+      var next = addDays(parseKey(dotLog[dotLog.length - 1].d), cycle);
       var guard = 0;
       while(next <= horizon && guard++ < 400){
-        for(j = 0; j < DOT_SPAN; j++){
+        /* the quiet week before it is due */
+        for(j = DOT_WARN; j >= 1; j--){
+          var wd = addDays(next, -j), wk = keyOf(wd);
+          if(!m[wk] && wd >= today) m[wk] = { t:'soon' };
+        }
+        for(j = 0; j < span; j++){
           var pd = addDays(next, j), pk = keyOf(pd);
           if(!m[pk] && pd >= today) m[pk] = { t:'pred', s: j === 0 };
         }
-        next = addDays(next, DOT_CYCLE);
+        next = addDays(next, cycle);
       }
     }
     return m;
@@ -2090,9 +2379,17 @@
       if(date > today) cls += ' d-fut';
       var lab = d + ' ' + MONTHS[m];
       if(st){
-        if(st.t === 'log') cls += st.s ? ' d-log d-logspan' : ' d-logspan';
-        else cls += st.s ? ' d-pred d-predspan' : ' d-predspan';
-        lab += st.t === 'log' ? ', marked' : ', anticipated';
+        if(st.t === 'log'){
+          cls += st.s ? ' d-log d-logspan' : ' d-logspan';
+          if(st.end) cls += ' d-end';
+          lab += ', marked' + (st.end ? ' (last day)' : '');
+        }else if(st.t === 'soon'){
+          cls += ' d-soon';
+          lab += ', due soon';
+        }else{
+          cls += st.s ? ' d-pred d-predspan' : ' d-predspan';
+          lab += ', anticipated';
+        }
       }
       if(isArmed('dot:' + k)){ cls += ' arm-row'; lab += ', tap again to unmark'; }
       html += '<button class="'+cls+'" data-key="'+k+'" aria-label="'+lab+'">' +
@@ -2117,7 +2414,7 @@
      occurrence in between, so it is flagged and left out of the average.
      dotExcl holds manual overrides (tap a bar to include/exclude it). */
   function dotGaps(){
-    var sorted = dotLog.slice().sort(), out = [], i;
+    var sorted = dotStarts(), out = [], i;
     for(i = 1; i < sorted.length; i++){
       out.push({
         days: daysBetween(parseKey(sorted[i-1]), parseKey(sorted[i])),
@@ -2154,20 +2451,22 @@
   }
 
   function renderDotSummary(){
-    var sorted = dotLog.slice().sort();
+    var sorted = dotStarts();
     var nextEl = document.getElementById('dotNext');
     var sideEl = document.getElementById('dotAvgBox');
     var hintEl = document.getElementById('dotHint');
     if(!sorted.length){
       nextEl.textContent = 'Nothing marked yet';
       sideEl.innerHTML = '';
-      hintEl.textContent = 'Tap any past day to mark it. The 8 days from each mark are shaded, and the next dates are anticipated every ' + DOT_CYCLE + ' days for ' + DOT_AHEAD_MONTHS + ' months.';
+      hintEl.textContent = 'Tap any past day to mark it. Each mark shades ' + DOT_SPAN +
+        ' days, and the next dates are anticipated every ' + DOT_CYCLE + ' days for ' + DOT_AHEAD_MONTHS + ' months.';
       return;
     }
+    var cycle = dotAvgCycle(), span = dotAvgSpan();
     var today = midnight();
-    var next = addDays(parseKey(sorted[sorted.length - 1]), DOT_CYCLE);
+    var next = addDays(parseKey(sorted[sorted.length - 1]), cycle);
     var guard = 0;
-    while(next < today && guard++ < 400) next = addDays(next, DOT_CYCLE);
+    while(next < today && guard++ < 400) next = addDays(next, cycle);
     var inDays = daysBetween(today, next);
     nextEl.textContent = DAYS[next.getDay()].slice(0,3) + ', ' + fmtShort(next) +
       ' · ' + (inDays === 0 ? 'today' : inDays === 1 ? 'tomorrow' : 'in ' + inDays + ' days');
@@ -2177,7 +2476,10 @@
     }else{
       sideEl.innerHTML = '<b>' + sorted.length + '</b><span>marked</span>';
     }
-    hintEl.textContent = 'Tap a day to mark or unmark it · anticipated dates assume ' + DOT_CYCLE + ' days';
+    var ended = dotLog.filter(function(r){ return r.e; }).length;
+    hintEl.textContent = 'Tap a day to mark it · tap a marked day to set its end date · ' +
+      (ended ? 'length averages ' + span + ' days from ' + ended + ' recorded' : 'length assumed ' + span + ' days') +
+      ', next in ' + cycle;
   }
 
   function renderGapChart(){
@@ -2215,25 +2517,82 @@
     renderGapChart();
   }
 
+  /* which recorded run, if any, covers this day */
+  function dotRunFor(k){
+    var d = parseKey(k), span = dotAvgSpan();
+    for(var i = 0; i < dotLog.length; i++){
+      var s = parseKey(dotLog[i].d);
+      var len = dotLog[i].e ? daysBetween(s, parseKey(dotLog[i].e)) + 1 : span;
+      var diff = daysBetween(s, d);
+      if(diff >= 0 && diff < len) return dotLog[i];
+    }
+    return null;
+  }
+
   function toggleDot(k){
     var d = parseKey(k), today = midnight();
     if(d > today){ toast('Only past days can be marked'); return; }
-    var idx = dotLog.indexOf(k);
-    if(idx > -1){
-      if(!confirmDelete('dot:' + k, 'this mark')) return;
-      dotLog.splice(idx, 1); saveDot(); renderDot();
-      toast('Unmarked ' + fmtShort(d));
-      return;
-    }
+    var rec = dotFind(k);
+    if(rec){ openDotSheet(k); return; }             /* a start day opens its editor */
     disarm(false);
-    for(var i = 0; i < dotLog.length; i++){
-      var diff = daysBetween(parseKey(dotLog[i]), d);
-      if(diff > 0 && diff < DOT_SPAN){ renderDot(); toast('Already inside a marked stretch'); return; }
-    }
-    dotLog.push(k); dotLog.sort(); saveDot(); renderDot();
+    var run = dotRunFor(k);
+    if(run){ openDotSheet(run.d, k); return; }      /* inside a run — offer to end it here */
+    dotLog.push({ d: k, e: null });
+    dotLog.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    saveDot(); renderDot();
     if(navigator.vibrate) navigator.vibrate(14);
     toast('Marked ' + fmtShort(d));
   }
+
+  /* ---- the per-occurrence editor ---- */
+  function openDotSheet(startKey, tappedKey){
+    dotSheetKey = startKey;
+    var rec = dotFind(startKey);
+    if(!rec){ dotSheetKey = null; return; }
+    var s = parseKey(rec.d);
+    document.getElementById('dotSheetTitle').textContent =
+      DAYS[s.getDay()].slice(0,3) + ', ' + fmtShort(s) + ' ' + s.getFullYear();
+    var len = rec.e ? daysBetween(s, parseKey(rec.e)) + 1 : null;
+    document.getElementById('dotSheetSub').textContent = rec.e
+      ? len + (len === 1 ? ' day' : ' days') + ', ending ' + fmtShort(parseKey(rec.e))
+      : 'No end date yet — showing ' + dotAvgSpan() + ' days';
+    var inp = document.getElementById('dotEndInput');
+    inp.value = rec.e || (tappedKey || '');
+    inp.min = rec.d;
+    inp.max = keyOf(midnight());
+    document.getElementById('dotClearEnd').classList.toggle('show', !!rec.e);
+    document.getElementById('dotSheet').classList.add('open');
+    overlay.classList.add('open');
+  }
+  function closeDotSheet(){
+    dotSheetKey = null;
+    document.getElementById('dotSheet').classList.remove('open');
+  }
+  document.getElementById('dotEndSave').addEventListener('click', function(){
+    if(!dotSheetKey) return;
+    var rec = dotFind(dotSheetKey);
+    var v = document.getElementById('dotEndInput').value;
+    if(!rec || !v){ toast('Pick the last day first'); return; }
+    if(v < rec.d){ toast('The end can’t be before the start'); return; }
+    if(parseKey(v) > midnight()){ toast('That day hasn’t happened yet'); return; }
+    rec.e = v; saveDot(); renderDot();
+    closeDotSheet(); overlay.classList.remove('open');
+    toast('Ended ' + fmtShort(parseKey(v)));
+  });
+  document.getElementById('dotClearEnd').addEventListener('click', function(){
+    if(!dotSheetKey) return;
+    var rec = dotFind(dotSheetKey);
+    if(rec){ rec.e = null; saveDot(); renderDot(); }
+    closeDotSheet(); overlay.classList.remove('open');
+  });
+  document.getElementById('dotRemove').addEventListener('click', function(){
+    if(!dotSheetKey) return;
+    if(!confirmDelete('dot:' + dotSheetKey, 'this occurrence')) return;
+    dotLog = dotLog.filter(function(r){ return r.d !== dotSheetKey; });
+    saveDot(); renderDot();
+    closeDotSheet(); overlay.classList.remove('open');
+    toast('Removed');
+  });
 
   document.getElementById('dotGrid').addEventListener('click', function(e){
     var btn = e.target.closest('.day');
@@ -2305,6 +2664,54 @@
     return u;
   }
 
+  /* oEmbed gives the real title, the channel/author and a thumbnail, and the
+     big platforms allow it straight from a browser. Anything else falls back
+     to a relay that just reads the page title. */
+  function oembedFor(url){
+    var u = url.toLowerCase();
+    if(/youtube\.com|youtu\.be/.test(u)) return 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url);
+    if(/vimeo\.com/.test(u)) return 'https://vimeo.com/api/oembed.json?url=' + encodeURIComponent(url);
+    if(/open\.spotify\.com/.test(u)) return 'https://open.spotify.com/oembed?url=' + encodeURIComponent(url);
+    if(/soundcloud\.com/.test(u)) return 'https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(url);
+    return null;
+  }
+  function lookupLink(url){
+    var oe = oembedFor(url);
+    if(oe){
+      return fetch(oe, { cache:'no-store' })
+        .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+        .then(function(j){
+          return {
+            title: j.title || '',
+            author: j.author_name || j.provider_name || '',
+            thumb: j.thumbnail_url || ''
+          };
+        });
+    }
+    return fetch('https://r.jina.ai/' + url, { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw 0; return r.text(); })
+      .then(function(t){
+        var m = t.match(/^Title:\s*(.+)$/m) || t.match(/<title[^>]*>([^<]+)<\/title>/i);
+        return { title: m ? m[1].trim().slice(0, 120) : '', author: '', thumb: '' };
+      });
+  }
+  /* fill in whatever is missing, quietly, after the item is saved */
+  function enrichLink(id){
+    var item = null;
+    for(var i = 0; i < libItems.length; i++) if(libItems[i].id === id) item = libItems[i];
+    if(!item || item.looked) return;
+    item.looked = 1; saveLib();
+    lookupLink(item.url).then(function(info){
+      var cur = null;
+      for(var j = 0; j < libItems.length; j++) if(libItems[j].id === id) cur = libItems[j];
+      if(!cur) return;
+      if(info.title && (!cur.title || cur.title === libHost(cur.url) || cur.auto)) { cur.title = info.title; cur.auto = 1; }
+      if(info.author) cur.by = info.author;
+      if(info.thumb) cur.th = info.thumb;
+      saveLib(); renderLib();
+    }).catch(function(){});
+  }
+
   function renderLib(){
     var box = document.getElementById('libList');
     box.innerHTML = libShelves.map(function(s){
@@ -2315,10 +2722,13 @@
         ? '<div class="empty-note">Nothing here yet — paste a link below</div>'
         : items.map(function(it, i){
             var k = libKind(it.url);
-            return '<li class="lib-item" data-id="'+it.id+'">' +
-              '<span class="lib-ico '+k+'">'+(k === 'video' ? PLAY_SVG : k === 'audio' ? NOTE_SVG : LINK_SVG)+'</span>' +
+            var ico = it.th
+              ? '<span class="lib-ico thumb" style="background-image:url(\''+esc(it.th)+'\')"></span>'
+              : '<span class="lib-ico '+k+'">'+(k === 'video' ? PLAY_SVG : k === 'audio' ? NOTE_SVG : LINK_SVG)+'</span>';
+            var meta = (it.by ? esc(it.by) + ' · ' : '') + esc(libHost(it.url));
+            return '<li class="lib-item" data-id="'+it.id+'">' + ico +
               '<span class="lib-main"><span class="lib-title">'+esc(it.title)+'</span>' +
-              '<span class="lib-host">'+esc(libHost(it.url))+'</span></span>' +
+              '<span class="lib-host">'+meta+'</span></span>' +
               (reord
                 ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
                   '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
@@ -2377,9 +2787,11 @@
       var tEl = card.querySelector('.lib-t'), uEl = card.querySelector('.lib-u');
       var url = normUrl(uEl.value);
       if(!url){ toast('Paste a link first'); return; }
-      var title = tEl.value.trim() || libHost(url);
-      libItems.push({ id:'l' + Date.now() + Math.floor(Math.random()*1000), s:s, title:title, url:url, pri:false });
+      var typed = tEl.value.trim();
+      var nid = 'l' + Date.now() + Math.floor(Math.random()*1000);
+      libItems.push({ id:nid, s:s, title: typed || libHost(url), url:url, pri:false, auto: typed ? 0 : 1 });
       saveLib(); tEl.value = ''; uEl.value = ''; renderLib();
+      enrichLink(nid);
       toast('Saved to ' + s);
       return;
     }
@@ -2431,6 +2843,199 @@
   });
 
   renderLib();
+
+  /* ==================== NEWS ====================
+     Reads only the sources you add. A YouTube link becomes that channel's
+     public feed; a plain name becomes a Google News search for it. Neither
+     allows a browser to read it directly, so the feeds come through a public
+     relay — which is the one part that can fail. Everything is cached, so
+     the last good pull stays on screen. */
+  var NEWS_KEY = 'news-sources-v1', NEWSC_KEY = 'news-cache-v1';
+  var memNews = null, memNewsC = null;
+  function saveNewsSrc(){ memNews = newsSrc; try{ localStorage.setItem(NEWS_KEY, JSON.stringify(newsSrc)); }catch(e){} }
+  function saveNewsCache(){ memNewsC = newsCache; try{ localStorage.setItem(NEWSC_KEY, JSON.stringify(newsCache)); }catch(e){} }
+  var newsSrc = loadJSON(NEWS_KEY, [], memNews);      // [{id, kind:'yt'|'name', q, label}]
+  var newsCache = loadJSON(NEWSC_KEY, { at:0, items:[] }, memNewsC);
+  var newsBusy = false;
+
+  var RELAYS = [
+    function(u){ return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+    function(u){ return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
+    function(u){ return 'https://r.jina.ai/' + u; }
+  ];
+  function viaRelay(url){
+    var i = 0;
+    return new Promise(function(resolve, reject){
+      (function next(){
+        if(i >= RELAYS.length){ reject(0); return; }
+        fetch(RELAYS[i++](url), { cache:'no-store' })
+          .then(function(r){ if(!r.ok) throw 0; return r.text(); })
+          .then(function(t){ if(!t || t.length < 40) throw 0; resolve(t); })
+          .catch(next);
+      })();
+    });
+  }
+
+  function ytChannelId(url){
+    var m = String(url).match(/channel\/(UC[\w-]{20,})/);
+    return m ? m[1] : null;
+  }
+  function feedUrlFor(src){
+    if(src.kind === 'yt') return 'https://www.youtube.com/feeds/videos.xml?channel_id=' + src.q;
+    if(src.kind === 'ytuser') return 'https://www.youtube.com/feeds/videos.xml?user=' + src.q;
+    return 'https://news.google.com/rss/search?q=' + encodeURIComponent('"' + src.q + '"') + '&hl=en&gl=AE&ceid=AE:en';
+  }
+  function tagText(xml, tag){
+    var m = xml.match(new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>'));
+    if(!m) return '';
+    return m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+      .replace(/<[^>]+>/g, ' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+      .replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'")
+      .replace(/\s+/g, ' ').trim();
+  }
+  function parseFeed(xml, src){
+    var out = [];
+    var blocks = xml.split(/<entry[\s>]/).slice(1);
+    var atom = blocks.length > 0;
+    if(!atom) blocks = xml.split(/<item[\s>]/).slice(1);
+    for(var i = 0; i < blocks.length && i < 12; i++){
+      var bl = blocks[i];
+      var title = tagText(bl, 'title');
+      if(!title) continue;
+      var link = '';
+      var lm = bl.match(/<link[^>]*href="([^"]+)"/) || bl.match(/<link>([\s\S]*?)<\/link>/);
+      if(lm) link = lm[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+      var when = tagText(bl, 'published') || tagText(bl, 'pubDate') || tagText(bl, 'updated');
+      var t = when ? new Date(when) : null;
+      if(!t || isNaN(t.getTime())) t = new Date();
+      var th = '';
+      var tm = bl.match(/<media:thumbnail[^>]*url="([^"]+)"/);
+      if(tm) th = tm[1];
+      var by = tagText(bl, 'name') || tagText(bl, 'source') || src.label;
+      var blurb = tagText(bl, 'media:description') || tagText(bl, 'description') || '';
+      blurb = blurb.replace(/^\s*<?a\b[\s\S]*$/, '').slice(0, 180);
+      out.push({
+        title: title, url: link, by: by || src.label, th: th,
+        at: t.getTime(), day: keyOf(t), src: src.label,
+        blurb: blurb
+      });
+    }
+    return out;
+  }
+
+  function refreshNews(force){
+    if(newsBusy) return;
+    if(!newsSrc.length){ renderNews(); return; }
+    if(!force && Date.now() - (newsCache.at || 0) < 3 * 3600 * 1000) return;
+    newsBusy = true;
+    document.getElementById('newsStatus').textContent = 'Fetching…';
+    var got = [], done = 0, okCount = 0;
+    newsSrc.forEach(function(src){
+      viaRelay(feedUrlFor(src))
+        .then(function(xml){ got = got.concat(parseFeed(xml, src)); okCount++; })
+        .catch(function(){})
+        .then(function(){
+          if(++done < newsSrc.length) return;
+          newsBusy = false;
+          if(got.length){
+            got.sort(function(a, b){ return b.at - a.at; });
+            newsCache = { at: Date.now(), items: got.slice(0, 120) };
+            saveNewsCache();
+            document.getElementById('newsStatus').textContent =
+              'Updated · ' + okCount + '/' + newsSrc.length + ' sources';
+          }else{
+            document.getElementById('newsStatus').textContent = 'Couldn’t reach the feeds — try again later';
+          }
+          renderNews();
+        });
+    });
+  }
+
+  function renderNewsSources(){
+    var box = document.getElementById('newsSrcList');
+    if(!newsSrc.length){
+      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">Add a channel or a name to follow</div>';
+      return;
+    }
+    box.innerHTML = newsSrc.map(function(s){
+      return '<span class="news-chip'+(isArmed('news:'+s.id) ? ' armed' : '')+'" data-id="'+s.id+'">' +
+        '<i class="'+(s.kind === 'name' ? 'nm' : 'yt')+'"></i>'+esc(s.label)+
+        '<button aria-label="Remove">'+X_SVG+'</button></span>';
+    }).join('');
+  }
+
+  function renderNews(){
+    renderNewsSources();
+    var box = document.getElementById('newsFeed');
+    var items = newsCache.items || [];
+    if(!items.length){
+      box.innerHTML = '<section class="card"><div class="empty-note">' +
+        (newsSrc.length ? 'Nothing pulled in yet — tap Refresh' : 'Add a source above, then tap Refresh') +
+        '</div></section>';
+      return;
+    }
+    var days = [], byDay = {};
+    items.forEach(function(it){
+      if(!byDay[it.day]){ byDay[it.day] = []; days.push(it.day); }
+      byDay[it.day].push(it);
+    });
+    days.sort().reverse();
+    box.innerHTML = days.slice(0, 21).map(function(day){
+      var d = parseKey(day);
+      var head = day === todayKey() ? 'Today'
+        : day === keyOf(addDays(midnight(), -1)) ? 'Yesterday'
+        : DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d);
+      var rows = byDay[day].map(function(it){
+        return '<a class="news-item" href="'+esc(it.url)+'" target="_blank" rel="noopener">' +
+          (it.th ? '<span class="news-th" style="background-image:url(\''+esc(it.th)+'\')"></span>' : '') +
+          '<span class="news-main">' +
+            '<span class="news-by">'+esc(it.by || it.src)+'</span>' +
+            '<span class="news-title">'+esc(it.title)+'</span>' +
+            (it.blurb ? '<span class="news-blurb">'+esc(it.blurb)+'</span>' : '') +
+          '</span></a>';
+      }).join('');
+      return '<section class="card news-day">' +
+        '<div class="news-dayhead">'+head+' <span>'+byDay[day].length+'</span></div>' +
+        rows + '</section>';
+    }).join('');
+  }
+
+  document.getElementById('newsAdd').addEventListener('click', addNewsSrc);
+  document.getElementById('newsInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addNewsSrc(); });
+  function addNewsSrc(){
+    var inp = document.getElementById('newsInput');
+    var v = inp.value.trim();
+    if(!v) return;
+    var src;
+    if(/youtube\.com|youtu\.be/i.test(v)){
+      var cid = ytChannelId(v);
+      if(cid){
+        src = { id:'n'+Date.now(), kind:'yt', q:cid, label:'YouTube channel' };
+      }else{
+        var handle = (v.match(/@([\w.\-]+)/) || [])[1];
+        if(!handle){ toast('Use the channel URL with /channel/UC…'); return; }
+        src = { id:'n'+Date.now(), kind:'name', q:handle, label:'@'+handle };
+      }
+    }else{
+      src = { id:'n'+Date.now(), kind:'name', q:v, label:v };
+    }
+    newsSrc.push(src); saveNewsSrc(); inp.value = '';
+    renderNews(); refreshNews(true);
+  }
+  document.getElementById('newsSrcList').addEventListener('click', function(e){
+    var chip = e.target.closest('.news-chip');
+    if(!chip || !e.target.closest('button')) return;
+    var id = chip.getAttribute('data-id');
+    if(!confirmDelete('news:' + id, 'this source')) return;
+    newsSrc = newsSrc.filter(function(s){ return s.id !== id; });
+    newsCache.items = (newsCache.items || []).filter(function(it){
+      return newsSrc.some(function(s){ return s.label === it.src; });
+    });
+    saveNewsSrc(); saveNewsCache(); renderNews();
+  });
+  document.getElementById('newsRefresh').addEventListener('click', function(){ refreshNews(true); });
+
+  renderNews();
 
   /* ==================== GOLD ==================== */
   /* Ten days of 24K rates (AED per gram, Gulf News / Dubai Gold & Jewellery
@@ -2797,7 +3402,11 @@
     setSheet.classList.add('open'); overlay.classList.add('open');
     refreshRecoverNote();
   });
-  overlay.addEventListener('click', function(){ setSheet.classList.remove('open'); });
+  overlay.addEventListener('click', function(){
+    setSheet.classList.remove('open');
+    if(typeof closeDotSheet === 'function') closeDotSheet();
+    if(typeof closeRtItem === 'function') closeRtItem();
+  });
 
   document.getElementById('optLg').addEventListener('change', function(){
     settings.lg = this.checked; saveSettings(); applySettings();
@@ -2841,7 +3450,7 @@
 
   /* backup to a file / restore from one */
   document.getElementById('btnBackup').addEventListener('click', function(){
-    var payload = { app:'DayLog', version:'7.5', saved:new Date().toISOString(), data:snapshotData() };
+    var payload = { app:'DayLog', version:'8.0', saved:new Date().toISOString(), data:snapshotData() };
     var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' }));
     var a = document.createElement('a');
     a.href = url; a.download = 'daylog-backup-' + todayKey() + '.json';
@@ -2851,6 +3460,9 @@
   });
   document.getElementById('btnRestore').addEventListener('click', function(){
     document.getElementById('restoreFile').click();
+  });
+  document.getElementById('setDone').addEventListener('click', function(){
+    setSheet.classList.remove('open'); overlay.classList.remove('open');
   });
   document.getElementById('btnRecover').addEventListener('click', function(){
     var note = document.getElementById('recoverNote');

@@ -1,6 +1,6 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v17';
+var CACHE = 'daylog-v18';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -21,7 +21,8 @@ self.addEventListener('activate', function(e){
 self.addEventListener('fetch', function(e){
   if(e.request.method !== 'GET') return;
 
-  if(/dubaicityofgold\.com|allorigins|corsproxy|r\.jina\.ai/.test(e.request.url)) return;
+  /* anything fetched live is never served from the cache */
+  if(/dubaicityofgold\.com|allorigins|corsproxy|r\.jina\.ai|oembed|vimeo\.com\/api|news\.google\.com|youtube\.com\/feeds/.test(e.request.url)) return;
 
   /* The page itself is fetched from the network first, so a new version shows
      up the moment you open the app rather than one launch later. The cached
