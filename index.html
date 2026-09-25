@@ -646,10 +646,23 @@
   .news-chip i{width:7px; height:7px; border-radius:50%; display:block; flex:0 0 auto}
   .news-chip i.yt{background:#c0392b}
   .news-chip i.nm{background:var(--accent)}
-  .news-chip button{
-    border:0; background:transparent; color:var(--ink-2); cursor:pointer; padding:2px;
-    display:flex; border-radius:6px;
+  .news-chip.dim{opacity:.55}
+  .news-chip em{font-style:normal; font-size:11px; color:var(--ink-2)}
+  .news-hint{font-size:11px; color:var(--ink-2); margin-top:9px; line-height:1.5}
+  .news-hint a{color:var(--accent); font-weight:700; text-decoration:none; border-bottom:1px solid var(--line)}
+  .news-item.fresh .news-title{font-weight:700}
+  .news-item.fresh::before{
+    content:''; position:absolute; left:-9px; top:14px; width:5px; height:5px;
+    border-radius:50%; background:var(--accent);
   }
+  .news-item{position:relative}
+  .tab-badge{
+    position:absolute; top:4px; right:50%; transform:translateX(18px);
+    background:var(--accent); color:#fff; font-size:9px; font-weight:800;
+    min-width:15px; height:15px; border-radius:999px; padding:0 4px;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .tabbar button{position:relative}
   #newsFeed{display:flex; flex-direction:column; gap:10px}
   .news-day{padding:11px 13px}
   .news-dayhead{
@@ -761,7 +774,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v8.0</div>
+      <div class="ver" id="appVer">v8.1</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -984,11 +997,9 @@
         <span class="gold-status" id="newsStatus"></span>
       </div>
       <div class="news-src" id="newsSrcList"></div>
-      <div class="lib-add" style="margin-top:9px">
-        <div class="lib-add-row">
-          <input type="text" id="newsInput" placeholder="YouTube channel link, or a person's name">
-          <button id="newsAdd">Add</button>
-        </div>
+      <div class="news-hint">
+        Fetched each morning from the list in your repo ·
+        <a href="#" id="newsEditSrc">change who you follow</a>
       </div>
     </section>
     <div id="newsFeed"></div>
@@ -1740,6 +1751,7 @@
     var vis = visibleTabs();
     if(vis.indexOf(name) < 0) name = vis[0];
     activeTab = name;
+    if(name === 'news' && typeof markNewsSeen === 'function') setTimeout(markNewsSeen, 1200);
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
       var btn = document.getElementById('tab-'+t);
@@ -2845,122 +2857,103 @@
   renderLib();
 
   /* ==================== NEWS ====================
-     Reads only the sources you add. A YouTube link becomes that channel's
-     public feed; a plain name becomes a Google News search for it. Neither
-     allows a browser to read it directly, so the feeds come through a public
-     relay — which is the one part that can fail. Everything is cached, so
-     the last good pull stays on screen. */
-  var NEWS_KEY = 'news-sources-v1', NEWSC_KEY = 'news-cache-v1';
-  var memNews = null, memNewsC = null;
-  function saveNewsSrc(){ memNews = newsSrc; try{ localStorage.setItem(NEWS_KEY, JSON.stringify(newsSrc)); }catch(e){} }
+     The feeds are fetched once each morning by a job in the repo, which
+     writes news.json next to this page. Reading our own file needs no relay
+     and no key, so it just works; the last copy is cached for offline. The
+     sources live in news-sources.json, which the job reads. */
+  var NEWSC_KEY = 'news-cache-v1', NEWSSEEN_KEY = 'news-seen-v1';
+  var memNewsC = null;
   function saveNewsCache(){ memNewsC = newsCache; try{ localStorage.setItem(NEWSC_KEY, JSON.stringify(newsCache)); }catch(e){} }
-  var newsSrc = loadJSON(NEWS_KEY, [], memNews);      // [{id, kind:'yt'|'name', q, label}]
-  var newsCache = loadJSON(NEWSC_KEY, { at:0, items:[] }, memNewsC);
-  var newsBusy = false;
+  var newsCache = loadJSON(NEWSC_KEY, { at:0, items:[], sources:[] }, memNewsC);
+  var newsSeen = 0;
+  try{ newsSeen = +(localStorage.getItem(NEWSSEEN_KEY) || 0); }catch(e){}
+  var newsBusy = false, newsFetchedAt = 0;
+  var REPO_SOURCES_URL = 'https://github.com/subneter/med-log/edit/main/news-sources.json';
 
-  var RELAYS = [
-    function(u){ return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-    function(u){ return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
-    function(u){ return 'https://r.jina.ai/' + u; }
-  ];
-  function viaRelay(url){
-    var i = 0;
-    return new Promise(function(resolve, reject){
-      (function next(){
-        if(i >= RELAYS.length){ reject(0); return; }
-        fetch(RELAYS[i++](url), { cache:'no-store' })
-          .then(function(r){ if(!r.ok) throw 0; return r.text(); })
-          .then(function(t){ if(!t || t.length < 40) throw 0; resolve(t); })
-          .catch(next);
-      })();
-    });
+  function newsUnread(){
+    var n = 0, items = newsCache.items || [];
+    for(var i = 0; i < items.length; i++) if(new Date(items[i].at).getTime() > newsSeen) n++;
+    return n;
   }
-
-  function ytChannelId(url){
-    var m = String(url).match(/channel\/(UC[\w-]{20,})/);
-    return m ? m[1] : null;
-  }
-  function feedUrlFor(src){
-    if(src.kind === 'yt') return 'https://www.youtube.com/feeds/videos.xml?channel_id=' + src.q;
-    if(src.kind === 'ytuser') return 'https://www.youtube.com/feeds/videos.xml?user=' + src.q;
-    return 'https://news.google.com/rss/search?q=' + encodeURIComponent('"' + src.q + '"') + '&hl=en&gl=AE&ceid=AE:en';
-  }
-  function tagText(xml, tag){
-    var m = xml.match(new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>'));
-    if(!m) return '';
-    return m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-      .replace(/<[^>]+>/g, ' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
-      .replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'")
-      .replace(/\s+/g, ' ').trim();
-  }
-  function parseFeed(xml, src){
-    var out = [];
-    var blocks = xml.split(/<entry[\s>]/).slice(1);
-    var atom = blocks.length > 0;
-    if(!atom) blocks = xml.split(/<item[\s>]/).slice(1);
-    for(var i = 0; i < blocks.length && i < 12; i++){
-      var bl = blocks[i];
-      var title = tagText(bl, 'title');
-      if(!title) continue;
-      var link = '';
-      var lm = bl.match(/<link[^>]*href="([^"]+)"/) || bl.match(/<link>([\s\S]*?)<\/link>/);
-      if(lm) link = lm[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim();
-      var when = tagText(bl, 'published') || tagText(bl, 'pubDate') || tagText(bl, 'updated');
-      var t = when ? new Date(when) : null;
-      if(!t || isNaN(t.getTime())) t = new Date();
-      var th = '';
-      var tm = bl.match(/<media:thumbnail[^>]*url="([^"]+)"/);
-      if(tm) th = tm[1];
-      var by = tagText(bl, 'name') || tagText(bl, 'source') || src.label;
-      var blurb = tagText(bl, 'media:description') || tagText(bl, 'description') || '';
-      blurb = blurb.replace(/^\s*<?a\b[\s\S]*$/, '').slice(0, 180);
-      out.push({
-        title: title, url: link, by: by || src.label, th: th,
-        at: t.getTime(), day: keyOf(t), src: src.label,
-        blurb: blurb
-      });
+  function markNewsSeen(){
+    var items = newsCache.items || [];
+    if(!items.length) return;
+    var newest = 0;
+    for(var i = 0; i < items.length; i++){
+      var t = new Date(items[i].at).getTime();
+      if(t > newest) newest = t;
     }
-    return out;
+    if(newest > newsSeen){
+      newsSeen = newest;
+      try{ localStorage.setItem(NEWSSEEN_KEY, String(newsSeen)); }catch(e){}
+      paintNewsBadge();
+    }
+  }
+  function paintNewsBadge(){
+    var btn = document.getElementById('tab-news');
+    if(!btn) return;
+    var n = newsUnread();
+    var dot = btn.querySelector('.tab-badge');
+    if(n > 0){
+      if(!dot){
+        dot = document.createElement('span');
+        dot.className = 'tab-badge';
+        btn.appendChild(dot);
+      }
+      dot.textContent = n > 99 ? '99+' : n;
+    }else if(dot){ dot.remove(); }
   }
 
-  function refreshNews(force){
+  function fetchNews(force){
     if(newsBusy) return;
-    if(!newsSrc.length){ renderNews(); return; }
-    if(!force && Date.now() - (newsCache.at || 0) < 3 * 3600 * 1000) return;
-    newsBusy = true;
-    document.getElementById('newsStatus').textContent = 'Fetching…';
-    var got = [], done = 0, okCount = 0;
-    newsSrc.forEach(function(src){
-      viaRelay(feedUrlFor(src))
-        .then(function(xml){ got = got.concat(parseFeed(xml, src)); okCount++; })
-        .catch(function(){})
-        .then(function(){
-          if(++done < newsSrc.length) return;
-          newsBusy = false;
-          if(got.length){
-            got.sort(function(a, b){ return b.at - a.at; });
-            newsCache = { at: Date.now(), items: got.slice(0, 120) };
-            saveNewsCache();
-            document.getElementById('newsStatus').textContent =
-              'Updated · ' + okCount + '/' + newsSrc.length + ' sources';
-          }else{
-            document.getElementById('newsStatus').textContent = 'Couldn’t reach the feeds — try again later';
-          }
-          renderNews();
-        });
-    });
+    var now = Date.now();
+    if(!force && now - newsFetchedAt < 30 * 60 * 1000) return;
+    newsFetchedAt = now; newsBusy = true;
+    if(force) document.getElementById('newsStatus').textContent = 'Checking…';
+    fetch('news.json?d=' + todayKey(), { cache:'no-cache' })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        newsBusy = false;
+        if(!j || !j.items) throw 0;
+        newsCache = { at: Date.now(), updated: j.updated || '', items: j.items, sources: j.sources || [] };
+        saveNewsCache();
+        renderNews(); paintNewsBadge();
+        document.getElementById('newsStatus').textContent = j.items.length
+          ? 'Updated ' + relTime(j.updated)
+          : 'No posts in the feed yet';
+      })
+      .catch(function(){
+        newsBusy = false;
+        document.getElementById('newsStatus').textContent = (newsCache.items && newsCache.items.length)
+          ? 'Showing the last copy'
+          : 'Nothing yet — the morning job fills this in';
+        renderNews();
+      });
+  }
+  function relTime(iso){
+    if(!iso) return '';
+    var t = new Date(iso).getTime();
+    if(isNaN(t)) return '';
+    var mins = Math.round((Date.now() - t) / 60000);
+    if(mins < 2) return 'just now';
+    if(mins < 60) return mins + ' min ago';
+    var hrs = Math.round(mins / 60);
+    if(hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    var d = Math.round(hrs / 24);
+    return d + (d === 1 ? ' day ago' : ' days ago');
   }
 
   function renderNewsSources(){
     var box = document.getElementById('newsSrcList');
-    if(!newsSrc.length){
-      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">Add a channel or a name to follow</div>';
+    var srcs = newsCache.sources || [];
+    if(!srcs.length){
+      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">No sources set yet</div>';
       return;
     }
-    box.innerHTML = newsSrc.map(function(s){
-      return '<span class="news-chip'+(isArmed('news:'+s.id) ? ' armed' : '')+'" data-id="'+s.id+'">' +
+    box.innerHTML = srcs.map(function(s){
+      return '<span class="news-chip'+(s.ok ? '' : ' dim')+'">' +
         '<i class="'+(s.kind === 'name' ? 'nm' : 'yt')+'"></i>'+esc(s.label)+
-        '<button aria-label="Remove">'+X_SVG+'</button></span>';
+        (s.ok ? '' : ' <em>no posts</em>')+'</span>';
     }).join('');
   }
 
@@ -2970,14 +2963,16 @@
     var items = newsCache.items || [];
     if(!items.length){
       box.innerHTML = '<section class="card"><div class="empty-note">' +
-        (newsSrc.length ? 'Nothing pulled in yet — tap Refresh' : 'Add a source above, then tap Refresh') +
+        'Nothing here yet. Add who you want to follow to <b>news-sources.json</b> in your repo, ' +
+        'then the morning job fills this in — or run it now from the Actions tab.' +
         '</div></section>';
       return;
     }
     var days = [], byDay = {};
     items.forEach(function(it){
-      if(!byDay[it.day]){ byDay[it.day] = []; days.push(it.day); }
-      byDay[it.day].push(it);
+      var day = keyOf(new Date(it.at));
+      if(!byDay[day]){ byDay[day] = []; days.push(day); }
+      byDay[day].push(it);
     });
     days.sort().reverse();
     box.innerHTML = days.slice(0, 21).map(function(day){
@@ -2986,8 +2981,9 @@
         : day === keyOf(addDays(midnight(), -1)) ? 'Yesterday'
         : DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d);
       var rows = byDay[day].map(function(it){
-        return '<a class="news-item" href="'+esc(it.url)+'" target="_blank" rel="noopener">' +
-          (it.th ? '<span class="news-th" style="background-image:url(\''+esc(it.th)+'\')"></span>' : '') +
+        var fresh = new Date(it.at).getTime() > newsSeen;
+        return '<a class="news-item'+(fresh ? ' fresh' : '')+'" href="'+esc(it.url)+'" target="_blank" rel="noopener">' +
+          (it.th ? '<span class="news-th" style="background-image:url(\'' + esc(it.th) + '\')"></span>' : '') +
           '<span class="news-main">' +
             '<span class="news-by">'+esc(it.by || it.src)+'</span>' +
             '<span class="news-title">'+esc(it.title)+'</span>' +
@@ -3000,42 +2996,15 @@
     }).join('');
   }
 
-  document.getElementById('newsAdd').addEventListener('click', addNewsSrc);
-  document.getElementById('newsInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addNewsSrc(); });
-  function addNewsSrc(){
-    var inp = document.getElementById('newsInput');
-    var v = inp.value.trim();
-    if(!v) return;
-    var src;
-    if(/youtube\.com|youtu\.be/i.test(v)){
-      var cid = ytChannelId(v);
-      if(cid){
-        src = { id:'n'+Date.now(), kind:'yt', q:cid, label:'YouTube channel' };
-      }else{
-        var handle = (v.match(/@([\w.\-]+)/) || [])[1];
-        if(!handle){ toast('Use the channel URL with /channel/UC…'); return; }
-        src = { id:'n'+Date.now(), kind:'name', q:handle, label:'@'+handle };
-      }
-    }else{
-      src = { id:'n'+Date.now(), kind:'name', q:v, label:v };
-    }
-    newsSrc.push(src); saveNewsSrc(); inp.value = '';
-    renderNews(); refreshNews(true);
-  }
-  document.getElementById('newsSrcList').addEventListener('click', function(e){
-    var chip = e.target.closest('.news-chip');
-    if(!chip || !e.target.closest('button')) return;
-    var id = chip.getAttribute('data-id');
-    if(!confirmDelete('news:' + id, 'this source')) return;
-    newsSrc = newsSrc.filter(function(s){ return s.id !== id; });
-    newsCache.items = (newsCache.items || []).filter(function(it){
-      return newsSrc.some(function(s){ return s.label === it.src; });
-    });
-    saveNewsSrc(); saveNewsCache(); renderNews();
+  document.getElementById('newsRefresh').addEventListener('click', function(){ fetchNews(true); });
+  document.getElementById('newsEditSrc').addEventListener('click', function(e){
+    e.preventDefault();
+    window.open(REPO_SOURCES_URL, '_blank', 'noopener');
   });
-  document.getElementById('newsRefresh').addEventListener('click', function(){ refreshNews(true); });
 
   renderNews();
+  fetchNews(true);
+  paintNewsBadge();
 
   /* ==================== GOLD ==================== */
   /* Ten days of 24K rates (AED per gram, Gulf News / Dubai Gold & Jewellery
@@ -3306,6 +3275,36 @@
     if(!force && goldState.last === todayKey() && goldState.ok) return;
     goldFetchedAt = now; goldChecking = true;
     if(force) setGoldStatus('Checking…');
+
+    /* the morning job writes gold.json beside this page — same origin, so it
+       always works; the live scrape below is only a fallback */
+    fetch('gold.json?d=' + todayKey(), { cache:'no-cache' })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        if(!j || !j.history || !j.history.length) throw 0;
+        var added = 0;
+        for(var n = 0; n < j.history.length; n++){
+          var row = j.history[n], have = false;
+          for(var m2 = 0; m2 < goldHist.length; m2++) if(goldHist[m2].d === row.d){ have = true; break; }
+          if(!have){ goldHist.push({ d: row.d, v: row.v }); added++; }
+        }
+        if(added){
+          goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+          saveGold();
+        }
+        var last = j.history[j.history.length - 1];
+        if(last && last.d === todayKey()){
+          goldChecking = false;
+          goldState = { last: todayKey(), ok: true }; saveGoldState();
+          renderGold(); setGoldStatus(force ? 'Updated from this morning' : '');
+          return Promise.reject('done');
+        }
+        renderGold();
+        throw 0;                                   /* file is stale — try live */
+      })
+      .catch(function(err){ if(err !== 'done') tryLive(); });
+
+    function tryLive(){
     var i = 0;
     (function tryNext(){
       if(i >= GOLD_WAYS.length){
@@ -3329,6 +3328,7 @@
         })
         .catch(function(){ tryNext(); });
     })();
+    }
   }
   document.getElementById('goldCheck').addEventListener('click', function(){ fetchGold(true); });
 
@@ -3450,7 +3450,7 @@
 
   /* backup to a file / restore from one */
   document.getElementById('btnBackup').addEventListener('click', function(){
-    var payload = { app:'DayLog', version:'8.0', saved:new Date().toISOString(), data:snapshotData() };
+    var payload = { app:'DayLog', version:'8.1', saved:new Date().toISOString(), data:snapshotData() };
     var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' }));
     var a = document.createElement('a');
     a.href = url; a.download = 'daylog-backup-' + todayKey() + '.json';

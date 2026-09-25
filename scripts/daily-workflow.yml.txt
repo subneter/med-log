@@ -1,0 +1,39 @@
+name: Daily update
+
+on:
+  schedule:
+    # 03:10 UTC = 07:10 in Dubai, so it is ready when you wake up
+    - cron: '10 3 * * *'
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daylog-daily
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch feeds and the gold rate
+        run: node scripts/daily.mjs
+
+      - name: Commit whatever changed
+        run: |
+          if [ -n "$(git status --porcelain news.json gold.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add news.json gold.json
+            git commit -m "daily: $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "Nothing changed today."
+          fi

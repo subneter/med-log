@@ -1,7 +1,8 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v18';
+var CACHE = 'daylog-v19';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+/* news.json and gold.json are always fetched live, never served stale */
 
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(ASSETS); }).then(function(){ return self.skipWaiting(); }));
@@ -23,6 +24,13 @@ self.addEventListener('fetch', function(e){
 
   /* anything fetched live is never served from the cache */
   if(/dubaicityofgold\.com|allorigins|corsproxy|r\.jina\.ai|oembed|vimeo\.com\/api|news\.google\.com|youtube\.com\/feeds/.test(e.request.url)) return;
+  if(/\/(news|gold)\.json/.test(e.request.url)){
+    e.respondWith(fetch(e.request).then(function(res){
+      if(res && res.ok){ var c2 = res.clone(); caches.open(CACHE).then(function(c){ c.put(e.request.url.split('?')[0], c2); }); }
+      return res;
+    }).catch(function(){ return caches.match(e.request.url.split('?')[0], { ignoreSearch:true }); }));
+    return;
+  }
 
   /* The page itself is fetched from the network first, so a new version shows
      up the moment you open the app rather than one launch later. The cached
