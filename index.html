@@ -807,7 +807,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v8.3</div>
+      <div class="ver" id="appVer">v8.4</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -1044,8 +1044,8 @@
       </div>
       <div class="news-hint" id="newsHint"></div>
       <div class="set-pair" id="newsSyncRow" style="display:none">
-        <button class="set-test" id="newsSync" style="margin-top:0">Send list to repo</button>
-        <button class="set-test" id="newsCopy" style="margin-top:0">Copy list</button>
+        <button class="set-test" id="newsSync" style="margin-top:0">Connect GitHub</button>
+        <button class="set-test" id="newsCopy" style="margin-top:0">Copy list instead</button>
       </div>
     </section>
     <div id="newsFeed"></div>
@@ -1170,13 +1170,14 @@
   <div class="set-note" id="recoverNote"></div>
 
   <div class="set-row" style="border-top:1px solid var(--line); margin-top:12px">
-    <div><div class="set-name">GitHub token</div><div class="set-sub">Lets the News tab send your source list to the repo</div></div>
+    <div><div class="set-name">GitHub token</div><div class="set-sub">Lets the News tab fetch by itself when you add a name</div></div>
   </div>
   <div class="lib-add-row" style="margin-top:9px">
     <input type="password" id="ghTokInput" placeholder="github_pat_…" autocomplete="off">
     <button id="ghTokSave">Save</button>
   </div>
-  <p class="set-note">Optional. Only needs <b>Contents: read and write</b> on this one repo. It is stored on this phone and used for nothing else — leave it blank and the News tab will copy the list for you to paste instead.</p>
+  <div class="set-note" id="ghTokNote"></div>
+  <p class="set-note">Only needs <b>Contents: read and write</b> on this one repo. It is kept on this phone and used for nothing else. Without it, the News tab can only copy the list for you to paste into GitHub yourself.</p>
   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
   <div class="sheet-done"><button id="setDone">Done</button></div>
@@ -3078,14 +3079,14 @@
       }).join('');
     }
     var dirty = newsDirty(), linked = !!ghToken();
-    /* with a token the list saves itself, so the manual row is only for when
-       there is no token to save with */
-    document.getElementById('newsSyncRow').style.display = (dirty && !linked) ? 'flex' : 'none';
+    /* with a token the list saves itself; without one, the row is the way in */
+    document.getElementById('newsSyncRow').style.display = linked ? 'none' : 'flex';
     document.getElementById('newsHint').innerHTML = !linked
-      ? (dirty
-          ? 'This list differs from the one the job uses — send it over, or add a GitHub token in Settings and it will save itself.'
-          : 'Fetched each morning · add a GitHub token in Settings to add names straight from here')
-      : 'Adding or removing saves itself and fetches within a minute · also refreshed each morning · <a href="#" id="newsEditSrc">open the list</a>';
+      ? '<b>These names are only on this phone.</b> Connect GitHub once and adding a name will ' +
+        'fetch by itself within a minute. Otherwise copy the list and paste it into the repo yourself.'
+      : (dirty
+          ? 'Saving your list… it fetches within a minute of landing in the repo.'
+          : 'Adding or removing saves itself and fetches within a minute · also refreshed each morning · <a href="#" id="newsEditSrc">open the list</a>');
     var link = document.getElementById('newsEditSrc');
     if(link) link.addEventListener('click', function(e){
       e.preventDefault(); window.open(REPO_SOURCES_URL, '_blank', 'noopener');
@@ -3099,10 +3100,8 @@
     var tok = ghToken();
     var status = document.getElementById('newsStatus');
     if(!tok){
-      if(!quiet){
-        toast('Add a GitHub token in Settings first');
-        document.getElementById('newsCopy').click();
-      }
+      status.textContent = 'Not connected to GitHub yet';
+      if(!quiet && window.openTokenSetting) window.openTokenSetting();
       return;
     }
     if(newsSyncing) return;
@@ -3222,7 +3221,8 @@
     if(ghToken()) syncNewsSources(true);
     else fetchNews(true);
   });
-  document.getElementById('newsSync').addEventListener('click', syncNewsSources);
+  /* NB: pass nothing — a click event here would look like the "quiet" flag */
+  document.getElementById('newsSync').addEventListener('click', function(){ syncNewsSources(); });
   document.getElementById('newsCopy').addEventListener('click', function(){
     var txt = wantedJSON();
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -3688,6 +3688,18 @@
     setSheet.classList.add('open'); overlay.classList.add('open');
     refreshRecoverNote();
   });
+  /* jump straight to the token box, so "Connect GitHub" lands somewhere useful */
+  window.openTokenSetting = function(){
+    setSheet.classList.add('open'); overlay.classList.add('open');
+    refreshRecoverNote();
+    var inp = document.getElementById('ghTokInput');
+    setTimeout(function(){
+      inp.scrollIntoView({ block:'center' });
+      inp.focus();
+      document.getElementById('ghTokNote').textContent =
+        'Paste a GitHub token with Contents: read and write on subneter/med-log.';
+    }, 260);
+  };
   overlay.addEventListener('click', function(){
     setSheet.classList.remove('open');
     if(typeof closeDotSheet === 'function') closeDotSheet();
@@ -3771,15 +3783,45 @@
   document.getElementById('btnRestore').addEventListener('click', function(){
     document.getElementById('restoreFile').click();
   });
+  /* A token that looks saved but cannot write is the worst case — it fails
+     silently later. So check it here, once, and say plainly what happened. */
   document.getElementById('ghTokSave').addEventListener('click', function(){
     var el = document.getElementById('ghTokInput');
+    var note = document.getElementById('ghTokNote');
     var v = el.value.trim();
-    try{
-      if(v) localStorage.setItem(GHTOK_KEY, v); else localStorage.removeItem(GHTOK_KEY);
-    }catch(e){}
-    el.value = '';
-    toast(v ? 'Token saved on this phone' : 'Token cleared');
-    if(typeof renderNews === 'function') renderNews();
+    if(!v){
+      try{ localStorage.removeItem(GHTOK_KEY); }catch(e){}
+      note.textContent = 'Token cleared.';
+      toast('Token cleared');
+      if(typeof renderNews === 'function') renderNews();
+      return;
+    }
+    note.textContent = 'Checking the token…';
+    fetch('https://api.github.com/repos/subneter/med-log', {
+      headers: { 'Authorization': 'Bearer ' + v, 'Accept': 'application/vnd.github+json' },
+      cache: 'no-store'
+    }).then(function(r){
+      if(r.status === 401) throw 'expired';
+      if(!r.ok) throw 'norepo';
+      return r.json();
+    }).then(function(j){
+      if(!j || !j.permissions || !j.permissions.push) throw 'readonly';
+      try{ localStorage.setItem(GHTOK_KEY, v); }catch(e){}
+      el.value = '';
+      note.innerHTML = '<b>Connected.</b> Adding a name in News now fetches by itself.';
+      toast('Connected to GitHub');
+      if(typeof renderNews === 'function') renderNews();
+      if(typeof syncNewsSources === 'function' && newsDirty()) syncNewsSources(true);
+    }).catch(function(why){
+      note.textContent = why === 'expired'
+        ? 'That token is expired or mistyped — make a new one on GitHub.'
+        : why === 'readonly'
+          ? 'That token can read but not write. It needs Contents: read and write.'
+          : why === 'norepo'
+            ? 'That token cannot see subneter/med-log — check the repository it was given access to.'
+            : 'Could not reach GitHub just now — try again in a moment.';
+      toast('Token not accepted');
+    });
   });
   document.getElementById('setDone').addEventListener('click', function(){
     setSheet.classList.remove('open'); overlay.classList.remove('open');

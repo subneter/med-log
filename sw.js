@@ -1,6 +1,6 @@
 /* DayLog service worker — cache-first so the app works fully offline,
    plus best-effort daily reminder via Periodic Background Sync */
-var CACHE = 'daylog-v21';
+var CACHE = 'daylog-v22';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 /* news.json and gold.json are always fetched live, never served stale */
 
