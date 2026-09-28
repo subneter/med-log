@@ -21,7 +21,8 @@ const get = (url, extra = {}) =>
 /* ---------------------------------------------------------------- news --- */
 
 const NEWS_KEEP_DAYS = 45;
-const PER_SOURCE = 8;
+const PER_SOURCE = 8;      // videos per channel
+const PER_NAME = 12;       // stories per person
 
 function strip(s) {
   return String(s || '')
@@ -54,11 +55,11 @@ async function resolveChannel(input) {
   return m[1];
 }
 
-function parseFeed(xml, label) {
+function parseFeed(xml, label, limit = PER_SOURCE) {
   const out = [];
   const atom = xml.includes('<entry');
   const blocks = atom ? xml.split(/<entry[\s>]/).slice(1) : xml.split(/<item[\s>]/).slice(1);
-  for (const b of blocks.slice(0, PER_SOURCE)) {
+  for (const b of blocks.slice(0, limit)) {
     const title = tag(b, 'title');
     if (!title) continue;
     const lm = b.match(/<link[^>]*href="([^"]+)"/) || b.match(/<link>([\s\S]*?)<\/link>/);
@@ -108,15 +109,30 @@ async function buildNews() {
     }
   }
 
+  /* Google ranks a plain name search by relevance, which drags up articles
+     from years back — of eight results, seven were older than the window and
+     got thrown away. Asking for a date range first gives eight recent ones
+     instead. If the person has been quiet, fall back to their latest coverage
+     whatever its age, and mark it so the freshness filter lets it through. */
+  const news = async (q, limit, label) => {
+    const res = await get(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en&gl=AE&ceid=AE:en`
+    );
+    if (!res.ok) throw new Error(`feed ${res.status}`);
+    return parseFeed(await res.text(), label, limit);
+  };
+
   for (const name of cfg.names || []) {
     try {
-      const q = encodeURIComponent(`"${name}"`);
-      const res = await get(`https://news.google.com/rss/search?q=${q}&hl=en&gl=AE&ceid=AE:en`);
-      if (!res.ok) throw new Error(`feed ${res.status}`);
-      const got = parseFeed(await res.text(), name);
+      let got = await news(`"${name}" when:${NEWS_KEEP_DAYS}d`, PER_NAME, name);
+      let note = '';
+      if (!got.length) {
+        got = (await news(`"${name}"`, 3, name)).map((i) => ({ ...i, keep: true }));
+        if (got.length) note = 'nothing recent — showing the latest';
+      }
       items.push(...got);
-      sources.push({ label: name, kind: 'name', ok: got.length });
-      console.log(`news: ${name} -> ${got.length}`);
+      sources.push({ label: name, kind: 'name', ok: got.length, note });
+      console.log(`news: ${name} -> ${got.length}${note ? ' (' + note + ')' : ''}`);
     } catch (e) {
       sources.push({ label: name, kind: 'name', ok: 0, error: e.message });
       console.log(`news: ${name} failed — ${e.message}`);
@@ -124,10 +140,18 @@ async function buildNews() {
   }
 
   const cutoff = Date.now() - NEWS_KEEP_DAYS * 86400000;
+  const seen = new Set();
   const fresh = items
-    .filter((i) => new Date(i.at).getTime() >= cutoff)
+    .filter((i) => i.keep || new Date(i.at).getTime() >= cutoff)
+    .filter((i) => {
+      const k = (i.url || i.title).replace(/[?#].*$/, '');
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
     .sort((a, b) => new Date(b.at) - new Date(a.at))
-    .slice(0, 150);
+    .slice(0, 150)
+    .map(({ keep, ...i }) => i);
 
   await writeFile(new URL('news.json', ROOT),
     JSON.stringify({ updated: new Date().toISOString(), sources, items: fresh }, null, 2) + '\n');
