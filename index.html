@@ -807,7 +807,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v8.2</div>
+      <div class="ver" id="appVer">v8.3</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -2952,6 +2952,7 @@
   var newsSeen = 0;
   try{ newsSeen = +(localStorage.getItem(NEWSSEEN_KEY) || 0); }catch(e){}
   var newsBusy = false, newsFetchedAt = 0;
+  var newsSyncing = false, newsSyncTimer = null, newsWatchTimer = null;
   var REPO_SOURCES_URL = 'https://github.com/subneter/med-log/edit/main/news-sources.json';
 
   function newsUnread(){
@@ -3046,7 +3047,9 @@
   function wantedJSON(){
     var list = newsList();
     return JSON.stringify({
-      _comment: 'The News tab reads only what is listed here.',
+      _comment: 'The News tab reads only what is listed here. Saving this file ' +
+                'is what sets the fetch going, so "touched" changes every time.',
+      touched: new Date().toISOString(),
       youtube: list.filter(function(s){ return s.kind === 'yt'; })
         .map(function(s){ return { name: s.label, url: s.q }; }),
       names: list.filter(function(s){ return s.kind === 'name'; })
@@ -3074,34 +3077,44 @@
           '<button aria-label="Remove">'+X_SVG+'</button></span>';
       }).join('');
     }
-    var dirty = newsDirty();
-    document.getElementById('newsSyncRow').style.display = dirty ? 'flex' : 'none';
-    document.getElementById('newsHint').innerHTML = dirty
-      ? 'This list differs from the one your morning job uses — send it over so tomorrow’s fetch includes it.'
-      : 'Fetched each morning from the list in your repo · <a href="#" id="newsEditSrc">open the file</a>';
+    var dirty = newsDirty(), linked = !!ghToken();
+    /* with a token the list saves itself, so the manual row is only for when
+       there is no token to save with */
+    document.getElementById('newsSyncRow').style.display = (dirty && !linked) ? 'flex' : 'none';
+    document.getElementById('newsHint').innerHTML = !linked
+      ? (dirty
+          ? 'This list differs from the one the job uses — send it over, or add a GitHub token in Settings and it will save itself.'
+          : 'Fetched each morning · add a GitHub token in Settings to add names straight from here')
+      : 'Adding or removing saves itself and fetches within a minute · also refreshed each morning · <a href="#" id="newsEditSrc">open the list</a>';
     var link = document.getElementById('newsEditSrc');
     if(link) link.addEventListener('click', function(e){
       e.preventDefault(); window.open(REPO_SOURCES_URL, '_blank', 'noopener');
     });
   }
 
-  /* commit news-sources.json straight to the repo, if a token is saved */
-  function syncNewsSources(){
+  /* Saving news-sources.json to the repo is also what starts the fetch: the
+     job there runs on any change to that file. So one tap covers both, and
+     watchBuild() then waits for the new news.json to appear. */
+  function syncNewsSources(quiet){
     var tok = ghToken();
     var status = document.getElementById('newsStatus');
     if(!tok){
-      toast('Add a GitHub token in Settings first');
-      document.getElementById('newsCopy').click();
+      if(!quiet){
+        toast('Add a GitHub token in Settings first');
+        document.getElementById('newsCopy').click();
+      }
       return;
     }
-    status.textContent = 'Sending…';
+    if(newsSyncing) return;
+    newsSyncing = true;
+    status.textContent = 'Saving your list…';
     var api = 'https://api.github.com/repos/subneter/med-log/contents/news-sources.json';
     var hdr = { 'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json' };
     fetch(api, { headers: hdr, cache:'no-store' })
       .then(function(r){ return r.ok ? r.json() : {}; })
       .then(function(cur){
         var body = {
-          message: 'news: update sources from the app',
+          message: 'news: sources from the app',
           content: btoa(unescape(encodeURIComponent(wantedJSON()))),
           branch: 'main'
         };
@@ -3109,15 +3122,57 @@
         return fetch(api, { method:'PUT', headers: hdr, body: JSON.stringify(body) });
       })
       .then(function(r){
+        newsSyncing = false;
         if(!r.ok) throw 0;
-        status.textContent = 'Sent — the morning job will use it';
-        toast('Sources sent to your repo');
         renderNews();
+        watchBuild();
       })
       .catch(function(){
-        status.textContent = 'Couldn’t send — check the token';
-        toast('Sending failed');
+        newsSyncing = false;
+        status.textContent = 'Couldn’t save — check the token in Settings';
+        toast('Saving failed');
       });
+  }
+
+  /* After the list is saved the job takes about a minute. Keep looking at
+     news.json until its timestamp moves, then show the result. */
+  function watchBuild(){
+    var status = document.getElementById('newsStatus');
+    var was = newsCache.updated || '';
+    var started = Date.now(), LIMIT = 4 * 60 * 1000;
+    clearTimeout(newsWatchTimer);
+    (function look(){
+      var waited = Math.round((Date.now() - started) / 1000);
+      if(Date.now() - started > LIMIT){
+        status.textContent = 'Still fetching — pull down in a minute';
+        return;
+      }
+      status.textContent = 'Fetching your feeds… ' + waited + 's';
+      fetch('news.json?t=' + Date.now(), { cache:'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){
+          if(j && j.items && (j.updated || '') !== was){
+            newsCache = { at: Date.now(), updated: j.updated || '', items: j.items, sources: j.sources || [] };
+            saveNewsCache();
+            renderNews(); paintNewsBadge();
+            status.textContent = j.items.length
+              ? j.items.length + (j.items.length === 1 ? ' post' : ' posts') + ' · just now'
+              : 'Fetched, but those sources had nothing';
+            fetchGold(true);
+            return;
+          }
+          newsWatchTimer = setTimeout(look, 6000);
+        })
+        .catch(function(){ newsWatchTimer = setTimeout(look, 6000); });
+    })();
+  }
+
+  /* add/remove saves itself a moment later, so there is nothing to remember */
+  function queueSync(){
+    if(!ghToken()) return;
+    clearTimeout(newsSyncTimer);
+    document.getElementById('newsStatus').textContent = 'Saving your list…';
+    newsSyncTimer = setTimeout(function(){ syncNewsSources(true); }, 1500);
   }
 
   function renderNews(){
@@ -3126,8 +3181,10 @@
     var items = newsCache.items || [];
     if(!items.length){
       box.innerHTML = '<section class="card"><div class="empty-note">' +
-        'Nothing here yet. Add who you want to follow to <b>news-sources.json</b> in your repo, ' +
-        'then the morning job fills this in — or run it now from the Actions tab.' +
+        (ghToken()
+          ? 'Nothing here yet. Add a YouTube channel or a person’s name above — it fetches within a minute.'
+          : 'Nothing here yet. Add a name above, then send the list to your repo. ' +
+            'A GitHub token in Settings lets it save and fetch by itself.') +
         '</div></section>';
       return;
     }
@@ -3159,7 +3216,12 @@
     }).join('');
   }
 
-  document.getElementById('newsRefresh').addEventListener('click', function(){ fetchNews(true); });
+  /* With a token, "Check" asks the repo for a fresh fetch rather than just
+     re-reading the file it wrote this morning. */
+  document.getElementById('newsRefresh').addEventListener('click', function(){
+    if(ghToken()) syncNewsSources(true);
+    else fetchNews(true);
+  });
   document.getElementById('newsSync').addEventListener('click', syncNewsSources);
   document.getElementById('newsCopy').addEventListener('click', function(){
     var txt = wantedJSON();
@@ -3188,14 +3250,15 @@
     for(var i = 0; i < list.length; i++) if(list[i].label === item.label){ toast('Already on the list'); return; }
     list.push(item); saveWanted(); inp.value = '';
     renderNews();
-    toast('Added — send the list to your repo when ready');
+    if(ghToken()){ toast('Added — fetching now'); queueSync(); }
+    else toast('Added — send the list to your repo when ready');
   }
   document.getElementById('newsSrcList').addEventListener('click', function(e){
     var chip = e.target.closest('.news-chip');
     if(!chip || !e.target.closest('button')) return;
     var i = +chip.getAttribute('data-i');
     if(!confirmDelete('news:' + i, 'this source')) return;
-    newsList().splice(i, 1); saveWanted(); renderNews();
+    newsList().splice(i, 1); saveWanted(); renderNews(); queueSync();
   });
 
   renderNews();

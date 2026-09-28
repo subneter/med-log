@@ -4,6 +4,11 @@ on:
   schedule:
     # 03:10 UTC = 07:10 in Dubai, so it is ready when you wake up
     - cron: '10 3 * * *'
+  push:
+    # the app saves news-sources.json straight to the repo; that lands here and
+    # fetches within the minute, so a name added on the phone shows up at once
+    paths:
+      - 'news-sources.json'
   workflow_dispatch:        # lets you run it by hand from the Actions tab
 
 permissions:
