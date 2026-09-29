@@ -1,10 +1,11 @@
 {
-  "updated": "2026-09-29T01:39:29.420Z",
+  "updated": "2026-09-29T03:39:05.074Z",
   "sources": [
     {
       "label": "@thedeshbhakt",
       "kind": "yt",
-      "ok": 1
+      "ok": 0,
+      "error": "feed 404"
     }
   ],
   "items": []
