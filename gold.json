@@ -2,7 +2,7 @@
   "unit": "AED per gram",
   "purity": "24K",
   "source": "dubaicityofgold.com",
-  "updated": "2026-10-14",
+  "updated": "2026-10-15",
   "history": [
     {
       "d": "2026-09-28",
@@ -71,6 +71,10 @@
     {
       "d": "2026-10-14",
       "v": 502
+    },
+    {
+      "d": "2026-10-15",
+      "v": 499.75
     }
   ]
 }
