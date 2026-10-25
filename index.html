@@ -22,6 +22,7 @@
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
     --dot-a:#d63b60; --dot-p:#b8862c; --danger:#d13c34; --fri:#2f9e8f;
+    --btc:#5a5fe0; --series:#b8862c;
     --gold:#b8862c; --up:#1a7f4b; --down:#c0392b;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
@@ -34,6 +35,7 @@
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
       --dot-a:#e85570; --dot-p:#c2882f; --danger:#ef5f56; --fri:#3bb6a4;
+      --btc:#7578f0; --series:#c2882f;
       --gold:#c2882f; --up:#1f9e5c; --down:#ea5765;
     }
   }
@@ -568,6 +570,20 @@
   .dot-sum-side{text-align:right; flex:0 0 auto}
   .dot-sum-side b{display:block; font-size:17px; font-weight:800; letter-spacing:-.3px}
   .dot-sum-side span{font-size:11px; color:var(--ink-2); font-weight:600}
+  .dot-sum-note{font-size:12px; color:var(--ink-2); margin-top:2px}
+  /* overdue: the ring and the reading both turn amber, so a glance is enough */
+  .dot-sum.late .dot-sum-ring{border-color:var(--dot-p); border-style:solid}
+  .dot-sum.late .dot-sum-ring i{background:var(--dot-p)}
+  .dot-sum.late .dot-sum-val{color:var(--dot-p)}
+  /* the two figures he asked for: how often it comes, how long it stays */
+  .dot-stats{display:flex; gap:8px; margin-top:11px}
+  .dot-stats .dot-stat{
+    flex:1; text-align:center; padding:7px 4px; border-radius:11px;
+    background:var(--tap);
+  }
+  .dot-stats .dot-stat b{display:block; font-size:18px; font-weight:800; letter-spacing:-.4px}
+  .dot-stats .dot-stat span{font-size:11px; color:var(--ink-2); font-weight:600}
+  .dot-stats .dot-stat em{font-style:normal; font-size:11px; color:var(--ink-2); font-weight:600}
 
   .day.d-fut{opacity:1; pointer-events:auto}
   .day.d-fut .num{color:var(--ink-2)}
@@ -578,16 +594,32 @@
     border:2px dashed var(--dot-p); color:var(--ink); font-weight:800; background:transparent;
   }
   .day.d-soon{background:color-mix(in srgb, var(--dot-p) 7%, transparent)}
+  /* overdue — hatched rather than another colour, so it still reads apart
+     from "due soon" for anyone who sees the two ambers as the same */
+  .day.d-late{
+    background:repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--dot-p) 24%, transparent) 0 4px,
+      transparent 4px 8px);
+  }
+  .day.d-late .num{color:var(--dot-p); font-weight:800}
   .day.d-end .num{box-shadow:inset 0 0 0 2px var(--dot-a); border-radius:50%}
   .dot-clear{display:none}
   .dot-clear.show{display:block}
-  .dot-legend{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:9px 2px 1px}
-  .dot-key{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--ink-2)}
-  .dot-key i{width:14px; height:14px; border-radius:50%; display:block; flex:0 0 auto}
+  /* the Meds calendar flexes to fill the screen; the Dot one has a legend and
+     a hint beneath it, so it sizes to its content and the page scrolls */
+  #dotCalCard{flex:0 0 auto; min-height:0}
+  .dot-legend{display:flex; flex-wrap:wrap; gap:4px 10px; justify-content:center; padding:9px 2px 1px}
+  .dot-key{display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--ink-2)}
+  .dot-key i{width:12px; height:12px; border-radius:50%; display:block; flex:0 0 auto}
   .dot-key i.k-log{background:var(--dot-a)}
   .dot-key i.k-logspan{background:color-mix(in srgb, var(--dot-a) 30%, transparent); border:1px solid var(--dot-a)}
   .dot-key i.k-pred{border:2px dashed var(--dot-p)}
   .dot-key i.k-soon{background:color-mix(in srgb, var(--dot-p) 22%, transparent); border:1px solid var(--line)}
+  .dot-key i.k-late{
+    border:1px solid var(--line);
+    background:repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--dot-p) 42%, transparent) 0 3px, transparent 3px 6px);
+  }
   .dot-hint{font-size:11.5px; color:var(--ink-2); text-align:center; padding:7px 4px 0; line-height:1.45}
 
   .gap-chart{display:flex; align-items:flex-end; gap:5px; height:88px; padding-top:4px; overflow-x:auto; scrollbar-width:none}
@@ -668,62 +700,28 @@
   }
   .backup-nag .nag-x{background:transparent; color:var(--ink-2); padding:6px 4px; font-size:13px}
 
-  /* ---------- news tab ---------- */
-  .news-top{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
-  .news-src{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
-  .news-src:empty{display:none}
-  .news-chip{
-    display:inline-flex; align-items:center; gap:5px; background:var(--tap);
-    border-radius:999px; padding:5px 6px 5px 10px; font-size:12.5px; font-weight:600; color:var(--ink);
+/* ---------- gold tab ---------- */
+  /* One series is shown at a time, so the whole tab recolours to whichever
+     is selected rather than drawing two scales on one chart. */
+  #page-gold[data-asset="gold"]{--series:var(--gold)}
+  #page-gold[data-asset="btc"]{--series:var(--btc)}
+  .asset-row{display:flex; gap:5px; margin:0 0 10px}
+  .asset-row button{
+    flex:1; padding:8px 4px; border-radius:11px; border:1px solid var(--line);
+    background:var(--card); color:var(--ink-2); font:inherit; font-size:13px;
+    font-weight:700; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; gap:6px;
   }
-  .news-chip i{width:7px; height:7px; border-radius:50%; display:block; flex:0 0 auto}
-  .news-chip i.yt{background:#c0392b}
-  .news-chip i.nm{background:var(--accent)}
-  .news-chip.dim{opacity:.55}
-  .news-chip em{font-style:normal; font-size:11px; color:var(--ink-2)}
-  .news-hint{font-size:11px; color:var(--ink-2); margin-top:9px; line-height:1.5}
-  .news-hint a{color:var(--accent); font-weight:700; text-decoration:none; border-bottom:1px solid var(--line)}
-  .news-item.fresh .news-title{font-weight:700}
-  .news-item.fresh::before{
-    content:''; position:absolute; left:-9px; top:14px; width:5px; height:5px;
-    border-radius:50%; background:var(--accent);
+  .asset-row button i{width:8px; height:8px; border-radius:50%; display:block}
+  .asset-row button[data-a="gold"] i{background:var(--gold)}
+  .asset-row button[data-a="btc"] i{background:var(--btc)}
+  .asset-row button.on{
+    background:color-mix(in srgb, var(--series) 13%, var(--card));
+    border-color:var(--series); color:var(--ink);
   }
-  .news-item{position:relative}
-  .tab-badge{
-    position:absolute; top:4px; right:50%; transform:translateX(18px);
-    background:var(--accent); color:#fff; font-size:9px; font-weight:800;
-    min-width:15px; height:15px; border-radius:999px; padding:0 4px;
-    display:flex; align-items:center; justify-content:center; line-height:1;
-  }
-  .tabbar button{position:relative}
-  #newsFeed{display:flex; flex-direction:column; gap:10px}
-  .news-day{padding:11px 13px}
-  .news-dayhead{
-    font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--ink-2); margin-bottom:9px; display:flex; align-items:center; gap:7px;
-  }
-  .news-dayhead span{
-    background:var(--tap); border-radius:999px; padding:1px 7px; font-size:11px; letter-spacing:0;
-  }
-  .news-item{
-    display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--line);
-    text-decoration:none; color:inherit;
-  }
-  .news-item:first-of-type{border-top:0; padding-top:0}
-  .news-th{
-    flex:0 0 auto; width:76px; height:52px; border-radius:9px; background-size:cover;
-    background-position:center; background-color:var(--line);
-  }
-  .news-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
-  .news-by{font-size:11px; font-weight:800; color:var(--accent); letter-spacing:.02em}
-  .news-title{font-size:14px; font-weight:600; line-height:1.3}
-  .news-blurb{font-size:12px; color:var(--ink-2); line-height:1.4;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-
-  /* ---------- gold tab ---------- */
   .gold-card{
     background:
-      radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--gold) 13%, transparent), transparent 62%),
+      radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--series) 13%, transparent), transparent 62%),
       var(--card);
     text-align:left;
   }
@@ -731,7 +729,7 @@
     font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
     color:var(--ink-2); display:flex; align-items:center; gap:6px;
   }
-  .gold-lab i{width:8px; height:8px; border-radius:50%; background:var(--gold); display:block}
+  .gold-lab i{width:8px; height:8px; border-radius:50%; background:var(--series); display:block}
   .gold-big{display:flex; align-items:baseline; gap:7px; margin-top:6px}
   .gold-big .cur{font-size:16px; font-weight:700; color:var(--ink-2)}
   .gold-big .amt{font-size:40px; font-weight:800; letter-spacing:-1.4px; line-height:1}
@@ -759,15 +757,15 @@
 
   .gchart-wrap{position:relative; margin-top:2px}
   .gchart{display:block; width:100%; height:auto; touch-action:pan-y}
-  .gchart .gline{fill:none; stroke:var(--gold); stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round}
+  .gchart .gline{fill:none; stroke:var(--series); stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round}
   .gchart .garea{fill:url(#gfade); stroke:none}
-  .gchart .gdot{fill:var(--gold); stroke:var(--card); stroke-width:2.5}
+  .gchart .gdot{fill:var(--series); stroke:var(--card); stroke-width:2.5}
   .gchart .gcross{stroke:var(--ink-2); stroke-width:1; stroke-dasharray:3 3; opacity:.75}
   .gchart .gxl{fill:var(--ink-2); font-size:9.5px; font-weight:600}
   .gchart .ggrid{stroke:var(--line); stroke-width:1}
   .gchart .gyl{fill:var(--ink-2); font-size:9.5px; font-weight:600}
-  .gchart .gyl.now{fill:var(--gold); font-weight:800; font-size:10px}
-  .gchart .gref{stroke:var(--gold); stroke-width:1.2; stroke-dasharray:4 3; opacity:.85}
+  .gchart .gyl.now{fill:var(--series); font-weight:800; font-size:10px}
+  .gchart .gref{stroke:var(--series); stroke-width:1.2; stroke-dasharray:4 3; opacity:.85}
   .gtip{
     position:absolute; top:0; transform:translateX(-50%); pointer-events:none;
     background:var(--ink); color:var(--bg); font-size:11.5px; font-weight:700;
@@ -807,7 +805,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v8.4</div>
+      <div class="ver" id="appVer">v9.0</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -919,14 +917,15 @@
 
   <main class="page hide" id="page-dot">
     <section class="card" style="padding:12px 15px">
-      <div class="dot-sum">
+      <div class="dot-sum" id="dotSum">
         <div class="dot-sum-ring"><i></i></div>
         <div class="dot-sum-main">
-          <div class="dot-sum-lab">Next expected</div>
+          <div class="dot-sum-lab" id="dotNextLab">Next expected</div>
           <div class="dot-sum-val" id="dotNext">—</div>
+          <div class="dot-sum-note" id="dotNextNote"></div>
         </div>
-        <div class="dot-sum-side" id="dotAvgBox"></div>
       </div>
+      <div class="dot-stats" id="dotAvgBox"></div>
     </section>
 
     <section class="cal-card" id="dotCalCard">
@@ -945,9 +944,9 @@
       <div class="grid-wrap"><div class="grid" id="dotGrid"></div></div>
       <div class="dot-legend">
         <span class="dot-key"><i class="k-log"></i>Marked</span>
-        <span class="dot-key"><i class="k-logspan"></i>Following days</span>
-        <span class="dot-key"><i class="k-pred"></i>Anticipated</span>
+        <span class="dot-key"><i class="k-pred"></i>Expected</span>
         <span class="dot-key"><i class="k-soon"></i>Due soon</span>
+        <span class="dot-key"><i class="k-late"></i>Overdue</span>
       </div>
       <div class="dot-hint" id="dotHint"></div>
     </section>
@@ -963,12 +962,16 @@
     </section>
   </main>
 
-  <main class="page hide" id="page-gold">
+  <main class="page hide" id="page-gold" data-asset="gold">
+    <div class="asset-row" id="assetRow">
+      <button data-a="gold" class="on"><i></i>Gold</button>
+      <button data-a="btc"><i></i>Bitcoin</button>
+    </div>
     <section class="card gold-card">
-      <div class="gold-lab"><i></i>24K gold · Dubai</div>
+      <div class="gold-lab"><i></i><span id="goldLab">24K gold · Dubai</span></div>
       <div class="gold-big"><span class="cur">AED</span><span class="amt" id="goldAmt">—</span></div>
       <div class="gold-sub">
-        <span class="gold-unit">per gram</span>
+        <span class="gold-unit" id="goldUnit">per gram</span>
         <span class="gold-chg flat" id="goldChg">—</span>
       </div>
       <div class="gold-meta" id="goldMeta">Loading latest rate…</div>
@@ -1026,30 +1029,6 @@
     <button class="nag-x" id="nagHide" aria-label="Not now">✕</button>
   </div>
 
-  <main class="page hide" id="page-news">
-    <section class="card" style="padding:11px 14px">
-      <div class="news-top">
-        <button class="gold-check" id="newsRefresh">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
-          Refresh
-        </button>
-        <span class="gold-status" id="newsStatus"></span>
-      </div>
-      <div class="news-src" id="newsSrcList"></div>
-      <div class="lib-add" style="margin-top:9px">
-        <div class="lib-add-row">
-          <input type="text" id="newsInput" placeholder="YouTube channel link or @handle, or a name">
-          <button id="newsAdd">Add</button>
-        </div>
-      </div>
-      <div class="news-hint" id="newsHint"></div>
-      <div class="set-pair" id="newsSyncRow" style="display:none">
-        <button class="set-test" id="newsSync" style="margin-top:0">Connect GitHub</button>
-        <button class="set-test" id="newsCopy" style="margin-top:0">Copy list instead</button>
-      </div>
-    </section>
-    <div id="newsFeed"></div>
-  </main>
 
   <nav class="tabbar">
     <button id="tab-meds" class="on" aria-label="Medicines">
@@ -1075,10 +1054,6 @@
     <button id="tab-lib" aria-label="Library">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m10 7 5 3-5 3z" fill="currentColor" stroke="none"/></svg>
       Library
-    </button>
-    <button id="tab-news" aria-label="News">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9h4"/><path d="M18 14h-8M10 6h8v4h-8z"/><path d="M10 18h8"/></svg>
-      News
     </button>
   </nav>
 
@@ -1169,15 +1144,6 @@
   <button class="set-test" id="btnRecover">Recover from the app's own backup</button>
   <div class="set-note" id="recoverNote"></div>
 
-  <div class="set-row" style="border-top:1px solid var(--line); margin-top:12px">
-    <div><div class="set-name">GitHub token</div><div class="set-sub">Lets the News tab fetch by itself when you add a name</div></div>
-  </div>
-  <div class="lib-add-row" style="margin-top:9px">
-    <input type="password" id="ghTokInput" placeholder="github_pat_…" autocomplete="off">
-    <button id="ghTokSave">Save</button>
-  </div>
-  <div class="set-note" id="ghTokNote"></div>
-  <p class="set-note">Only needs <b>Contents: read and write</b> on this one repo. It is kept on this phone and used for nothing else. Without it, the News tab can only copy the list for you to paste into GitHub yourself.</p>
   <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
   <p class="set-note">Reminders need notification permission and work best with the app installed. Android decides the exact delivery moment for background reminders, and the sound always follows your phone's system notification tone — web apps can't set custom tones.</p>
   <div class="sheet-done"><button id="setDone">Done</button></div>
@@ -1200,8 +1166,8 @@
     'todos-v1', 'todo-cats-v1',
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
-    'gold-hist-v1', 'gold-state-v1', 'lib-items-v1', 'lib-shelves-v1',
-    'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'news-sources-v1', 'news-cache-v1', 'news-seen-v1', 'last-backup-v1'
+    'gold-hist-v1', 'gold-state-v1', 'btc-hist-v1', 'asset-v1', 'lib-items-v1', 'lib-shelves-v1',
+    'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'last-backup-v1'
   ];
   /* Keys that hold things you actually typed. The backup is scored on these,
      so a wiped app can never overwrite a good backup with an empty one. */
@@ -1619,7 +1585,6 @@
     if(typeof renderRoutine === 'function') renderRoutine();
     if(typeof renderDot === 'function') renderDot();
     if(typeof renderLib === 'function') renderLib();
-    if(typeof renderNews === 'function') renderNews();
     if(sheetKey) renderSheet();
   }
 
@@ -1793,8 +1758,8 @@
 
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
-  var TABS = ['meds','todo','routine','dot','gold','lib','news'];
-  var TAB_NAMES = { meds:'Meds', todo:'To-Do', routine:'Routine', dot:'Dot', gold:'Gold', lib:'Library', news:'News' };
+  var TABS = ['meds','todo','routine','dot','gold','lib'];
+  var TAB_NAMES = { meds:'Meds', todo:'To-Do', routine:'Routine', dot:'Dot', gold:'Gold', lib:'Library' };
   var HIDE_KEY = 'tabs-hidden-v1';
   var hiddenTabs = loadJSON(HIDE_KEY, [], null) || [];
   function saveHidden(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify(hiddenTabs)); }catch(e){} }
@@ -1807,7 +1772,6 @@
     var vis = visibleTabs();
     if(vis.indexOf(name) < 0) name = vis[0];
     activeTab = name;
-    if(name === 'news' && typeof markNewsSeen === 'function') setTimeout(markNewsSeen, 1200);
     TABS.forEach(function(t){
       document.getElementById('page-'+t).classList.toggle('hide', t !== name);
       var btn = document.getElementById('tab-'+t);
@@ -2434,7 +2398,18 @@
     if(dotLog.length){
       var today = midnight();
       var horizon = new Date(); horizon.setMonth(horizon.getMonth() + DOT_AHEAD_MONTHS);
-      var next = addDays(parseKey(dotLog[dotLog.length - 1].d), cycle);
+      var due = addDays(parseKey(dotLog[dotLog.length - 1].d), cycle);
+      /* If the expected day came and went unmarked, the expectation does not
+         skip to the next cycle — it shuffles forward a day at a time and sits
+         on today until it actually gets marked. The days it has run over are
+         shaded so the delay is visible rather than silently absorbed. */
+      if(due < today){
+        for(var ld = new Date(due.getTime()); ld < today; ld = addDays(ld, 1)){
+          var lk = keyOf(ld);
+          if(!m[lk]) m[lk] = { t:'late' };
+        }
+      }
+      var next = due < today ? today : due;
       var guard = 0;
       while(next <= horizon && guard++ < 400){
         /* the quiet week before it is due */
@@ -2477,6 +2452,9 @@
         }else if(st.t === 'soon'){
           cls += ' d-soon';
           lab += ', due soon';
+        }else if(st.t === 'late'){
+          cls += ' d-late';
+          lab += ', expected but not marked';
         }else{
           cls += st.s ? ' d-pred d-predspan' : ' d-predspan';
           lab += ', anticipated';
@@ -2544,10 +2522,16 @@
   function renderDotSummary(){
     var sorted = dotStarts();
     var nextEl = document.getElementById('dotNext');
+    var labEl = document.getElementById('dotNextLab');
+    var noteEl = document.getElementById('dotNextNote');
     var sideEl = document.getElementById('dotAvgBox');
     var hintEl = document.getElementById('dotHint');
+    var sumEl = document.getElementById('dotSum');
+    sumEl.classList.remove('late');
     if(!sorted.length){
+      labEl.textContent = 'Next expected';
       nextEl.textContent = 'Nothing marked yet';
+      noteEl.textContent = '';
       sideEl.innerHTML = '';
       hintEl.textContent = 'Tap any past day to mark it. Each mark shades ' + DOT_SPAN +
         ' days, and the next dates are anticipated every ' + DOT_CYCLE + ' days for ' + DOT_AHEAD_MONTHS + ' months.';
@@ -2555,22 +2539,35 @@
     }
     var cycle = dotAvgCycle(), span = dotAvgSpan();
     var today = midnight();
-    var next = addDays(parseKey(sorted[sorted.length - 1]), cycle);
-    var guard = 0;
-    while(next < today && guard++ < 400) next = addDays(next, cycle);
-    var inDays = daysBetween(today, next);
-    nextEl.textContent = DAYS[next.getDay()].slice(0,3) + ', ' + fmtShort(next) +
-      ' · ' + (inDays === 0 ? 'today' : inDays === 1 ? 'tomorrow' : 'in ' + inDays + ' days');
-    var st = dotStats();
-    if(st.gaps.length){
-      sideEl.innerHTML = '<b>' + st.avg + '</b><span>avg days</span>';
+    var due = addDays(parseKey(sorted[sorted.length - 1]), cycle);
+    var late = daysBetween(due, today);
+
+    if(late > 0){
+      /* overdue: it stays on today until marked, and says how far over it is */
+      sumEl.classList.add('late');
+      labEl.textContent = 'Overdue';
+      nextEl.textContent = late === 1 ? '1 day late' : late + ' days late';
+      noteEl.textContent = 'Expected ' + DAYS[due.getDay()].slice(0,3) + ', ' + fmtShort(due) +
+        ' · still expected today, and each day after, until you mark it';
     }else{
-      sideEl.innerHTML = '<b>' + sorted.length + '</b><span>marked</span>';
+      var inDays = daysBetween(today, due);
+      labEl.textContent = 'Next expected';
+      nextEl.textContent = DAYS[due.getDay()].slice(0,3) + ', ' + fmtShort(due) +
+        ' · ' + (inDays === 0 ? 'today' : inDays === 1 ? 'tomorrow' : 'in ' + inDays + ' days');
+      noteEl.textContent = 'Based on your average of ' + cycle + ' days';
     }
+
+    var st = dotStats();
     var ended = dotLog.filter(function(r){ return r.e; }).length;
-    hintEl.textContent = 'Tap a day to mark it · tap a marked day to set its end date · ' +
-      (ended ? 'length averages ' + span + ' days from ' + ended + ' recorded' : 'length assumed ' + span + ' days') +
-      ', next in ' + cycle;
+    sideEl.innerHTML =
+      '<div class="dot-stat"><b>' + (st.gaps.length ? cycle : '—') + '</b>' +
+        '<span>avg days between</span></div>' +
+      '<div class="dot-stat"><b>' + (ended ? span : '—') + '</b>' +
+        '<span>avg days it lasts</span></div>';
+
+    hintEl.textContent = ended
+      ? 'Tap a day to mark it · tap a marked day to change its last day'
+      : 'Tap a day to mark it · tap a marked day to set its last day';
   }
 
   function renderGapChart(){
@@ -2935,337 +2932,7 @@
 
   renderLib();
 
-  /* ==================== NEWS ====================
-     The feeds are fetched once each morning by a job in the repo, which
-     writes news.json next to this page. Reading our own file needs no relay
-     and no key, so it just works; the last copy is cached for offline. The
-     sources live in news-sources.json, which the job reads. */
-  var NEWSC_KEY = 'news-cache-v1', NEWSSEEN_KEY = 'news-seen-v1';
-  var NEWSSRC_KEY = 'news-sources-v1', GHTOK_KEY = 'gh-token-v1';
-  var memNewsC = null, memNewsS = null;
-  /* Your own list, kept on the phone. The morning job reads the repo's copy,
-     so "Send list to repo" pushes this list there in one tap. */
-  var newsWanted = loadJSON(NEWSSRC_KEY, null, memNewsS);
-  function saveWanted(){ memNewsS = newsWanted; try{ localStorage.setItem(NEWSSRC_KEY, JSON.stringify(newsWanted)); }catch(e){} }
-  function ghToken(){ try{ return localStorage.getItem(GHTOK_KEY) || ''; }catch(e){ return ''; } }
-  function saveNewsCache(){ memNewsC = newsCache; try{ localStorage.setItem(NEWSC_KEY, JSON.stringify(newsCache)); }catch(e){} }
-  var newsCache = loadJSON(NEWSC_KEY, { at:0, items:[], sources:[] }, memNewsC);
-  var newsSeen = 0;
-  try{ newsSeen = +(localStorage.getItem(NEWSSEEN_KEY) || 0); }catch(e){}
-  var newsBusy = false, newsFetchedAt = 0;
-  var newsSyncing = false, newsSyncTimer = null, newsWatchTimer = null;
-  var REPO_SOURCES_URL = 'https://github.com/subneter/med-log/edit/main/news-sources.json';
-
-  function newsUnread(){
-    var n = 0, items = newsCache.items || [];
-    for(var i = 0; i < items.length; i++) if(new Date(items[i].at).getTime() > newsSeen) n++;
-    return n;
-  }
-  function markNewsSeen(){
-    var items = newsCache.items || [];
-    if(!items.length) return;
-    var newest = 0;
-    for(var i = 0; i < items.length; i++){
-      var t = new Date(items[i].at).getTime();
-      if(t > newest) newest = t;
-    }
-    if(newest > newsSeen){
-      newsSeen = newest;
-      try{ localStorage.setItem(NEWSSEEN_KEY, String(newsSeen)); }catch(e){}
-      paintNewsBadge();
-    }
-  }
-  function paintNewsBadge(){
-    var btn = document.getElementById('tab-news');
-    if(!btn) return;
-    var n = newsUnread();
-    var dot = btn.querySelector('.tab-badge');
-    if(n > 0){
-      if(!dot){
-        dot = document.createElement('span');
-        dot.className = 'tab-badge';
-        btn.appendChild(dot);
-      }
-      dot.textContent = n > 99 ? '99+' : n;
-    }else if(dot){ dot.remove(); }
-  }
-
-  function fetchNews(force){
-    if(newsBusy) return;
-    var now = Date.now();
-    if(!force && now - newsFetchedAt < 30 * 60 * 1000) return;
-    newsFetchedAt = now; newsBusy = true;
-    if(force) document.getElementById('newsStatus').textContent = 'Checking…';
-    fetch('news.json?d=' + todayKey(), { cache:'no-cache' })
-      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-      .then(function(j){
-        newsBusy = false;
-        if(!j || !j.items) throw 0;
-        newsCache = { at: Date.now(), updated: j.updated || '', items: j.items, sources: j.sources || [] };
-        saveNewsCache();
-        renderNews(); paintNewsBadge();
-        document.getElementById('newsStatus').textContent = j.items.length
-          ? 'Updated ' + relTime(j.updated)
-          : 'No posts in the feed yet';
-      })
-      .catch(function(){
-        newsBusy = false;
-        document.getElementById('newsStatus').textContent = (newsCache.items && newsCache.items.length)
-          ? 'Showing the last copy'
-          : 'Nothing yet — the morning job fills this in';
-        renderNews();
-      });
-  }
-  function relTime(iso){
-    if(!iso) return '';
-    var t = new Date(iso).getTime();
-    if(isNaN(t)) return '';
-    var mins = Math.round((Date.now() - t) / 60000);
-    if(mins < 2) return 'just now';
-    if(mins < 60) return mins + ' min ago';
-    var hrs = Math.round(mins / 60);
-    if(hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
-    var d = Math.round(hrs / 24);
-    return d + (d === 1 ? ' day ago' : ' days ago');
-  }
-
-  /* the list the app shows: yours, annotated with how the last fetch went */
-  function newsList(){
-    if(!newsWanted){
-      /* first run — adopt whatever the repo already fetched */
-      newsWanted = (newsCache.sources || []).map(function(s){
-        return { kind: s.kind === 'name' ? 'name' : 'yt', label: s.label, q: s.label };
-      });
-      saveWanted();
-    }
-    return newsWanted;
-  }
-  function srcStatus(label){
-    var srcs = newsCache.sources || [];
-    for(var i = 0; i < srcs.length; i++) if(srcs[i].label === label) return srcs[i];
-    return null;
-  }
-  function wantedJSON(){
-    var list = newsList();
-    return JSON.stringify({
-      _comment: 'The News tab reads only what is listed here. Saving this file ' +
-                'is what sets the fetch going, so "touched" changes every time.',
-      touched: new Date().toISOString(),
-      youtube: list.filter(function(s){ return s.kind === 'yt'; })
-        .map(function(s){ return { name: s.label, url: s.q }; }),
-      names: list.filter(function(s){ return s.kind === 'name'; })
-        .map(function(s){ return s.q; })
-    }, null, 2) + '\n';
-  }
-  function newsDirty(){
-    var list = newsList(), srcs = newsCache.sources || [];
-    if(list.length !== srcs.length) return true;
-    for(var i = 0; i < list.length; i++) if(!srcStatus(list[i].label)) return true;
-    return false;
-  }
-
-  function renderNewsSources(){
-    var box = document.getElementById('newsSrcList');
-    var list = newsList();
-    if(!list.length){
-      box.innerHTML = '<div class="empty-note" style="padding:2px 0 0">No sources yet — add one below</div>';
-    }else{
-      box.innerHTML = list.map(function(s, i){
-        var st = srcStatus(s.label);
-        var note = !st ? ' <em>not fetched yet</em>' : (st.ok ? '' : ' <em>no posts</em>');
-        return '<span class="news-chip'+(st && st.ok ? '' : ' dim')+(isArmed('news:'+i) ? ' armed' : '')+'" data-i="'+i+'">' +
-          '<i class="'+(s.kind === 'name' ? 'nm' : 'yt')+'"></i>'+esc(s.label)+note+
-          '<button aria-label="Remove">'+X_SVG+'</button></span>';
-      }).join('');
-    }
-    var dirty = newsDirty(), linked = !!ghToken();
-    /* with a token the list saves itself; without one, the row is the way in */
-    document.getElementById('newsSyncRow').style.display = linked ? 'none' : 'flex';
-    document.getElementById('newsHint').innerHTML = !linked
-      ? '<b>These names are only on this phone.</b> Connect GitHub once and adding a name will ' +
-        'fetch by itself within a minute. Otherwise copy the list and paste it into the repo yourself.'
-      : (dirty
-          ? 'Saving your list… it fetches within a minute of landing in the repo.'
-          : 'Adding or removing saves itself and fetches within a minute · also refreshed each morning · <a href="#" id="newsEditSrc">open the list</a>');
-    var link = document.getElementById('newsEditSrc');
-    if(link) link.addEventListener('click', function(e){
-      e.preventDefault(); window.open(REPO_SOURCES_URL, '_blank', 'noopener');
-    });
-  }
-
-  /* Saving news-sources.json to the repo is also what starts the fetch: the
-     job there runs on any change to that file. So one tap covers both, and
-     watchBuild() then waits for the new news.json to appear. */
-  function syncNewsSources(quiet){
-    var tok = ghToken();
-    var status = document.getElementById('newsStatus');
-    if(!tok){
-      status.textContent = 'Not connected to GitHub yet';
-      if(!quiet && window.openTokenSetting) window.openTokenSetting();
-      return;
-    }
-    if(newsSyncing) return;
-    newsSyncing = true;
-    status.textContent = 'Saving your list…';
-    var api = 'https://api.github.com/repos/subneter/med-log/contents/news-sources.json';
-    var hdr = { 'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json' };
-    fetch(api, { headers: hdr, cache:'no-store' })
-      .then(function(r){ return r.ok ? r.json() : {}; })
-      .then(function(cur){
-        var body = {
-          message: 'news: sources from the app',
-          content: btoa(unescape(encodeURIComponent(wantedJSON()))),
-          branch: 'main'
-        };
-        if(cur && cur.sha) body.sha = cur.sha;
-        return fetch(api, { method:'PUT', headers: hdr, body: JSON.stringify(body) });
-      })
-      .then(function(r){
-        newsSyncing = false;
-        if(!r.ok) throw 0;
-        renderNews();
-        watchBuild();
-      })
-      .catch(function(){
-        newsSyncing = false;
-        status.textContent = 'Couldn’t save — check the token in Settings';
-        toast('Saving failed');
-      });
-  }
-
-  /* After the list is saved the job takes about a minute. Keep looking at
-     news.json until its timestamp moves, then show the result. */
-  function watchBuild(){
-    var status = document.getElementById('newsStatus');
-    var was = newsCache.updated || '';
-    var started = Date.now(), LIMIT = 4 * 60 * 1000;
-    clearTimeout(newsWatchTimer);
-    (function look(){
-      var waited = Math.round((Date.now() - started) / 1000);
-      if(Date.now() - started > LIMIT){
-        status.textContent = 'Still fetching — pull down in a minute';
-        return;
-      }
-      status.textContent = 'Fetching your feeds… ' + waited + 's';
-      fetch('news.json?t=' + Date.now(), { cache:'no-store' })
-        .then(function(r){ return r.ok ? r.json() : null; })
-        .then(function(j){
-          if(j && j.items && (j.updated || '') !== was){
-            newsCache = { at: Date.now(), updated: j.updated || '', items: j.items, sources: j.sources || [] };
-            saveNewsCache();
-            renderNews(); paintNewsBadge();
-            status.textContent = j.items.length
-              ? j.items.length + (j.items.length === 1 ? ' post' : ' posts') + ' · just now'
-              : 'Fetched, but those sources had nothing';
-            fetchGold(true);
-            return;
-          }
-          newsWatchTimer = setTimeout(look, 6000);
-        })
-        .catch(function(){ newsWatchTimer = setTimeout(look, 6000); });
-    })();
-  }
-
-  /* add/remove saves itself a moment later, so there is nothing to remember */
-  function queueSync(){
-    if(!ghToken()) return;
-    clearTimeout(newsSyncTimer);
-    document.getElementById('newsStatus').textContent = 'Saving your list…';
-    newsSyncTimer = setTimeout(function(){ syncNewsSources(true); }, 1500);
-  }
-
-  function renderNews(){
-    renderNewsSources();
-    var box = document.getElementById('newsFeed');
-    var items = newsCache.items || [];
-    if(!items.length){
-      box.innerHTML = '<section class="card"><div class="empty-note">' +
-        (ghToken()
-          ? 'Nothing here yet. Add a YouTube channel or a person’s name above — it fetches within a minute.'
-          : 'Nothing here yet. Add a name above, then send the list to your repo. ' +
-            'A GitHub token in Settings lets it save and fetch by itself.') +
-        '</div></section>';
-      return;
-    }
-    var days = [], byDay = {};
-    items.forEach(function(it){
-      var day = keyOf(new Date(it.at));
-      if(!byDay[day]){ byDay[day] = []; days.push(day); }
-      byDay[day].push(it);
-    });
-    days.sort().reverse();
-    box.innerHTML = days.slice(0, 21).map(function(day){
-      var d = parseKey(day);
-      var head = day === todayKey() ? 'Today'
-        : day === keyOf(addDays(midnight(), -1)) ? 'Yesterday'
-        : DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d);
-      var rows = byDay[day].map(function(it){
-        var fresh = new Date(it.at).getTime() > newsSeen;
-        return '<a class="news-item'+(fresh ? ' fresh' : '')+'" href="'+esc(it.url)+'" target="_blank" rel="noopener">' +
-          (it.th ? '<span class="news-th" style="background-image:url(\'' + esc(it.th) + '\')"></span>' : '') +
-          '<span class="news-main">' +
-            '<span class="news-by">'+esc(it.by || it.src)+'</span>' +
-            '<span class="news-title">'+esc(it.title)+'</span>' +
-            (it.blurb ? '<span class="news-blurb">'+esc(it.blurb)+'</span>' : '') +
-          '</span></a>';
-      }).join('');
-      return '<section class="card news-day">' +
-        '<div class="news-dayhead">'+head+' <span>'+byDay[day].length+'</span></div>' +
-        rows + '</section>';
-    }).join('');
-  }
-
-  /* With a token, "Check" asks the repo for a fresh fetch rather than just
-     re-reading the file it wrote this morning. */
-  document.getElementById('newsRefresh').addEventListener('click', function(){
-    if(ghToken()) syncNewsSources(true);
-    else fetchNews(true);
-  });
-  /* NB: pass nothing — a click event here would look like the "quiet" flag */
-  document.getElementById('newsSync').addEventListener('click', function(){ syncNewsSources(); });
-  document.getElementById('newsCopy').addEventListener('click', function(){
-    var txt = wantedJSON();
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(txt).then(function(){
-        toast('Copied — paste it into news-sources.json');
-        window.open(REPO_SOURCES_URL, '_blank', 'noopener');
-      }).catch(function(){ toast('Couldn’t copy'); });
-    }else{ toast('Couldn’t copy on this browser'); }
-  });
-
-  document.getElementById('newsAdd').addEventListener('click', addNewsWanted);
-  document.getElementById('newsInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') addNewsWanted(); });
-  function addNewsWanted(){
-    var inp = document.getElementById('newsInput');
-    var v = inp.value.trim();
-    if(!v) return;
-    var list = newsList(), item;
-    if(/youtube\.com|youtu\.be/i.test(v) || v.charAt(0) === '@'){
-      var nice = (v.match(/@([\w.\-]+)/) || [])[1] ||
-                 (v.match(/channel\/(UC[\w-]{22})/) || [])[1] || 'YouTube channel';
-      item = { kind:'yt', label: nice.charAt(0) === 'U' ? nice : '@' + nice, q: v };
-    }else{
-      item = { kind:'name', label: v, q: v };
-    }
-    for(var i = 0; i < list.length; i++) if(list[i].label === item.label){ toast('Already on the list'); return; }
-    list.push(item); saveWanted(); inp.value = '';
-    renderNews();
-    if(ghToken()){ toast('Added — fetching now'); queueSync(); }
-    else toast('Added — send the list to your repo when ready');
-  }
-  document.getElementById('newsSrcList').addEventListener('click', function(e){
-    var chip = e.target.closest('.news-chip');
-    if(!chip || !e.target.closest('button')) return;
-    var i = +chip.getAttribute('data-i');
-    if(!confirmDelete('news:' + i, 'this source')) return;
-    newsList().splice(i, 1); saveWanted(); renderNews(); queueSync();
-  });
-
-  renderNews();
-  fetchNews(true);
-  paintNewsBadge();
-
-  /* ==================== GOLD ==================== */
+/* ==================== GOLD ==================== */
   /* Ten days of 24K rates (AED per gram, Gulf News / Dubai Gold & Jewellery
      Group) are baked in as a starting point. From there the app tops the list
      up itself: once a day it reads the live spot price and converts it at the
@@ -3314,6 +2981,28 @@
   var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
   var goldRange = 30, goldFetchedAt = 0;
 
+  /* Bitcoin rides the same machinery as gold, with one series on screen at a
+     time chosen by the switch at the top. Two prices three orders of
+     magnitude apart have no business sharing one chart and one y-axis. */
+  var BTC_KEY = 'btc-hist-v1', ASSET_KEY = 'asset-v1';
+  var memBtc = null;
+  var btcHist = loadJSON(BTC_KEY, null, memBtc) || [];
+  var asset = 'gold';
+  try{ if(localStorage.getItem(ASSET_KEY) === 'btc') asset = 'btc'; }catch(e){}
+  var ASSET = {
+    gold: { lab:'24K gold · Dubai', unit:'per gram', dp:2, src:'dubaicityofgold.com',
+            hint:'AED per gram (24K)', lo:50, hi:5000 },
+    btc:  { lab:'Bitcoin', unit:'per coin', dp:0, src:'CoinGecko',
+            hint:'AED per bitcoin', lo:1000, hi:100000000 }
+  };
+  function cfg(){ return ASSET[asset]; }
+  function hist(){ return asset === 'btc' ? btcHist : goldHist; }
+  function saveBtc(){
+    memBtc = btcHist;
+    try{ localStorage.setItem(BTC_KEY, JSON.stringify(btcHist)); }catch(e){}
+  }
+  function saveCur(){ if(asset === 'btc') saveBtc(); else saveGold(); }
+
   function saveGold(){
     memGold = goldHist;
     try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
@@ -3323,23 +3012,28 @@
   }
   /* add or replace one day's rate */
   function putGold(dateKey, val, manual){
-    for(var i = 0; i < goldHist.length; i++){
-      if(goldHist[i].d === dateKey){ goldHist[i].v = val; goldHist[i].m = !!manual; saveGold(); return; }
+    var h = hist(), i;
+    for(i = 0; i < h.length; i++){
+      if(h[i].d === dateKey){ h[i].v = val; h[i].m = !!manual; saveCur(); return; }
     }
-    goldHist.push({ d: dateKey, v: val, m: !!manual });
-    goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-    if(goldHist.length > 1200) goldHist = goldHist.slice(-1200);
-    saveGold();
+    h.push({ d: dateKey, v: val, m: !!manual });
+    h.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    while(h.length > 1200) h.shift();
+    saveCur();
   }
-  function money(n){
-    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  /* gold is read to the fils, bitcoin to the dirham — decimals on a six-figure
+     number are noise */
+  function money(n, d){
+    if(d === undefined) d = cfg().dp;
+    return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
   /* One point per day. Days with no reading carry the previous day's rate
      forward — markets are shut at weekends anyway — and are flagged so the
      readout can say so, rather than the line skipping days. */
   function goldSeries(){
-    if(!goldHist.length) return [];
-    var h = goldHist.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    var H = hist();
+    if(!H.length) return [];
+    var h = H.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
     var have = {};
     for(var i = 0; i < h.length; i++) have[h[i].d] = h[i].v;
 
@@ -3374,13 +3068,19 @@
     var amtEl = document.getElementById('goldAmt');
     var chgEl = document.getElementById('goldChg');
     var metaEl = document.getElementById('goldMeta');
-    if(!goldHist.length){
+    var H = hist(), c = cfg();
+    document.getElementById('goldLab').textContent = c.lab;
+    document.getElementById('goldUnit').textContent = c.unit;
+    document.getElementById('goldInput').placeholder = c.hint;
+    if(!H.length){
       amtEl.textContent = '—';
       chgEl.className = 'gold-chg flat'; chgEl.textContent = 'no data';
-      metaEl.textContent = 'No rate yet.';
+      metaEl.textContent = asset === 'btc'
+        ? 'No price yet — it fills in from tomorrow morning, or tap Check now.'
+        : 'No rate yet.';
       return;
     }
-    var h = goldHist.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    var h = H.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
     var last = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;
     amtEl.textContent = money(last.v);
     if(prev){
@@ -3396,11 +3096,12 @@
     var d = parseKey(last.d);
     var stale = last.d !== todayKey();
     metaEl.innerHTML =
-      'Rate for ' + DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
+      (asset === 'btc' ? 'Price for ' : 'Rate for ') +
+      DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
       ' · ' + h.length + ' days recorded' +
       (stale ? ' · <b>not updated today</b>' : '') +
-      '<br>' + (goldState.ok ? 'Checked automatically once a day' : 'Source: dubaicityofgold.com') +
-      ' · <a href="#" id="goldManual">enter today’s rate</a>';
+      '<br>' + (goldState.ok ? 'Checked automatically once a day' : 'Source: ' + c.src) +
+      ' · <a href="#" id="goldManual">enter today’s ' + (asset === 'btc' ? 'price' : 'rate') + '</a>';
     var link = document.getElementById('goldManual');
     if(link) link.addEventListener('click', function(ev){
       ev.preventDefault();
@@ -3446,18 +3147,23 @@
       ticks += '<line class="ggrid" x1="'+PL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+ty.toFixed(1)+'"/>';
       /* leave the label out when the current-price label would sit on top of it */
       if(Math.abs(ty - refY) > 9){
-        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+Math.round(tv)+'</text>';
+        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+
+          (asset === 'btc' ? Math.round(tv / 1000) + 'k' : Math.round(tv)) + '</text>';
       }
     }
-    /* dashed marker at the newest price, so every point reads against it */
+    /* dashed marker at the newest price, so every point reads against it.
+       Six figures spelled out in full run off the left edge, so bitcoin uses
+       the same thousands shorthand as the ticks — the exact number is one
+       tap away on the chart. */
+    var refLab = asset === 'btc' ? Math.round(lastV / 1000) + 'k' : money(lastV);
     var ref = '<line class="gref" x1="'+PL+'" y1="'+refY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+refY.toFixed(1)+'"/>' +
-      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+money(lastV)+'</text>';
+      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+refLab+'</text>';
 
     box.innerHTML =
-      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="24K gold rate trend">' +
+      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+cfg().lab+' trend">' +
         '<defs><linearGradient id="gfade" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="var(--gold)" stop-opacity=".26"/>' +
-          '<stop offset="1" stop-color="var(--gold)" stop-opacity="0"/>' +
+          '<stop offset="0" stop-color="var(--series)" stop-opacity=".26"/>' +
+          '<stop offset="1" stop-color="var(--series)" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
         ticks +
         '<path class="garea" d="'+area+'"/>' +
@@ -3512,7 +3218,26 @@
     svg.addEventListener('touchend', clear);
   }
 
-  function renderGold(){ renderGoldHead(); renderGoldChart(); }
+  function renderGold(){
+    document.getElementById('page-gold').setAttribute('data-asset', asset);
+    var bs = document.getElementById('assetRow').querySelectorAll('button');
+    for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-a') === asset);
+    renderGoldHead();
+    renderGoldChart();
+  }
+
+  document.getElementById('assetRow').addEventListener('click', function(e){
+    var btn = e.target.closest('button');
+    if(!btn) return;
+    var a = btn.getAttribute('data-a');
+    if(a === asset) return;
+    asset = a;
+    try{ localStorage.setItem(ASSET_KEY, asset); }catch(err){}
+    document.getElementById('goldAdd').classList.remove('show');
+    setGoldStatus('');
+    renderGold();
+    fetchGold(true);
+  });
 
   document.getElementById('goldRange').addEventListener('click', function(e){
     var btn = e.target.closest('button');
@@ -3529,12 +3254,6 @@
      couple of public read-through services. If none answer, the Check now
      button says so and you can type the number in. */
   var GOLD_PAGE = 'https://dubaicityofgold.com/';
-  var GOLD_WAYS = [
-    function(){ return fetch(GOLD_PAGE, { cache:'no-store' }); },
-    function(){ return fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }); },
-    function(){ return fetch('https://corsproxy.io/?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }); },
-    function(){ return fetch('https://r.jina.ai/' + GOLD_PAGE, { cache:'no-store' }); }
-  ];
   function parseGoldPage(html){
     var text = String(html)
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -3554,6 +3273,64 @@
     var el = document.getElementById('goldStatus');
     if(el) el.textContent = msg || '';
   }
+  /* Merge whatever the morning job wrote into the right local series, keeping
+     anything already collected on the phone. */
+  function mergeRows(into, rows){
+    if(!rows || !rows.length) return 0;
+    var have = {}, added = 0, i;
+    for(i = 0; i < into.length; i++) have[into[i].d] = 1;
+    for(i = 0; i < rows.length; i++){
+      if(!rows[i] || !rows[i].d || !(rows[i].v > 0)) continue;
+      if(have[rows[i].d]) continue;
+      into.push({ d: rows[i].d, v: rows[i].v });
+      have[rows[i].d] = 1;
+      added++;
+    }
+    if(added) into.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    return added;
+  }
+
+  /* Live readings, tried only when the repo file has nothing for today. Each
+     one resolves to a number in dirhams or throws. */
+  var LIVE = {
+    gold: [
+      function(){ return fetch(GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); },
+      function(){ return fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }).then(readGoldPage); },
+      function(){ return fetch('https://corsproxy.io/?url=' + encodeURIComponent(GOLD_PAGE), { cache:'no-store' }).then(readGoldPage); },
+      function(){ return fetch('https://r.jina.ai/' + GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); }
+    ],
+    btc: [
+      /* CoinGecko quotes dirhams directly, so no conversion to get wrong */
+      function(){
+        return fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=aed', { cache:'no-store' })
+          .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+          .then(function(j){
+            var v = j && j.bitcoin && j.bitcoin.aed;
+            if(!(v > 0)) throw 0;
+            return Math.round(v);
+          });
+      },
+      /* Coinbase only gives dollars, converted at the fixed peg */
+      function(){
+        return fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', { cache:'no-store' })
+          .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+          .then(function(j){
+            var v = j && j.data && parseFloat(j.data.amount);
+            if(!(v > 0)) throw 0;
+            return Math.round(v * AED_PER_USD);
+          });
+      }
+    ]
+  };
+  function readGoldPage(r){
+    if(!r.ok) throw 0;
+    return r.text().then(function(t){
+      var v = parseGoldPage(t);
+      if(!v) throw 0;
+      return v;
+    });
+  }
+
   function fetchGold(force){
     var now = Date.now();
     if(goldChecking) return;
@@ -3563,22 +3340,15 @@
     if(force) setGoldStatus('Checking…');
 
     /* the morning job writes gold.json beside this page — same origin, so it
-       always works; the live scrape below is only a fallback */
+       always works; the live readings below are only a fallback */
     fetch('gold.json?d=' + todayKey(), { cache:'no-cache' })
       .then(function(r){ if(!r.ok) throw 0; return r.json(); })
       .then(function(j){
-        if(!j || !j.history || !j.history.length) throw 0;
-        var added = 0;
-        for(var n = 0; n < j.history.length; n++){
-          var row = j.history[n], have = false;
-          for(var m2 = 0; m2 < goldHist.length; m2++) if(goldHist[m2].d === row.d){ have = true; break; }
-          if(!have){ goldHist.push({ d: row.d, v: row.v }); added++; }
-        }
-        if(added){
-          goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-          saveGold();
-        }
-        var last = j.history[j.history.length - 1];
+        if(!j) throw 0;
+        if(mergeRows(goldHist, j.history)) saveGold();
+        if(mergeRows(btcHist, j.btc)) saveBtc();
+        var h = hist();
+        var last = h.length ? h[h.length - 1] : null;
         if(last && last.d === todayKey()){
           goldChecking = false;
           goldState = { last: todayKey(), ok: true }; saveGoldState();
@@ -3591,29 +3361,29 @@
       .catch(function(err){ if(err !== 'done') tryLive(); });
 
     function tryLive(){
-    var i = 0;
-    (function tryNext(){
-      if(i >= GOLD_WAYS.length){
-        goldChecking = false;
-        goldState.ok = false; saveGoldState(); renderGoldHead();
-        if(force){ setGoldStatus('Couldn’t reach the rate — type it in below'); document.getElementById('goldAdd').classList.add('show'); }
-        return;
-      }
-      var way = GOLD_WAYS[i++];
-      way()
-        .then(function(r){ if(!r.ok) throw 0; return r.text(); })
-        .then(function(t){
-          var v = parseGoldPage(t);
-          if(!v) throw 0;
-          putGold(todayKey(), v, false);
-          goldState = { last: todayKey(), ok: true }; saveGoldState();
+      var ways = LIVE[asset] || [], i = 0;
+      (function tryNext(){
+        if(i >= ways.length){
           goldChecking = false;
-          renderGold();
-          setGoldStatus(force ? 'Updated just now' : '');
-          if(force) toast('Rate updated — AED ' + money(v));
-        })
-        .catch(function(){ tryNext(); });
-    })();
+          goldState.ok = false; saveGoldState(); renderGoldHead();
+          if(force){
+            setGoldStatus('Couldn’t reach the ' + (asset === 'btc' ? 'price' : 'rate') + ' — type it in below');
+            document.getElementById('goldAdd').classList.add('show');
+          }
+          return;
+        }
+        ways[i++]()
+          .then(function(v){
+            if(!(v > 0)) throw 0;
+            putGold(todayKey(), v, false);
+            goldState = { last: todayKey(), ok: true }; saveGoldState();
+            goldChecking = false;
+            renderGold();
+            setGoldStatus(force ? 'Updated just now' : '');
+            if(force) toast((asset === 'btc' ? 'Bitcoin' : 'Rate') + ' updated — AED ' + money(v));
+          })
+          .catch(function(){ tryNext(); });
+      })();
     }
   }
   document.getElementById('goldCheck').addEventListener('click', function(){ fetchGold(true); });
@@ -3624,13 +3394,13 @@
   });
   function saveManualGold(){
     var inp = document.getElementById('goldInput');
-    var v = parseFloat(inp.value);
-    if(!v || v < 50 || v > 5000){ toast('Enter the rate in AED per gram'); return; }
-    putGold(todayKey(), Math.round(v * 100) / 100, true);
+    var v = parseFloat(inp.value), c = cfg();
+    if(!v || v < c.lo || v > c.hi){ toast('Enter the ' + c.hint.toLowerCase()); return; }
+    putGold(todayKey(), asset === 'btc' ? Math.round(v) : Math.round(v * 100) / 100, true);
     inp.value = '';
     document.getElementById('goldAdd').classList.remove('show');
     renderGold();
-    toast('Saved today’s rate');
+    toast(asset === 'btc' ? 'Saved today’s price' : 'Saved today’s rate');
   }
 
   renderGold();
@@ -3688,18 +3458,6 @@
     setSheet.classList.add('open'); overlay.classList.add('open');
     refreshRecoverNote();
   });
-  /* jump straight to the token box, so "Connect GitHub" lands somewhere useful */
-  window.openTokenSetting = function(){
-    setSheet.classList.add('open'); overlay.classList.add('open');
-    refreshRecoverNote();
-    var inp = document.getElementById('ghTokInput');
-    setTimeout(function(){
-      inp.scrollIntoView({ block:'center' });
-      inp.focus();
-      document.getElementById('ghTokNote').textContent =
-        'Paste a GitHub token with Contents: read and write on subneter/med-log.';
-    }, 260);
-  };
   overlay.addEventListener('click', function(){
     setSheet.classList.remove('open');
     if(typeof closeDotSheet === 'function') closeDotSheet();
@@ -3782,46 +3540,6 @@
   });
   document.getElementById('btnRestore').addEventListener('click', function(){
     document.getElementById('restoreFile').click();
-  });
-  /* A token that looks saved but cannot write is the worst case — it fails
-     silently later. So check it here, once, and say plainly what happened. */
-  document.getElementById('ghTokSave').addEventListener('click', function(){
-    var el = document.getElementById('ghTokInput');
-    var note = document.getElementById('ghTokNote');
-    var v = el.value.trim();
-    if(!v){
-      try{ localStorage.removeItem(GHTOK_KEY); }catch(e){}
-      note.textContent = 'Token cleared.';
-      toast('Token cleared');
-      if(typeof renderNews === 'function') renderNews();
-      return;
-    }
-    note.textContent = 'Checking the token…';
-    fetch('https://api.github.com/repos/subneter/med-log', {
-      headers: { 'Authorization': 'Bearer ' + v, 'Accept': 'application/vnd.github+json' },
-      cache: 'no-store'
-    }).then(function(r){
-      if(r.status === 401) throw 'expired';
-      if(!r.ok) throw 'norepo';
-      return r.json();
-    }).then(function(j){
-      if(!j || !j.permissions || !j.permissions.push) throw 'readonly';
-      try{ localStorage.setItem(GHTOK_KEY, v); }catch(e){}
-      el.value = '';
-      note.innerHTML = '<b>Connected.</b> Adding a name in News now fetches by itself.';
-      toast('Connected to GitHub');
-      if(typeof renderNews === 'function') renderNews();
-      if(typeof syncNewsSources === 'function' && newsDirty()) syncNewsSources(true);
-    }).catch(function(why){
-      note.textContent = why === 'expired'
-        ? 'That token is expired or mistyped — make a new one on GitHub.'
-        : why === 'readonly'
-          ? 'That token can read but not write. It needs Contents: read and write.'
-          : why === 'norepo'
-            ? 'That token cannot see subneter/med-log — check the repository it was given access to.'
-            : 'Could not reach GitHub just now — try again in a moment.';
-      toast('Token not accepted');
-    });
   });
   document.getElementById('setDone').addEventListener('click', function(){
     setSheet.classList.remove('open'); overlay.classList.remove('open');

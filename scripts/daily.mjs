@@ -2,12 +2,12 @@
  * DayLog — the once-a-day job.
  *
  * Runs on GitHub's machines, where fetching another site is unrestricted, and
- * writes two plain files next to the app:
+ * writes one plain file next to the app:
  *
- *   news.json  — recent posts from the sources listed in news-sources.json
- *   gold.json  — 24K AED/gram, appended to whatever history is already there
+ *   gold.json  — 24K AED/gram and bitcoin in AED, appended to the history
+ *                that is already there
  *
- * The app then reads those from its own address: no relay, no CORS, no keys.
+ * The app then reads it from its own address: no relay, no CORS, no keys.
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -18,150 +18,22 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 const get = (url, extra = {}) =>
   fetch(url, { headers: { 'user-agent': UA, 'accept-language': 'en-US,en;q=0.9', ...extra } });
 
-/* ---------------------------------------------------------------- news --- */
+const AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
+const today = () => new Date().toISOString().slice(0, 10);
 
-const NEWS_KEEP_DAYS = 45;
-const PER_SOURCE = 8;      // videos per channel
-const PER_NAME = 12;       // stories per person
-
-function strip(s) {
-  return String(s || '')
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-const tag = (block, name) => {
-  const m = block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`));
-  return m ? strip(m[1]) : '';
-};
-
-/** A channel URL or @handle -> the UC… id YouTube's feed needs. */
-async function resolveChannel(input) {
-  const direct = input.match(/(UC[\w-]{22})/);
-  if (direct) return direct[1];
-  const url = /^https?:\/\//.test(input)
-    ? input
-    : `https://www.youtube.com/${input.startsWith('@') ? input : '@' + input}`;
-  const res = await get(url);
-  if (!res.ok) throw new Error(`channel lookup ${res.status}`);
-  const html = await res.text();
-  const m = html.match(/"channelId":"(UC[\w-]{22})"/) ||
-            html.match(/channel\/(UC[\w-]{22})/);
-  if (!m) throw new Error('could not find the channel id');
-  return m[1];
-}
-
-function parseFeed(xml, label, limit = PER_SOURCE) {
-  const out = [];
-  const atom = xml.includes('<entry');
-  const blocks = atom ? xml.split(/<entry[\s>]/).slice(1) : xml.split(/<item[\s>]/).slice(1);
-  for (const b of blocks.slice(0, limit)) {
-    const title = tag(b, 'title');
-    if (!title) continue;
-    const lm = b.match(/<link[^>]*href="([^"]+)"/) || b.match(/<link>([\s\S]*?)<\/link>/);
-    const when = tag(b, 'published') || tag(b, 'pubDate') || tag(b, 'updated');
-    const t = when ? new Date(when) : new Date();
-    const th = (b.match(/<media:thumbnail[^>]*url="([^"]+)"/) || [])[1] || '';
-    const by = tag(b, 'name') || tag(b, 'source') || label;
-    let blurb = tag(b, 'media:description') || tag(b, 'description') || '';
-    blurb = blurb.replace(/^\s*(Your browser|Watch on)[\s\S]*$/i, '').slice(0, 220);
-    out.push({
-      title,
-      url: lm ? strip(lm[1]) : '',
-      by: by || label,
-      th,
-      at: (isNaN(t) ? new Date() : t).toISOString(),
-      src: label,
-      blurb
-    });
-  }
-  return out;
-}
-
-async function buildNews() {
-  let cfg;
-  try {
-    cfg = JSON.parse(await readFile(new URL('news-sources.json', ROOT), 'utf8'));
-  } catch {
-    console.log('news: no news-sources.json, skipping');
-    return;
-  }
-  const sources = [];
-  const items = [];
-
-  for (const ch of cfg.youtube || []) {
-    const label = ch.name || ch.url || ch.id;
-    try {
-      const id = await resolveChannel(ch.id || ch.url || ch.name);
-      const res = await get(`https://www.youtube.com/feeds/videos.xml?channel_id=${id}`);
-      if (!res.ok) throw new Error(`feed ${res.status}`);
-      const got = parseFeed(await res.text(), label);
-      items.push(...got);
-      sources.push({ label, kind: 'yt', ok: got.length });
-      console.log(`news: ${label} -> ${got.length}`);
-    } catch (e) {
-      sources.push({ label, kind: 'yt', ok: 0, error: e.message });
-      console.log(`news: ${label} failed — ${e.message}`);
-    }
-  }
-
-  /* Google ranks a plain name search by relevance, which drags up articles
-     from years back — of eight results, seven were older than the window and
-     got thrown away. Asking for a date range first gives eight recent ones
-     instead. If the person has been quiet, fall back to their latest coverage
-     whatever its age, and mark it so the freshness filter lets it through. */
-  const news = async (q, limit, label) => {
-    const res = await get(
-      `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en&gl=AE&ceid=AE:en`
-    );
-    if (!res.ok) throw new Error(`feed ${res.status}`);
-    return parseFeed(await res.text(), label, limit);
-  };
-
-  for (const name of cfg.names || []) {
-    try {
-      let got = await news(`"${name}" when:${NEWS_KEEP_DAYS}d`, PER_NAME, name);
-      let note = '';
-      if (!got.length) {
-        got = (await news(`"${name}"`, 3, name)).map((i) => ({ ...i, keep: true }));
-        if (got.length) note = 'nothing recent — showing the latest';
-      }
-      items.push(...got);
-      sources.push({ label: name, kind: 'name', ok: got.length, note });
-      console.log(`news: ${name} -> ${got.length}${note ? ' (' + note + ')' : ''}`);
-    } catch (e) {
-      sources.push({ label: name, kind: 'name', ok: 0, error: e.message });
-      console.log(`news: ${name} failed — ${e.message}`);
-    }
-  }
-
-  const cutoff = Date.now() - NEWS_KEEP_DAYS * 86400000;
-  const seen = new Set();
-  const fresh = items
-    .filter((i) => i.keep || new Date(i.at).getTime() >= cutoff)
-    .filter((i) => {
-      const k = (i.url || i.title).replace(/[?#].*$/, '');
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    })
-    .sort((a, b) => new Date(b.at) - new Date(a.at))
-    .slice(0, 150)
-    .map(({ keep, ...i }) => i);
-
-  await writeFile(new URL('news.json', ROOT),
-    JSON.stringify({ updated: new Date().toISOString(), sources, items: fresh }, null, 2) + '\n');
-  console.log(`news.json: ${fresh.length} items from ${sources.length} sources`);
+/** Merge rows into a history, newest wins, oldest trimmed. */
+function merge(history, rows, keep = 1200) {
+  const map = new Map((history || []).map((r) => [r.d, r.v]));
+  for (const [d, v] of rows) if (v > 0) map.set(d, v);
+  return [...map.entries()]
+    .map(([d, v]) => ({ d, v }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1))
+    .slice(-keep);
 }
 
 /* ---------------------------------------------------------------- gold --- */
 
-const AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
-const MINV = 50, MAXV = 5000;
+const GOLD_MIN = 50, GOLD_MAX = 5000;
 
 function parseGold(html) {
   const text = String(html)
@@ -175,50 +47,129 @@ function parseGold(html) {
             text.match(/(\d{3}(?:\.\d{1,2})?)[^0-9]{0,20}?24\s*[Kk]/);
   if (!m) return null;
   const v = parseFloat(m[1]);
-  return v >= MINV && v <= MAXV ? Math.round(v * 100) / 100 : null;
+  return v >= GOLD_MIN && v <= GOLD_MAX ? Math.round(v * 100) / 100 : null;
 }
 
-async function buildGold() {
-  let rate = null, from = '';
+async function goldRate() {
   try {
     const res = await get('https://dubaicityofgold.com/');
-    if (res.ok) { rate = parseGold(await res.text()); from = 'dubaicityofgold.com'; }
+    if (res.ok) {
+      const v = parseGold(await res.text());
+      if (v) return { v, from: 'dubaicityofgold.com' };
+    }
   } catch (e) { console.log('gold: page failed —', e.message); }
 
-  if (!rate) {
-    for (const ep of [
-      { u: 'https://api.gold-api.com/price/XAU', pick: (j) => j && j.price },
-      { u: 'https://data-asg.goldprice.org/dbXRates/USD', pick: (j) => j?.items?.[0]?.xauPrice }
-    ]) {
-      try {
-        const r = await get(ep.u, { accept: 'application/json' });
-        if (!r.ok) continue;
-        const oz = Number(ep.pick(await r.json()));
-        if (!oz || !isFinite(oz)) continue;
-        const v = Math.round((oz * AED_PER_USD / GRAMS_PER_OZ) * 100) / 100;
-        if (v >= MINV && v <= MAXV) { rate = v; from = 'spot price'; break; }
-      } catch {}
-    }
+  for (const ep of [
+    { u: 'https://api.gold-api.com/price/XAU', pick: (j) => j && j.price },
+    { u: 'https://data-asg.goldprice.org/dbXRates/USD', pick: (j) => j?.items?.[0]?.xauPrice }
+  ]) {
+    try {
+      const r = await get(ep.u, { accept: 'application/json' });
+      if (!r.ok) continue;
+      const oz = Number(ep.pick(await r.json()));
+      if (!oz || !isFinite(oz)) continue;
+      const v = Math.round((oz * AED_PER_USD / GRAMS_PER_OZ) * 100) / 100;
+      if (v >= GOLD_MIN && v <= GOLD_MAX) return { v, from: 'spot price' };
+    } catch {}
   }
-  if (!rate) { console.log('gold: no rate today, leaving the file alone'); return; }
+  return null;
+}
 
-  let cur = { history: [] };
-  try { cur = JSON.parse(await readFile(new URL('gold.json', ROOT), 'utf8')); } catch {}
-  const map = new Map((cur.history || []).map((r) => [r.d, r.v]));
-  const today = new Date().toISOString().slice(0, 10);
-  map.set(today, rate);
-  const history = [...map.entries()]
-    .map(([d, v]) => ({ d, v }))
-    .sort((a, b) => (a.d < b.d ? -1 : 1))
-    .slice(-1200);
+/* ------------------------------------------------------------- bitcoin --- */
 
-  await writeFile(new URL('gold.json', ROOT),
-    JSON.stringify({ unit: 'AED per gram', purity: '24K', source: from,
-      updated: today, history }, null, 2) + '\n');
-  console.log(`gold.json: ${today} = ${rate} (${from}), ${history.length} rows`);
+const BTC_MIN = 1000, BTC_MAX = 100000000;
+const sane = (v) => v >= BTC_MIN && v <= BTC_MAX;
+
+async function btcRate() {
+  /* CoinGecko quotes dirhams directly, so there is no conversion to get wrong */
+  try {
+    const r = await get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=aed',
+      { accept: 'application/json' });
+    if (r.ok) {
+      const v = Math.round(Number((await r.json())?.bitcoin?.aed));
+      if (sane(v)) return { v, from: 'CoinGecko' };
+    }
+  } catch (e) { console.log('btc: coingecko failed —', e.message); }
+
+  for (const ep of [
+    { u: 'https://api.coinbase.com/v2/prices/BTC-USD/spot', pick: (j) => j?.data?.amount },
+    { u: 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD', pick: (j) => Object.values(j?.result || {})[0]?.c?.[0] }
+  ]) {
+    try {
+      const r = await get(ep.u, { accept: 'application/json' });
+      if (!r.ok) continue;
+      const usd = Number(ep.pick(await r.json()));
+      if (!usd || !isFinite(usd)) continue;
+      const v = Math.round(usd * AED_PER_USD);
+      if (sane(v)) return { v, from: 'spot price' };
+    } catch {}
+  }
+  return null;
+}
+
+/** One call gets a year of daily closes, so the chart is useful from day one
+ *  rather than growing a pixel at a time. Only worth doing once. */
+async function btcBackfill() {
+  try {
+    const r = await get('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=aed&days=365',
+      { accept: 'application/json' });
+    if (!r.ok) throw new Error(`backfill ${r.status}`);
+    const prices = (await r.json())?.prices || [];
+    const byDay = new Map();
+    for (const [ms, v] of prices) {
+      const d = new Date(ms).toISOString().slice(0, 10);
+      const n = Math.round(Number(v));
+      if (sane(n)) byDay.set(d, n);          // last reading of each day wins
+    }
+    console.log(`btc: backfilled ${byDay.size} days`);
+    return [...byDay.entries()];
+  } catch (e) {
+    console.log('btc: backfill failed —', e.message);
+    return [];
+  }
 }
 
 /* ----------------------------------------------------------------- run --- */
 
-const results = await Promise.allSettled([buildNews(), buildGold()]);
-results.forEach((r) => { if (r.status === 'rejected') console.log('task failed:', r.reason?.message || r.reason); });
+let cur = {};
+try { cur = JSON.parse(await readFile(new URL('gold.json', ROOT), 'utf8')); } catch {}
+
+const d = today();
+const [gold, btc] = await Promise.all([goldRate(), btcRate()]);
+
+let goldHistory = cur.history || [];
+if (gold) {
+  goldHistory = merge(goldHistory, [[d, gold.v]]);
+  console.log(`gold: ${d} = ${gold.v} (${gold.from})`);
+} else {
+  console.log('gold: no rate today, leaving it alone');
+}
+
+let btcHistory = cur.btc || [];
+const rows = [];
+/* a thin history means this is the first run — fetch the back year too */
+if (btcHistory.length < 300) rows.push(...await btcBackfill());
+if (btc) {
+  rows.push([d, btc.v]);
+  console.log(`btc: ${d} = ${btc.v} (${btc.from})`);
+} else {
+  console.log('btc: no price today, leaving it alone');
+}
+if (rows.length) btcHistory = merge(btcHistory, rows);
+
+if (!gold && !btc && !rows.length) {
+  console.log('nothing to write today');
+} else {
+  await writeFile(new URL('gold.json', ROOT),
+    JSON.stringify({
+      unit: 'AED per gram',
+      purity: '24K',
+      btcUnit: 'AED per bitcoin',
+      source: gold ? gold.from : (cur.source || ''),
+      btcSource: btc ? btc.from : (cur.btcSource || ''),
+      updated: d,
+      history: goldHistory,
+      btc: btcHistory
+    }, null, 2) + '\n');
+  console.log(`gold.json: ${goldHistory.length} gold rows, ${btcHistory.length} btc rows`);
+}
