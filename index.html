@@ -371,6 +371,18 @@
   .todo-text{flex:1; font-size:15px; font-weight:500; line-height:1.3; min-width:0; overflow-wrap:break-word}
   .todo-item.done .todo-text{text-decoration:line-through; color:var(--ink-2)}
   .todo-star{border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2); display:flex; border-radius:8px}
+  /* library: the watched tick, and the shelf it drops into */
+  .lib-tick{
+    flex:0 0 auto; width:24px; height:24px; border-radius:50%; border:2px solid var(--ink-2);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    padding:0; color:transparent; transition:all .15s;
+  }
+  .lib-tick.on{background:var(--ok); border-color:var(--ok); color:#fff}
+  .lib-done .lib-title{color:var(--ink-2)}
+  .lib-done .lib-ico{opacity:.55}
+  .lib-watched{background:color-mix(in srgb, var(--ok) 5%, var(--card))}
+  .lib-watched .cat-name{color:var(--ink-2)}
+  .lib-when{font-size:11px; color:var(--ink-2); font-weight:600}
   .todo-star.on{color:#e8a13c}
   .todo-star.on svg{fill:#e8a13c}
   .todo-del{border:0; background:transparent; cursor:pointer; padding:3px; color:var(--ink-2); display:flex; border-radius:8px}
@@ -703,22 +715,10 @@
 /* ---------- gold tab ---------- */
   /* One series is shown at a time, so the whole tab recolours to whichever
      is selected rather than drawing two scales on one chart. */
-  #page-gold[data-asset="gold"]{--series:var(--gold)}
-  #page-gold[data-asset="btc"]{--series:var(--btc)}
-  .asset-row{display:flex; gap:5px; margin:0 0 10px}
-  .asset-row button{
-    flex:1; padding:8px 4px; border-radius:11px; border:1px solid var(--line);
-    background:var(--card); color:var(--ink-2); font:inherit; font-size:13px;
-    font-weight:700; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; gap:6px;
-  }
-  .asset-row button i{width:8px; height:8px; border-radius:50%; display:block}
-  .asset-row button[data-a="gold"] i{background:var(--gold)}
-  .asset-row button[data-a="btc"] i{background:var(--btc)}
-  .asset-row button.on{
-    background:color-mix(in srgb, var(--series) 13%, var(--card));
-    border-color:var(--series); color:var(--ink);
-  }
+  /* each pair of cards carries its own series colour */
+  #page-gold [data-asset="gold"]{--series:var(--gold)}
+  #page-gold [data-asset="btc"]{--series:var(--btc)}
+  #page-gold .gold-card + .card{margin-top:-2px}
   .gold-card{
     background:
       radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--series) 13%, transparent), transparent 62%),
@@ -805,7 +805,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v9.0</div>
+      <div class="ver" id="appVer">v9.1</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -962,56 +962,7 @@
     </section>
   </main>
 
-  <main class="page hide" id="page-gold" data-asset="gold">
-    <div class="asset-row" id="assetRow">
-      <button data-a="gold" class="on"><i></i>Gold</button>
-      <button data-a="btc"><i></i>Bitcoin</button>
-    </div>
-    <section class="card gold-card">
-      <div class="gold-lab"><i></i><span id="goldLab">24K gold · Dubai</span></div>
-      <div class="gold-big"><span class="cur">AED</span><span class="amt" id="goldAmt">—</span></div>
-      <div class="gold-sub">
-        <span class="gold-unit" id="goldUnit">per gram</span>
-        <span class="gold-chg flat" id="goldChg">—</span>
-      </div>
-      <div class="gold-meta" id="goldMeta">Loading latest rate…</div>
-      <div class="gold-actions">
-        <button class="gold-check" id="goldCheck">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
-          Check now
-        </button>
-        <span class="gold-status" id="goldStatus"></span>
-      </div>
-      <div class="todo-add gold-add" id="goldAdd">
-        <input type="number" inputmode="decimal" step="0.01" id="goldInput" placeholder="AED per gram (24K)">
-        <button id="goldSave">Save</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="cat-head" style="margin-bottom:6px">
-        <div class="cat-name sec-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-          Trend
-        </div>
-        <span class="rt-prog" id="goldSpan"></span>
-      </div>
-      <div class="range-row" id="goldRange">
-        <button data-r="7">7D</button>
-        <button data-r="30" class="on">1M</button>
-        <button data-r="90">3M</button>
-        <button data-r="180">6M</button>
-        <button data-r="365">1Y</button>
-        <button data-r="0">All</button>
-      </div>
-      <div class="gchart-wrap" id="goldChartWrap">
-        <div class="gtip" id="goldTip"></div>
-        <div id="goldChart"></div>
-      </div>
-      <div class="gstats" id="goldStats"></div>
-      <div class="grange-note" id="goldNote"></div>
-    </section>
-  </main>
+  <main class="page hide" id="page-gold"></main>
 
   <main class="page hide" id="page-lib">
     <div id="libList"></div>
@@ -1166,7 +1117,7 @@
     'todos-v1', 'todo-cats-v1',
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
-    'gold-hist-v1', 'gold-state-v1', 'btc-hist-v1', 'asset-v1', 'lib-items-v1', 'lib-shelves-v1',
+    'gold-hist-v1', 'gold-state-v1', 'btc-hist-v1', 'lib-items-v1', 'lib-shelves-v1',
     'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'last-backup-v1'
   ];
   /* Keys that hold things you actually typed. The backup is scored on these,
@@ -2803,7 +2754,7 @@
   function renderLib(){
     var box = document.getElementById('libList');
     box.innerHTML = libShelves.map(function(s){
-      var items = libItems.filter(function(it){ return it.s === s; });
+      var items = libItems.filter(function(it){ return it.s === s && !it.w; });
       items.sort(function(a, b){ return a.pri === b.pri ? 0 : a.pri ? -1 : 1; });
       var reord = libReorder === s;
       var rows = items.length === 0
@@ -2820,7 +2771,8 @@
               (reord
                 ? '<button class="rt-move" data-dir="-1"'+(i === 0 ? ' disabled' : '')+' aria-label="Move up">'+UP_SVG+'</button>' +
                   '<button class="rt-move" data-dir="1"'+(i === items.length - 1 ? ' disabled' : '')+' aria-label="Move down">'+DOWN_SVG+'</button>'
-                : '<button class="todo-star'+(it.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
+                : '<button class="lib-tick" aria-label="Mark as watched">'+CHECK_SVG+'</button>' +
+                  '<button class="todo-star'+(it.pri ? ' on' : '')+'" aria-label="Toggle priority">'+STAR_SVG+'</button>' +
                   '<button class="todo-del'+(isArmed('lib:'+it.id) ? ' armed' : '')+'" aria-label="'+
                   (isArmed('lib:'+it.id) ? 'Tap again to delete' : 'Delete')+'">'+X_SVG+'</button>') +
               '</li>';
@@ -2839,7 +2791,38 @@
           '<input type="text" class="lib-t" placeholder="Name it (e.g. Friday talk)" maxlength="80">' +
           '<div class="lib-add-row"><input type="url" class="lib-u" inputmode="url" placeholder="Paste the link"><button>Add</button></div>' +
         '</div></section>';
+    }).join('') + watchedSection();
+  }
+
+  /* Everything ticked off, newest first, in one shelf at the bottom. Tapping
+     the tick again puts an item back where it came from. */
+  function watchedSection(){
+    var done = libItems.filter(function(it){ return it.w; });
+    if(!done.length) return '';
+    done.sort(function(a, b){ return (b.wAt || 0) - (a.wAt || 0); });
+    var rows = done.map(function(it){
+      var k = libKind(it.url);
+      var ico = it.th
+        ? '<span class="lib-ico thumb" style="background-image:url(\''+esc(it.th)+'\')"></span>'
+        : '<span class="lib-ico '+k+'">'+(k === 'video' ? PLAY_SVG : k === 'audio' ? NOTE_SVG : LINK_SVG)+'</span>';
+      return '<li class="lib-item lib-done" data-id="'+it.id+'">' + ico +
+        '<span class="lib-main"><span class="lib-title">'+esc(it.title)+'</span>' +
+        '<span class="lib-host">'+esc(it.s)+(it.wAt ? ' · <span class="lib-when">'+relDay(it.wAt)+'</span>' : '')+'</span></span>' +
+        '<button class="lib-tick on" aria-label="Put it back">'+CHECK_SVG+'</button>' +
+        '<button class="todo-del'+(isArmed('lib:'+it.id) ? ' armed' : '')+'" aria-label="'+
+          (isArmed('lib:'+it.id) ? 'Tap again to delete' : 'Delete')+'">'+X_SVG+'</button>' +
+        '</li>';
     }).join('');
+    return '<section class="card lib-watched" data-watched="1">' +
+      '<div class="cat-head"><div class="cat-name">Watched <span class="cat-count">'+done.length+'</span></div></div>' +
+      '<ul class="todo-list">'+rows+'</ul></section>';
+  }
+  function relDay(ms){
+    var days = Math.floor((midnight().getTime() - new Date(ms).setHours(0,0,0,0)) / 86400000);
+    if(days <= 0) return 'today';
+    if(days === 1) return 'yesterday';
+    if(days < 7) return days + ' days ago';
+    return fmtShort(new Date(ms));
   }
 
   function moveLib(id, dir){
@@ -2867,9 +2850,9 @@
   }
 
   document.getElementById('libList').addEventListener('click', function(e){
-    var card = e.target.closest('[data-shelf]');
+    var card = e.target.closest('[data-shelf], [data-watched]');
     if(!card) return;
-    var s = card.getAttribute('data-shelf');
+    var s = card.getAttribute('data-shelf') || '';
 
     if(e.target.closest('.lib-add-row button')){
       var tEl = card.querySelector('.lib-t'), uEl = card.querySelector('.lib-u');
@@ -2907,6 +2890,14 @@
 
     var mv = e.target.closest('.rt-move');
     if(mv){ moveLib(id, +mv.getAttribute('data-dir')); return; }
+    if(e.target.closest('.lib-tick')){
+      disarm(false);
+      if(item.w){ delete item.w; delete item.wAt; toast('Back on the shelf'); }
+      else { item.w = 1; item.wAt = Date.now(); toast('Moved to Watched'); }
+      saveLib(); renderLib();
+      if(navigator.vibrate) navigator.vibrate(8);
+      return;
+    }
     if(e.target.closest('.todo-del')){
       if(!confirmDelete('lib:' + id, 'this link')) return;
       libItems = libItems.filter(function(it){ return it.id !== id; });
@@ -2929,6 +2920,46 @@
       card.querySelector('.lib-add-row button').click();
     }
   });
+
+  /* ---------- shared in from the phone ----------
+     The manifest registers DayLog as a share target, so Android lists it in
+     YouTube's (or anything else's) Share sheet. The share arrives as an
+     ordinary page load with the link in the query string. YouTube puts the
+     title and the link together in "text" rather than filling "url", so take
+     whichever carries a link and keep the rest as a provisional title — the
+     real one is fetched a moment later, same as a pasted link. */
+  (function sharedIn(){
+    if(!location.search) return;
+    var q;
+    try{ q = new URLSearchParams(location.search); }catch(e){ return; }
+    var text = q.get('text') || '', url = q.get('url') || '', title = q.get('title') || '';
+    var hit = String(url + ' ' + text + ' ' + title).match(/https?:\/\/[^\s<>"']+/);
+    /* clear the query either way, so a refresh cannot add it twice */
+    try{ history.replaceState({}, '', location.pathname); }catch(e){}
+    if(!hit) return;
+    var link = normUrl(hit[0].replace(/[),.]+$/, ''));
+
+    var already = null, i;
+    for(i = 0; i < libItems.length; i++) if(libItems[i].url === link) already = libItems[i];
+    if(already){
+      if(already.w){ delete already.w; delete already.wAt; saveLib(); }
+      renderLib(); showTab('lib');
+      toast('Already in ' + already.s);
+      return;
+    }
+    /* the title YouTube sends is the video's, minus the link itself */
+    var guess = (title || text).replace(/https?:\/\/[^\s]+/g, '').trim().slice(0, 120);
+    var shelf = libShelves[0] || 'Saved';
+    var nid = 'l' + Date.now() + Math.floor(Math.random() * 1000);
+    /* pushed, not unshifted, so it lands at the bottom of the shelf */
+    libItems.push({ id:nid, s:shelf, title: guess || libHost(link), url:link,
+                    pri:false, auto: guess ? 0 : 1 });
+    saveLib();
+    renderLib();
+    showTab('lib');
+    enrichLink(nid);
+    toast('Added to ' + shelf);
+  })();
 
   renderLib();
 
@@ -2962,10 +2993,11 @@
     {d:"2026-09-07",v:530.75}, {d:"2026-09-08",v:526.5}, {d:"2026-09-09",v:532}, {d:"2026-09-10",v:522.5},
     {d:"2026-09-11",v:526.75}
   ];
-  var GOLD_KEY = 'gold-hist-v1', GOLD_MSG_KEY = 'gold-state-v1';
+  var GOLD_KEY = 'gold-hist-v1', BTC_KEY = 'btc-hist-v1', GOLD_MSG_KEY = 'gold-state-v1';
   var AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
-  var memGold = null;
+  var memGold = null, memBtc = null;
   var goldHist = loadJSON(GOLD_KEY, null, memGold) || [];
+  var btcHist  = loadJSON(BTC_KEY, null, memBtc) || [];
   /* fill in any seed day we don't already hold, keeping everything collected so far */
   (function mergeSeed(){
     var have = {}, added = 0, i;
@@ -2978,82 +3010,114 @@
       try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
     }
   })();
-  var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
-  var goldRange = 30, goldFetchedAt = 0;
 
-  /* Bitcoin rides the same machinery as gold, with one series on screen at a
-     time chosen by the switch at the top. Two prices three orders of
-     magnitude apart have no business sharing one chart and one y-axis. */
-  var BTC_KEY = 'btc-hist-v1', ASSET_KEY = 'asset-v1';
-  var memBtc = null;
-  var btcHist = loadJSON(BTC_KEY, null, memBtc) || [];
-  var asset = 'gold';
-  try{ if(localStorage.getItem(ASSET_KEY) === 'btc') asset = 'btc'; }catch(e){}
+  /* Gold and bitcoin sit one above the other, each with its own card and its
+     own chart. They share nothing but the layout: a gram price in the
+     hundreds and a coin price in the hundreds of thousands on one pair of
+     axes would squash whichever moved less into a flat line. */
   var ASSET = {
-    gold: { lab:'24K gold · Dubai', unit:'per gram', dp:2, src:'dubaicityofgold.com',
-            hint:'AED per gram (24K)', lo:50, hi:5000 },
-    btc:  { lab:'Bitcoin', unit:'per coin', dp:0, src:'CoinGecko',
-            hint:'AED per bitcoin', lo:1000, hi:100000000 }
+    gold: { key:GOLD_KEY, lab:'24K gold · Dubai', unit:'per gram', dp:2,
+            src:'dubaicityofgold.com', hint:'AED per gram (24K)', lo:50, hi:5000 },
+    btc:  { key:BTC_KEY,  lab:'Bitcoin', unit:'per coin', dp:0,
+            src:'CoinGecko', hint:'AED per bitcoin', lo:1000, hi:100000000 }
   };
-  function cfg(){ return ASSET[asset]; }
-  function hist(){ return asset === 'btc' ? btcHist : goldHist; }
-  function saveBtc(){
-    memBtc = btcHist;
-    try{ localStorage.setItem(BTC_KEY, JSON.stringify(btcHist)); }catch(e){}
-  }
-  function saveCur(){ if(asset === 'btc') saveBtc(); else saveGold(); }
+  var ASSETS = ['gold', 'btc'];
+  var ranges = { gold:30, btc:30 };
+  var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
+  var goldFetchedAt = 0, goldChecking = false;
 
-  function saveGold(){
-    memGold = goldHist;
-    try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
+  function hist(a){ return a === 'btc' ? btcHist : goldHist; }
+  function saveA(a){
+    if(a === 'btc'){ memBtc = btcHist; try{ localStorage.setItem(BTC_KEY, JSON.stringify(btcHist)); }catch(e){} }
+    else { memGold = goldHist; try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){} }
   }
-  function saveGoldState(){
-    try{ localStorage.setItem(GOLD_MSG_KEY, JSON.stringify(goldState)); }catch(e){}
-  }
-  /* add or replace one day's rate */
-  function putGold(dateKey, val, manual){
-    var h = hist(), i;
+  function saveGoldState(){ try{ localStorage.setItem(GOLD_MSG_KEY, JSON.stringify(goldState)); }catch(e){} }
+  function el(a, name){ return document.getElementById(a + name); }
+
+  /* add or replace one day's reading */
+  function putRate(a, dateKey, val, manual){
+    var h = hist(a), i;
     for(i = 0; i < h.length; i++){
-      if(h[i].d === dateKey){ h[i].v = val; h[i].m = !!manual; saveCur(); return; }
+      if(h[i].d === dateKey){ h[i].v = val; h[i].m = !!manual; saveA(a); return; }
     }
     h.push({ d: dateKey, v: val, m: !!manual });
-    h.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    h.sort(function(x, y){ return x.d < y.d ? -1 : 1; });
     while(h.length > 1200) h.shift();
-    saveCur();
+    saveA(a);
   }
-  /* gold is read to the fils, bitcoin to the dirham — decimals on a six-figure
-     number are noise */
+  /* gold is read to the fils, bitcoin to the dirham — decimals on a
+     six-figure number are noise */
   function money(n, d){
-    if(d === undefined) d = cfg().dp;
+    if(d === undefined) d = 2;
     return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
-  /* One point per day. Days with no reading carry the previous day's rate
-     forward — markets are shut at weekends anyway — and are flagged so the
-     readout can say so, rather than the line skipping days. */
-  function goldSeries(){
-    var H = hist();
-    if(!H.length) return [];
-    var h = H.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-    var have = {};
-    for(var i = 0; i < h.length; i++) have[h[i].d] = h[i].v;
+  function rate(a, n){ return money(n, ASSET[a].dp); }
+  /* six figures spelled out in full run off the left edge of the chart */
+  function axisLab(a, v){ return a === 'btc' ? Math.round(v / 1000) + 'k' : String(Math.round(v)); }
 
-    var last = parseKey(h[h.length - 1].d);
-    var today = midnight();
-    var endD = last > today ? last : today;
-    var startD;
-    if(!goldRange){
-      startD = parseKey(h[0].d);
-    }else{
-      startD = addDays(endD, -(goldRange - 1));
+  /* ---------- markup: the same section twice, so they cannot drift ---------- */
+  function assetSection(a){
+    var c = ASSET[a];
+    return '<section class="card gold-card" data-asset="'+a+'">' +
+      '<div class="gold-lab"><i></i>'+c.lab+'</div>' +
+      '<div class="gold-big"><span class="cur">AED</span><span class="amt" id="'+a+'Amt">—</span></div>' +
+      '<div class="gold-sub">' +
+        '<span class="gold-unit">'+c.unit+'</span>' +
+        '<span class="gold-chg flat" id="'+a+'Chg">—</span>' +
+      '</div>' +
+      '<div class="gold-meta" id="'+a+'Meta">Loading…</div>' +
+      '<div class="gold-actions">' +
+        '<button class="gold-check" data-check="'+a+'">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>' +
+          ' Check now</button>' +
+        '<span class="gold-status" id="'+a+'Status"></span>' +
+      '</div>' +
+      '<div class="todo-add gold-add" id="'+a+'Add">' +
+        '<input type="number" inputmode="decimal" step="'+(a === 'btc' ? '1' : '0.01')+'" id="'+a+'Input" placeholder="'+c.hint+'">' +
+        '<button data-save="'+a+'">Save</button>' +
+      '</div>' +
+    '</section>' +
+    '<section class="card" data-asset="'+a+'">' +
+      '<div class="cat-head" style="margin-bottom:6px">' +
+        '<div class="cat-name sec-title">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>' +
+          c.lab.split(' · ')[0] + ' trend' +
+        '</div>' +
+        '<span class="rt-prog" id="'+a+'Span"></span>' +
+      '</div>' +
+      '<div class="range-row" data-range="'+a+'">' +
+        '<button data-r="7">7D</button><button data-r="30" class="on">1M</button>' +
+        '<button data-r="90">3M</button><button data-r="180">6M</button>' +
+        '<button data-r="365">1Y</button><button data-r="0">All</button>' +
+      '</div>' +
+      '<div class="gchart-wrap"><div class="gtip" id="'+a+'Tip"></div><div id="'+a+'Chart"></div></div>' +
+      '<div class="gstats" id="'+a+'Stats"></div>' +
+      '<div class="grange-note" id="'+a+'Note"></div>' +
+    '</section>';
+  }
+  document.getElementById('page-gold').innerHTML =
+    ASSETS.map(assetSection).join('');
+
+  /* One point per day. Days with no reading carry the previous day's forward
+     — markets are shut at weekends anyway — and are flagged so the readout
+     can say so, rather than the line skipping days. */
+  function series(a){
+    var H = hist(a);
+    if(!H.length) return [];
+    var h = H.slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; });
+    var have = {}, i;
+    for(i = 0; i < h.length; i++) have[h[i].d] = h[i].v;
+    var last = parseKey(h[h.length - 1].d), today = midnight();
+    var endD = last > today ? last : today, startD;
+    var range = ranges[a];
+    if(!range){ startD = parseKey(h[0].d); }
+    else {
+      startD = addDays(endD, -(range - 1));
       var firstD = parseKey(h[0].d);
       if(startD < firstD) startD = firstD;
     }
-
     var out = [], cur = null;
-    /* seed with the newest reading at or before the start */
-    for(i = 0; i < h.length; i++){
-      if(parseKey(h[i].d) <= startD) cur = h[i].v; else break;
-    }
+    for(i = 0; i < h.length; i++){ if(parseKey(h[i].d) <= startD) cur = h[i].v; else break; }
     var d = new Date(startD.getTime()), guard = 0;
     while(d <= endD && guard++ < 1500){
       var k = keyOf(d);
@@ -3061,64 +3125,47 @@
       else if(cur !== null){ out.push({ d:k, v:cur, real:false }); }
       d = addDays(d, 1);
     }
-    return out.length >= 2 ? out : h.map(function(r){ return { d:r.d, v:r.v, real:true }; }).slice(-2);
+    if(out.length >= 2) return out;
+    return h.map(function(r){ return { d:r.d, v:r.v, real:true }; }).slice(-2);
   }
 
-  function renderGoldHead(){
-    var amtEl = document.getElementById('goldAmt');
-    var chgEl = document.getElementById('goldChg');
-    var metaEl = document.getElementById('goldMeta');
-    var H = hist(), c = cfg();
-    document.getElementById('goldLab').textContent = c.lab;
-    document.getElementById('goldUnit').textContent = c.unit;
-    document.getElementById('goldInput').placeholder = c.hint;
+  function renderRateHead(a){
+    var c = ASSET[a], H = hist(a);
+    var amtEl = el(a, 'Amt'), chgEl = el(a, 'Chg'), metaEl = el(a, 'Meta');
     if(!H.length){
       amtEl.textContent = '—';
       chgEl.className = 'gold-chg flat'; chgEl.textContent = 'no data';
-      metaEl.textContent = asset === 'btc'
-        ? 'No price yet — it fills in from tomorrow morning, or tap Check now.'
-        : 'No rate yet.';
+      metaEl.textContent = 'Nothing yet — tap Check now.';
       return;
     }
-    var h = H.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    var h = H.slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; });
     var last = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;
-    amtEl.textContent = money(last.v);
+    amtEl.textContent = rate(a, last.v);
     if(prev){
       var diff = last.v - prev.v, pct = (diff / prev.v) * 100;
       var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : 'flat';
       chgEl.className = 'gold-chg ' + dir;
       chgEl.textContent = (dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '● ') +
-        (dir === 'flat' ? '0.00' : money(Math.abs(diff))) +
+        (dir === 'flat' ? '0' : rate(a, Math.abs(diff))) +
         ' (' + (dir === 'flat' ? '0.00' : Math.abs(pct).toFixed(2)) + '%)';
     }else{
       chgEl.className = 'gold-chg flat'; chgEl.textContent = 'first reading';
     }
-    var d = parseKey(last.d);
-    var stale = last.d !== todayKey();
+    var d = parseKey(last.d), stale = last.d !== todayKey();
     metaEl.innerHTML =
-      (asset === 'btc' ? 'Price for ' : 'Rate for ') +
       DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
       ' · ' + h.length + ' days recorded' +
       (stale ? ' · <b>not updated today</b>' : '') +
       '<br>' + (goldState.ok ? 'Checked automatically once a day' : 'Source: ' + c.src) +
-      ' · <a href="#" id="goldManual">enter today’s ' + (asset === 'btc' ? 'price' : 'rate') + '</a>';
-    var link = document.getElementById('goldManual');
-    if(link) link.addEventListener('click', function(ev){
-      ev.preventDefault();
-      document.getElementById('goldAdd').classList.toggle('show');
-      var inp = document.getElementById('goldInput');
-      if(document.getElementById('goldAdd').classList.contains('show')) inp.focus();
-    });
+      ' · <a href="#" data-manual="'+a+'">enter today’s figure</a>';
   }
 
-  function renderGoldChart(){
-    var box = document.getElementById('goldChart');
-    var statsEl = document.getElementById('goldStats');
-    var noteEl = document.getElementById('goldNote');
-    var tip = document.getElementById('goldTip');
+  function renderRateChart(a){
+    var box = el(a, 'Chart'), statsEl = el(a, 'Stats'), noteEl = el(a, 'Note');
+    var tip = el(a, 'Tip');
     tip.classList.remove('on');
-    var s = goldSeries();
-    document.getElementById('goldSpan').textContent = s.length ? s.length + ' days' : '';
+    var s = series(a);
+    el(a, 'Span').textContent = s.length ? s.length + ' days' : '';
     if(s.length < 2){
       box.innerHTML = '<div class="empty-note">Not enough history yet — it grows by a day at a time</div>';
       statsEl.innerHTML = ''; noteEl.textContent = '';
@@ -3137,58 +3184,48 @@
     var area = line + ' L' + x(s.length - 1).toFixed(1) + ' ' + (H - PB) + ' L' + PL + ' ' + (H - PB) + ' Z';
     var lastI = s.length - 1, lastV = s[lastI].v;
     var firstD = parseKey(s[0].d), lastD = parseKey(s[lastI].d);
+    var gid = 'fade-' + a;
 
-    /* price scale: four ticks across the range, labelled down the left */
     var refY = y(lastV);
     var ticks = '', TICKS = 4, ti, tv, ty;
     for(ti = 0; ti < TICKS; ti++){
       tv = lo + pad + (hi - pad - (lo + pad)) * (ti / (TICKS - 1));
       ty = y(tv);
       ticks += '<line class="ggrid" x1="'+PL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+ty.toFixed(1)+'"/>';
-      /* leave the label out when the current-price label would sit on top of it */
       if(Math.abs(ty - refY) > 9){
-        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+
-          (asset === 'btc' ? Math.round(tv / 1000) + 'k' : Math.round(tv)) + '</text>';
+        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+axisLab(a, tv)+'</text>';
       }
     }
-    /* dashed marker at the newest price, so every point reads against it.
-       Six figures spelled out in full run off the left edge, so bitcoin uses
-       the same thousands shorthand as the ticks — the exact number is one
-       tap away on the chart. */
-    var refLab = asset === 'btc' ? Math.round(lastV / 1000) + 'k' : money(lastV);
     var ref = '<line class="gref" x1="'+PL+'" y1="'+refY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+refY.toFixed(1)+'"/>' +
-      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+refLab+'</text>';
+      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+axisLab(a, lastV)+'</text>';
 
     box.innerHTML =
-      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+cfg().lab+' trend">' +
-        '<defs><linearGradient id="gfade" x1="0" y1="0" x2="0" y2="1">' +
+      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+ASSET[a].lab+' trend">' +
+        '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">' +
           '<stop offset="0" stop-color="var(--series)" stop-opacity=".26"/>' +
           '<stop offset="1" stop-color="var(--series)" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
         ticks +
-        '<path class="garea" d="'+area+'"/>' +
+        '<path class="garea" style="fill:url(#'+gid+')" d="'+area+'"/>' +
         '<path class="gline" d="'+line+'"/>' +
         ref +
-        '<line class="gcross" id="gCross" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" style="display:none"/>' +
-        '<circle class="gdot" id="gDot" cx="'+x(lastI).toFixed(1)+'" cy="'+refY.toFixed(1)+'" r="4"/>' +
+        '<line class="gcross" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" style="display:none"/>' +
+        '<circle class="gdot" cx="'+x(lastI).toFixed(1)+'" cy="'+refY.toFixed(1)+'" r="4"/>' +
         '<text class="gxl" x="'+PL+'" y="'+(H-3)+'">'+fmtShort(firstD)+'</text>' +
         '<text class="gxl" x="'+(W-PR)+'" y="'+(H-3)+'" text-anchor="end">'+fmtShort(lastD)+'</text>' +
       '</svg>';
 
-    var first = s[0].v, last = s[lastI].v, diff = last - first;
-    var pct = (diff / first) * 100;
+    var first = s[0].v, diff = lastV - first, pct = (diff / first) * 100;
     var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : '';
     statsEl.innerHTML =
-      '<div class="gstat"><b>'+money(hi - pad)+'</b><span>high</span></div>' +
-      '<div class="gstat"><b>'+money(lo + pad)+'</b><span>low</span></div>' +
+      '<div class="gstat"><b>'+rate(a, hi - pad)+'</b><span>high</span></div>' +
+      '<div class="gstat"><b>'+rate(a, lo + pad)+'</b><span>low</span></div>' +
       '<div class="gstat"><b class="'+dir+'">'+(dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '')+
         (dir ? Math.abs(pct).toFixed(2) : '0.00')+'%</b><span>change</span></div>';
     noteEl.textContent = 'Tap the chart to read a day · updates once a day';
 
-    /* tap / drag to read a value */
     var svg = box.querySelector('.gchart');
-    var cross = document.getElementById('gCross');
-    var dot = document.getElementById('gDot');
+    var cross = svg.querySelector('.gcross'), dot = svg.querySelector('.gdot');
     function readAt(clientX){
       var rect = svg.getBoundingClientRect();
       var rel = (clientX - rect.left) / rect.width * W;
@@ -3199,60 +3236,70 @@
       cross.style.display = '';
       dot.setAttribute('cx', px); dot.setAttribute('cy', py);
       var dd = parseKey(s[i].d);
-      tip.textContent = money(s[i].v) + ' · ' + fmtShort(dd) + (s[i].real === false ? ' (carried)' : '');
+      tip.textContent = rate(a, s[i].v) + ' · ' + fmtShort(dd) + (s[i].real === false ? ' (carried)' : '');
       tip.style.left = (px / W * 100) + '%';
       tip.classList.add('on');
     }
     function clear(){
       cross.style.display = 'none';
-      dot.setAttribute('cx', x(lastI)); dot.setAttribute('cy', y(s[lastI].v));
+      dot.setAttribute('cx', x(lastI)); dot.setAttribute('cy', y(lastV));
       tip.classList.remove('on');
     }
     svg.addEventListener('pointerdown', function(e){ readAt(e.clientX); });
     svg.addEventListener('pointermove', function(e){ if(e.buttons) readAt(e.clientX); });
     svg.addEventListener('pointerup', clear);
     svg.addEventListener('pointerleave', clear);
-    svg.addEventListener('touchmove', function(e){
-      if(e.touches.length) readAt(e.touches[0].clientX);
-    }, {passive:true});
+    svg.addEventListener('touchmove', function(e){ if(e.touches.length) readAt(e.touches[0].clientX); }, {passive:true});
     svg.addEventListener('touchend', clear);
   }
 
   function renderGold(){
-    document.getElementById('page-gold').setAttribute('data-asset', asset);
-    var bs = document.getElementById('assetRow').querySelectorAll('button');
-    for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-a') === asset);
-    renderGoldHead();
-    renderGoldChart();
+    for(var i = 0; i < ASSETS.length; i++){ renderRateHead(ASSETS[i]); renderRateChart(ASSETS[i]); }
+  }
+  function setGoldStatus(a, msg){ var e2 = el(a, 'Status'); if(e2) e2.textContent = msg || ''; }
+
+  /* ---------- one delegated listener for both sections ---------- */
+  document.getElementById('page-gold').addEventListener('click', function(e){
+    var r = e.target.closest('[data-range] button');
+    if(r){
+      var row = r.closest('[data-range]'), a = row.getAttribute('data-range');
+      ranges[a] = +r.getAttribute('data-r');
+      var bs = row.querySelectorAll('button');
+      for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === r);
+      renderRateChart(a);
+      return;
+    }
+    var chk = e.target.closest('[data-check]');
+    if(chk){ fetchRates(true, chk.getAttribute('data-check')); return; }
+    var sv = e.target.closest('[data-save]');
+    if(sv){ saveManual(sv.getAttribute('data-save')); return; }
+    var man = e.target.closest('[data-manual]');
+    if(man){
+      e.preventDefault();
+      var a2 = man.getAttribute('data-manual');
+      var add = el(a2, 'Add');
+      add.classList.toggle('show');
+      if(add.classList.contains('show')) el(a2, 'Input').focus();
+    }
+  });
+  document.getElementById('page-gold').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var inp = e.target.closest('[id$="Input"]');
+    if(!inp) return;
+    saveManual(inp.id.replace('Input', ''));
+  });
+  function saveManual(a){
+    var inp = el(a, 'Input'), c = ASSET[a];
+    var v = parseFloat(inp.value);
+    if(!v || v < c.lo || v > c.hi){ toast('Enter the ' + c.hint.toLowerCase()); return; }
+    putRate(a, todayKey(), a === 'btc' ? Math.round(v) : Math.round(v * 100) / 100, true);
+    inp.value = '';
+    el(a, 'Add').classList.remove('show');
+    renderGold();
+    toast('Saved today’s figure');
   }
 
-  document.getElementById('assetRow').addEventListener('click', function(e){
-    var btn = e.target.closest('button');
-    if(!btn) return;
-    var a = btn.getAttribute('data-a');
-    if(a === asset) return;
-    asset = a;
-    try{ localStorage.setItem(ASSET_KEY, asset); }catch(err){}
-    document.getElementById('goldAdd').classList.remove('show');
-    setGoldStatus('');
-    renderGold();
-    fetchGold(true);
-  });
-
-  document.getElementById('goldRange').addEventListener('click', function(e){
-    var btn = e.target.closest('button');
-    if(!btn) return;
-    goldRange = +btn.getAttribute('data-r');
-    var bs = this.querySelectorAll('button');
-    for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === btn);
-    renderGoldChart();
-  });
-
-  /* The rate comes from dubaicityofgold.com — "Today's Suggested Retail Gold
-     Jewellery Price · Rates in AED / Gram · 24K Gold". A browser can't read
-     another site directly, so the page is tried first and then through a
-     couple of public read-through services. If none answer, the Check now
-     button says so and you can type the number in. */
+  /* ---------- where the numbers come from ---------- */
   var GOLD_PAGE = 'https://dubaicityofgold.com/';
   function parseGoldPage(html){
     var text = String(html)
@@ -3268,30 +3315,16 @@
     var v = parseFloat(m[1]);
     return (v >= 100 && v <= 5000) ? Math.round(v * 100) / 100 : null;
   }
-  var goldChecking = false;
-  function setGoldStatus(msg){
-    var el = document.getElementById('goldStatus');
-    if(el) el.textContent = msg || '';
+  function readGoldPage(r){
+    if(!r.ok) throw 0;
+    return r.text().then(function(t){
+      var v = parseGoldPage(t);
+      if(!v) throw 0;
+      return v;
+    });
   }
-  /* Merge whatever the morning job wrote into the right local series, keeping
-     anything already collected on the phone. */
-  function mergeRows(into, rows){
-    if(!rows || !rows.length) return 0;
-    var have = {}, added = 0, i;
-    for(i = 0; i < into.length; i++) have[into[i].d] = 1;
-    for(i = 0; i < rows.length; i++){
-      if(!rows[i] || !rows[i].d || !(rows[i].v > 0)) continue;
-      if(have[rows[i].d]) continue;
-      into.push({ d: rows[i].d, v: rows[i].v });
-      have[rows[i].d] = 1;
-      added++;
-    }
-    if(added) into.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-    return added;
-  }
-
-  /* Live readings, tried only when the repo file has nothing for today. Each
-     one resolves to a number in dirhams or throws. */
+  /* Live readings, tried only when the repo file has nothing for today.
+     Each resolves to a number in dirhams or throws. */
   var LIVE = {
     gold: [
       function(){ return fetch(GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); },
@@ -3300,7 +3333,7 @@
       function(){ return fetch('https://r.jina.ai/' + GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); }
     ],
     btc: [
-      /* CoinGecko quotes dirhams directly, so no conversion to get wrong */
+      /* CoinGecko quotes dirhams directly, so there is no conversion to get wrong */
       function(){
         return fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=aed', { cache:'no-store' })
           .then(function(r){ if(!r.ok) throw 0; return r.json(); })
@@ -3310,7 +3343,6 @@
             return Math.round(v);
           });
       },
-      /* Coinbase only gives dollars, converted at the fixed peg */
       function(){
         return fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', { cache:'no-store' })
           .then(function(r){ if(!r.ok) throw 0; return r.json(); })
@@ -3322,89 +3354,95 @@
       }
     ]
   };
-  function readGoldPage(r){
-    if(!r.ok) throw 0;
-    return r.text().then(function(t){
-      var v = parseGoldPage(t);
-      if(!v) throw 0;
-      return v;
-    });
+
+  function mergeRows(into, rows){
+    if(!rows || !rows.length) return 0;
+    var have = {}, added = 0, i;
+    for(i = 0; i < into.length; i++) have[into[i].d] = 1;
+    for(i = 0; i < rows.length; i++){
+      if(!rows[i] || !rows[i].d || !(rows[i].v > 0) || have[rows[i].d]) continue;
+      into.push({ d: rows[i].d, v: rows[i].v });
+      have[rows[i].d] = 1;
+      added++;
+    }
+    if(added) into.sort(function(x, y){ return x.d < y.d ? -1 : 1; });
+    return added;
+  }
+  function freshToday(a){
+    var h = hist(a);
+    return h.length && h[h.length - 1].d === todayKey();
   }
 
-  function fetchGold(force){
+  function fetchRates(force, only){
     var now = Date.now();
     if(goldChecking) return;
-    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;     /* at most hourly */
+    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;
     if(!force && goldState.last === todayKey() && goldState.ok) return;
     goldFetchedAt = now; goldChecking = true;
-    if(force) setGoldStatus('Checking…');
+    var want = only ? [only] : ASSETS;
+    if(force) want.forEach(function(a){ setGoldStatus(a, 'Checking…'); });
 
     /* the morning job writes gold.json beside this page — same origin, so it
-       always works; the live readings below are only a fallback */
+       always works; the live readings are only a fallback */
     fetch('gold.json?d=' + todayKey(), { cache:'no-cache' })
       .then(function(r){ if(!r.ok) throw 0; return r.json(); })
       .then(function(j){
         if(!j) throw 0;
-        if(mergeRows(goldHist, j.history)) saveGold();
-        if(mergeRows(btcHist, j.btc)) saveBtc();
-        var h = hist();
-        var last = h.length ? h[h.length - 1] : null;
-        if(last && last.d === todayKey()){
+        if(mergeRows(goldHist, j.history)) saveA('gold');
+        if(mergeRows(btcHist, j.btc)) saveA('btc');
+        renderGold();
+      })
+      .catch(function(){})
+      .then(function(){
+        var pending = want.filter(function(a){ return !freshToday(a); });
+        want.forEach(function(a){
+          if(freshToday(a) && force) setGoldStatus(a, 'Up to date');
+        });
+        if(!pending.length){
           goldChecking = false;
           goldState = { last: todayKey(), ok: true }; saveGoldState();
-          renderGold(); setGoldStatus(force ? 'Updated from this morning' : '');
-          return Promise.reject('done');
+          renderGold();
+          return;
         }
-        renderGold();
-        throw 0;                                   /* file is stale — try live */
-      })
-      .catch(function(err){ if(err !== 'done') tryLive(); });
+        var done = 0;
+        pending.forEach(function(a){
+          tryLive(a, function(){
+            if(++done === pending.length){
+              goldChecking = false;
+              goldState = { last: todayKey(), ok: ASSETS.every(freshToday) };
+              saveGoldState();
+              renderGold();
+            }
+          });
+        });
+      });
 
-    function tryLive(){
-      var ways = LIVE[asset] || [], i = 0;
-      (function tryNext(){
+    function tryLive(a, after){
+      var ways = LIVE[a] || [], i = 0;
+      (function next(){
         if(i >= ways.length){
-          goldChecking = false;
-          goldState.ok = false; saveGoldState(); renderGoldHead();
           if(force){
-            setGoldStatus('Couldn’t reach the ' + (asset === 'btc' ? 'price' : 'rate') + ' — type it in below');
-            document.getElementById('goldAdd').classList.add('show');
+            setGoldStatus(a, 'Couldn’t reach it — type it in below');
+            el(a, 'Add').classList.add('show');
           }
+          after();
           return;
         }
         ways[i++]()
           .then(function(v){
             if(!(v > 0)) throw 0;
-            putGold(todayKey(), v, false);
-            goldState = { last: todayKey(), ok: true }; saveGoldState();
-            goldChecking = false;
-            renderGold();
-            setGoldStatus(force ? 'Updated just now' : '');
-            if(force) toast((asset === 'btc' ? 'Bitcoin' : 'Rate') + ' updated — AED ' + money(v));
+            putRate(a, todayKey(), v, false);
+            renderRateHead(a); renderRateChart(a);
+            setGoldStatus(a, force ? 'Updated just now' : '');
+            after();
           })
-          .catch(function(){ tryNext(); });
+          .catch(function(){ next(); });
       })();
     }
   }
-  document.getElementById('goldCheck').addEventListener('click', function(){ fetchGold(true); });
-
-  document.getElementById('goldSave').addEventListener('click', saveManualGold);
-  document.getElementById('goldInput').addEventListener('keydown', function(e){
-    if(e.key === 'Enter') saveManualGold();
-  });
-  function saveManualGold(){
-    var inp = document.getElementById('goldInput');
-    var v = parseFloat(inp.value), c = cfg();
-    if(!v || v < c.lo || v > c.hi){ toast('Enter the ' + c.hint.toLowerCase()); return; }
-    putGold(todayKey(), asset === 'btc' ? Math.round(v) : Math.round(v * 100) / 100, true);
-    inp.value = '';
-    document.getElementById('goldAdd').classList.remove('show');
-    renderGold();
-    toast(asset === 'btc' ? 'Saved today’s price' : 'Saved today’s rate');
-  }
 
   renderGold();
-  fetchGold(true);
+  fetchRates(true);
 
   /* ==================== SETTINGS ==================== */
   var SET_KEY = 'settings-v1';
@@ -3599,7 +3637,7 @@
     var before = todos.length;
     todos = todos.filter(function(t){ return !(t.done && now - t.done > DAY_MS); });
     if(todos.length !== before) saveTodos();
-    renderTodo(); renderRoutine(); renderDot(); fetchGold();
+    renderTodo(); renderRoutine(); renderDot(); fetchRates();
   });
 
   renderTodo();
