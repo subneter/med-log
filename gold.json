@@ -7,6 +7,38 @@
     "btc": "CryptoCompare / Coinbase",
     "gold": "dubaicityofgold.com"
   },
+  "notes": {
+    "goldHistory": [
+      {
+        "src": "cryptocompare",
+        "err": "http 401"
+      },
+      {
+        "src": "yahoo query1 GC=F",
+        "err": "http 429"
+      },
+      {
+        "src": "yahoo query1 XAUUSD=X",
+        "err": "http 429"
+      },
+      {
+        "src": "yahoo query2 GC=F",
+        "err": "http 429"
+      },
+      {
+        "src": "yahoo query2 XAUUSD=X",
+        "err": "http 429"
+      },
+      {
+        "src": "stooq",
+        "err": "http 403"
+      },
+      {
+        "src": "datahub monthly",
+        "n": 35
+      }
+    ]
+  },
   "series": {
     "gold": {
       "unit": "AED per gram",
@@ -4932,7 +4964,7 @@
         },
         {
           "d": "2026-11-08",
-          "v": 278061
+          "v": 277972
         }
       ]
     },
@@ -15988,7 +16020,7 @@
     },
     {
       "d": "2026-11-08",
-      "v": 278061
+      "v": 277972
     }
   ]
 }
