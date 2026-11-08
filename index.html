@@ -22,7 +22,7 @@
     --med-blue:#3b82f6; --med-red:#f05252; --med-green:#166534; --med-black:#1f2937;
     --pf1:14%; --pf2:22%; --pf3:30%;
     --dot-a:#d63b60; --dot-p:#b8862c; --danger:#d13c34; --fri:#2f9e8f;
-    --btc:#5a5fe0; --series:#b8862c;
+    --btc:#5a5fe0; --inr:#0e8ba8; --dxy:#db2777; --series:#b8862c;
     --gold:#b8862c; --up:#1a7f4b; --down:#c0392b;
     --shadow:0 1px 2px rgba(15,23,20,.04), 0 10px 30px rgba(15,23,20,.07);
     --radius:22px;
@@ -35,7 +35,7 @@
       --med-blue:#4c8bf5; --med-red:#f05d5d; --med-green:#1c6f3d; --med-black:#d5dbd9;
       --pf1:22%; --pf2:32%; --pf3:42%;
       --dot-a:#e85570; --dot-p:#c2882f; --danger:#ef5f56; --fri:#3bb6a4;
-      --btc:#7578f0; --series:#c2882f;
+      --btc:#7578f0; --inr:#1f9bba; --dxy:#ec4899; --series:#c2882f;
       --gold:#c2882f; --up:#1f9e5c; --down:#ea5765;
     }
   }
@@ -712,45 +712,56 @@
   }
   .backup-nag .nag-x{background:transparent; color:var(--ink-2); padding:6px 4px; font-size:13px}
 
-/* ---------- gold tab ---------- */
-  /* One series is shown at a time, so the whole tab recolours to whichever
-     is selected rather than drawing two scales on one chart. */
-  /* each pair of cards carries its own series colour */
-  #page-gold [data-asset="gold"]{--series:var(--gold)}
-  #page-gold [data-asset="btc"]{--series:var(--btc)}
-  #page-gold .gold-card + .card{margin-top:-2px}
-  .gold-card{
-    background:
-      radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--series) 13%, transparent), transparent 62%),
-      var(--card);
-    text-align:left;
+/* ---------- rates tab ---------- */
+  /* Four things at once, so each one collapses to a single line you can read
+     at a glance and opens on a tap. Colours checked for colour-blind
+     separation in both themes; the name beside each one carries the identity
+     anyway, so colour is never doing the work alone. */
+  .rate-card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    border:1px solid var(--line); overflow:hidden; margin-bottom:8px;
   }
-  .gold-lab{
-    font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
-    color:var(--ink-2); display:flex; align-items:center; gap:6px;
+  .rate-card[data-a="gold"]{--series:var(--gold)}
+  .rate-card[data-a="btc"]{--series:var(--btc)}
+  .rate-card[data-a="inr"]{--series:var(--inr)}
+  .rate-card[data-a="dxy"]{--series:var(--dxy)}
+  .rate-head{
+    width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px;
+    background:transparent; border:0; font:inherit; color:inherit; cursor:pointer; text-align:left;
   }
-  .gold-lab i{width:8px; height:8px; border-radius:50%; background:var(--series); display:block}
-  .gold-big{display:flex; align-items:baseline; gap:7px; margin-top:6px}
-  .gold-big .cur{font-size:16px; font-weight:700; color:var(--ink-2)}
-  .gold-big .amt{font-size:40px; font-weight:800; letter-spacing:-1.4px; line-height:1}
-  .gold-sub{display:flex; align-items:center; gap:9px; margin-top:8px; flex-wrap:wrap}
-  .gold-unit{font-size:12.5px; color:var(--ink-2); font-weight:600}
-  .gold-chg{
-    display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:800;
-    border-radius:999px; padding:3px 9px;
+  .rate-dot{width:9px; height:9px; border-radius:50%; background:var(--series); flex:0 0 auto}
+  .rate-main{flex:1; min-width:0}
+  .rate-name{
+    display:block; font-size:10px; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-2);
   }
-  .gold-chg.up{color:var(--up); background:color-mix(in srgb, var(--up) 13%, transparent)}
-  .gold-chg.down{color:var(--down); background:color-mix(in srgb, var(--down) 13%, transparent)}
-  .gold-chg.flat{color:var(--ink-2); background:var(--tap)}
-  .gold-meta{font-size:11px; color:var(--ink-2); margin-top:9px; line-height:1.5}
-  .gold-meta a{color:var(--accent); font-weight:700; text-decoration:none; border-bottom:1px solid var(--line)}
-  .gold-add{display:none}
+  .rate-val{display:flex; align-items:baseline; gap:4px; margin-top:1px}
+  .rate-val b{font-size:23px; font-weight:800; letter-spacing:-.7px; line-height:1.1}
+  .rate-val i{font-style:normal; font-size:11px; font-weight:700; color:var(--ink-2)}
+  .rate-alt{display:block; font-size:11.5px; color:var(--ink-2); font-weight:600; margin-top:1px}
+  .rate-right{flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:3px}
+  .rate-chg{font-size:11.5px; font-weight:800; letter-spacing:-.1px; color:var(--ink-2)}
+  .rate-chg.up{color:var(--up)} .rate-chg.down{color:var(--down)}
+  .spark{display:block; width:64px; height:22px; overflow:visible}
+  .spark path{fill:none; stroke:var(--series); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round}
+  .spark circle{fill:var(--series)}
+  .rate-caret{color:var(--ink-2); display:flex; transition:transform .18s}
+  .rate-card.open .rate-caret{transform:rotate(180deg)}
+  .rate-body{display:none; padding:0 12px 11px}
+  .rate-card.open .rate-body{display:block}
+  .rate-stale{font-size:11px; color:var(--ink-2); font-weight:600; margin-top:6px}
+  .rate-act{display:flex; align-items:center; gap:9px; margin-top:9px; flex-wrap:wrap}
+  .rate-act .rate-type{
+    border:0; background:transparent; padding:0; font:inherit; font-size:11.5px;
+    font-weight:700; color:var(--accent); cursor:pointer; text-decoration:underline;
+  }
+  .gold-add{display:none; margin-top:9px}
   .gold-add.show{display:flex}
-  .gold-actions{display:flex; align-items:center; gap:9px; margin-top:10px; flex-wrap:wrap}
+
   .gold-check{
     display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--line);
-    background:var(--card); color:var(--ink); font:inherit; font-size:13px; font-weight:700;
-    border-radius:11px; padding:7px 12px; cursor:pointer;
+    background:var(--card); color:var(--ink); font:inherit; font-size:12.5px; font-weight:700;
+    border-radius:11px; padding:6px 11px; cursor:pointer;
   }
   .gold-check:active{background:var(--tap); transform:scale(.97)}
   .gold-status{font-size:11.5px; color:var(--ink-2); font-weight:600}
@@ -805,7 +816,7 @@
       DayLog
     </div>
     <div class="top-right">
-      <div class="ver" id="appVer">v9.1</div>
+      <div class="ver" id="appVer">v9.2</div>
       <button class="iconbtn" id="setBtn" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -998,9 +1009,9 @@
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg>
       Dot
     </button>
-    <button id="tab-gold" aria-label="Gold rate">
+    <button id="tab-gold" aria-label="Rates">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-      Gold
+      Rates
     </button>
     <button id="tab-lib" aria-label="Library">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="m10 7 5 3-5 3z" fill="currentColor" stroke="none"/></svg>
@@ -1117,7 +1128,7 @@
     'todos-v1', 'todo-cats-v1',
     'routines-v1', 'routine-groups-v1', 'routine-log-v1',
     'dot-log-v1', 'dot-gap-excl-v1',
-    'gold-hist-v1', 'gold-state-v1', 'btc-hist-v1', 'lib-items-v1', 'lib-shelves-v1',
+    'gold-hist-v1', 'gold-state-v1', 'btc-hist-v1', 'inr-hist-v1', 'dxy-hist-v1', 'rate-open-v1', 'lib-items-v1', 'lib-shelves-v1',
     'settings-v1', 'active-tab-v1', 'tabs-hidden-v1', 'last-backup-v1'
   ];
   /* Keys that hold things you actually typed. The backup is scored on these,
@@ -1710,7 +1721,7 @@
   /* ==================== TABS ==================== */
   var TAB_KEY = 'active-tab-v1';
   var TABS = ['meds','todo','routine','dot','gold','lib'];
-  var TAB_NAMES = { meds:'Meds', todo:'To-Do', routine:'Routine', dot:'Dot', gold:'Gold', lib:'Library' };
+  var TAB_NAMES = { meds:'Meds', todo:'To-Do', routine:'Routine', dot:'Dot', gold:'Rates', lib:'Library' };
   var HIDE_KEY = 'tabs-hidden-v1';
   var hiddenTabs = loadJSON(HIDE_KEY, [], null) || [];
   function saveHidden(){ try{ localStorage.setItem(HIDE_KEY, JSON.stringify(hiddenTabs)); }catch(e){} }
@@ -2993,123 +3004,106 @@
     {d:"2026-09-07",v:530.75}, {d:"2026-09-08",v:526.5}, {d:"2026-09-09",v:532}, {d:"2026-09-10",v:522.5},
     {d:"2026-09-11",v:526.75}
   ];
-  var GOLD_KEY = 'gold-hist-v1', BTC_KEY = 'btc-hist-v1', GOLD_MSG_KEY = 'gold-state-v1';
   var AED_PER_USD = 3.6725, GRAMS_PER_OZ = 31.1034768;
-  var memGold = null, memBtc = null;
-  var goldHist = loadJSON(GOLD_KEY, null, memGold) || [];
-  var btcHist  = loadJSON(BTC_KEY, null, memBtc) || [];
-  /* fill in any seed day we don't already hold, keeping everything collected so far */
+  var RATE_STATE_KEY = 'gold-state-v1', RATE_OPEN_KEY = 'rate-open-v1';
+
+  /* Four daily series, each its own card. They are never drawn on one pair of
+     axes: a gram price in the hundreds, a coin price in the hundreds of
+     thousands and an index near a hundred share no scale worth sharing. */
+  var RATES = [
+    { k:'gold', key:'gold-hist-v1', name:'24K Gold · Dubai', unit:'AED / gram',
+      dp:2, lo:50, hi:5000, hint:'AED per gram (24K)', src:'dubaicityofgold.com' },
+    { k:'btc',  key:'btc-hist-v1',  name:'Bitcoin', unit:'AED / coin',
+      dp:0, lo:1000, hi:100000000, hint:'AED per bitcoin', src:'CoinGecko' },
+    { k:'inr',  key:'inr-hist-v1',  name:'Rupee', unit:'₹ / dirham',
+      dp:3, lo:5, hi:100, hint:'rupees per dirham', src:'ECB' },
+    { k:'dxy',  key:'dxy-hist-v1',  name:'Dollar index', unit:'vs six majors',
+      dp:2, lo:50, hi:200, hint:'index value', src:'ECB' }
+  ];
+  function rateCfg(k){
+    for(var i = 0; i < RATES.length; i++) if(RATES[i].k === k) return RATES[i];
+    return RATES[0];
+  }
+
+  var H = {}, memH = {};
+  RATES.forEach(function(c){ H[c.k] = loadJSON(c.key, null, memH[c.k]) || []; });
+  /* fill in any seed day we don't already hold, keeping everything collected */
   (function mergeSeed(){
     var have = {}, added = 0, i;
-    for(i = 0; i < goldHist.length; i++) have[goldHist[i].d] = 1;
+    for(i = 0; i < H.gold.length; i++) have[H.gold[i].d] = 1;
     for(i = 0; i < GOLD_SEED.length; i++){
-      if(!have[GOLD_SEED[i].d]){ goldHist.push({ d:GOLD_SEED[i].d, v:GOLD_SEED[i].v }); added++; }
+      if(!have[GOLD_SEED[i].d]){ H.gold.push({ d:GOLD_SEED[i].d, v:GOLD_SEED[i].v }); added++; }
     }
     if(added){
-      goldHist.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
-      try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){}
+      H.gold.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+      try{ localStorage.setItem('gold-hist-v1', JSON.stringify(H.gold)); }catch(e){}
     }
   })();
 
-  /* Gold and bitcoin sit one above the other, each with its own card and its
-     own chart. They share nothing but the layout: a gram price in the
-     hundreds and a coin price in the hundreds of thousands on one pair of
-     axes would squash whichever moved less into a flat line. */
-  var ASSET = {
-    gold: { key:GOLD_KEY, lab:'24K gold · Dubai', unit:'per gram', dp:2,
-            src:'dubaicityofgold.com', hint:'AED per gram (24K)', lo:50, hi:5000 },
-    btc:  { key:BTC_KEY,  lab:'Bitcoin', unit:'per coin', dp:0,
-            src:'CoinGecko', hint:'AED per bitcoin', lo:1000, hi:100000000 }
-  };
-  var ASSETS = ['gold', 'btc'];
-  var ranges = { gold:30, btc:30 };
-  var goldState = loadJSON(GOLD_MSG_KEY, { last:'', ok:false }, null);
-  var goldFetchedAt = 0, goldChecking = false;
+  var ranges = { gold:30, btc:30, inr:30, dxy:30 };
+  var rateOpen = '';
+  try{ rateOpen = localStorage.getItem(RATE_OPEN_KEY) || ''; }catch(e){}
+  var goldState = loadJSON(RATE_STATE_KEY, { last:'', ok:false }, null);
+  var rateFetchedAt = 0, rateChecking = false;
 
-  function hist(a){ return a === 'btc' ? btcHist : goldHist; }
-  function saveA(a){
-    if(a === 'btc'){ memBtc = btcHist; try{ localStorage.setItem(BTC_KEY, JSON.stringify(btcHist)); }catch(e){} }
-    else { memGold = goldHist; try{ localStorage.setItem(GOLD_KEY, JSON.stringify(goldHist)); }catch(e){} }
+  function saveRate(k){
+    memH[k] = H[k];
+    try{ localStorage.setItem(rateCfg(k).key, JSON.stringify(H[k])); }catch(e){}
   }
-  function saveGoldState(){ try{ localStorage.setItem(GOLD_MSG_KEY, JSON.stringify(goldState)); }catch(e){} }
-  function el(a, name){ return document.getElementById(a + name); }
-
-  /* add or replace one day's reading */
-  function putRate(a, dateKey, val, manual){
-    var h = hist(a), i;
+  function saveGoldState(){ try{ localStorage.setItem(RATE_STATE_KEY, JSON.stringify(goldState)); }catch(e){} }
+  function putRate(k, dateKey, val, manual){
+    var h = H[k], i;
     for(i = 0; i < h.length; i++){
-      if(h[i].d === dateKey){ h[i].v = val; h[i].m = !!manual; saveA(a); return; }
+      if(h[i].d === dateKey){ h[i].v = val; h[i].m = !!manual; saveRate(k); return; }
     }
     h.push({ d: dateKey, v: val, m: !!manual });
-    h.sort(function(x, y){ return x.d < y.d ? -1 : 1; });
-    while(h.length > 1200) h.shift();
-    saveA(a);
+    h.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+    while(h.length > 1300) h.shift();
+    saveRate(k);
   }
-  /* gold is read to the fils, bitcoin to the dirham — decimals on a
-     six-figure number are noise */
+  function latest(k){ var h = H[k]; return h.length ? h[h.length - 1] : null; }
+
+  /* ---------- the numbers, written out ---------- */
   function money(n, d){
     if(d === undefined) d = 2;
     return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
-  function rate(a, n){ return money(n, ASSET[a].dp); }
-  /* six figures spelled out in full run off the left edge of the chart */
-  function axisLab(a, v){ return a === 'btc' ? Math.round(v / 1000) + 'k' : String(Math.round(v)); }
-
-  /* ---------- markup: the same section twice, so they cannot drift ---------- */
-  function assetSection(a){
-    var c = ASSET[a];
-    return '<section class="card gold-card" data-asset="'+a+'">' +
-      '<div class="gold-lab"><i></i>'+c.lab+'</div>' +
-      '<div class="gold-big"><span class="cur">AED</span><span class="amt" id="'+a+'Amt">—</span></div>' +
-      '<div class="gold-sub">' +
-        '<span class="gold-unit">'+c.unit+'</span>' +
-        '<span class="gold-chg flat" id="'+a+'Chg">—</span>' +
-      '</div>' +
-      '<div class="gold-meta" id="'+a+'Meta">Loading…</div>' +
-      '<div class="gold-actions">' +
-        '<button class="gold-check" data-check="'+a+'">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>' +
-          ' Check now</button>' +
-        '<span class="gold-status" id="'+a+'Status"></span>' +
-      '</div>' +
-      '<div class="todo-add gold-add" id="'+a+'Add">' +
-        '<input type="number" inputmode="decimal" step="'+(a === 'btc' ? '1' : '0.01')+'" id="'+a+'Input" placeholder="'+c.hint+'">' +
-        '<button data-save="'+a+'">Save</button>' +
-      '</div>' +
-    '</section>' +
-    '<section class="card" data-asset="'+a+'">' +
-      '<div class="cat-head" style="margin-bottom:6px">' +
-        '<div class="cat-name sec-title">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>' +
-          c.lab.split(' · ')[0] + ' trend' +
-        '</div>' +
-        '<span class="rt-prog" id="'+a+'Span"></span>' +
-      '</div>' +
-      '<div class="range-row" data-range="'+a+'">' +
-        '<button data-r="7">7D</button><button data-r="30" class="on">1M</button>' +
-        '<button data-r="90">3M</button><button data-r="180">6M</button>' +
-        '<button data-r="365">1Y</button><button data-r="0">All</button>' +
-      '</div>' +
-      '<div class="gchart-wrap"><div class="gtip" id="'+a+'Tip"></div><div id="'+a+'Chart"></div></div>' +
-      '<div class="gstats" id="'+a+'Stats"></div>' +
-      '<div class="grange-note" id="'+a+'Note"></div>' +
-    '</section>';
+  function fig(k, n){ return money(n, rateCfg(k).dp); }
+  /* lakh and crore are how these are actually read, and a seven-figure
+     rupee number spelled out is unreadable at this size */
+  function rupees(n){
+    if(n >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
+    if(n >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
+    return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: n < 100 ? 2 : 0 });
   }
-  document.getElementById('page-gold').innerHTML =
-    ASSETS.map(assetSection).join('');
+  function dollars(n){
+    return '$' + n.toLocaleString('en-US', {
+      minimumFractionDigits: n < 100 ? 2 : 0, maximumFractionDigits: n < 100 ? 2 : 0 });
+  }
+  function inrPerAed(){
+    var r = latest('inr');
+    return r ? r.v : 0;
+  }
+  /* the line under each price: the same figure in the other two currencies */
+  function altLine(k, v){
+    if(k === 'gold' || k === 'btc'){
+      var inr = inrPerAed();
+      return dollars(v / AED_PER_USD) + (inr ? ' · ' + rupees(v * inr) : '');
+    }
+    if(k === 'inr') return '₹' + money(v * AED_PER_USD, 2) + ' per $1';
+    return 'higher = a stronger dollar';
+  }
 
-  /* One point per day. Days with no reading carry the previous day's forward
-     — markets are shut at weekends anyway — and are flagged so the readout
-     can say so, rather than the line skipping days. */
-  function series(a){
-    var H = hist(a);
-    if(!H.length) return [];
-    var h = H.slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; });
+  /* ---------- one point per day, gaps carried forward ---------- */
+  function series(k){
+    var A = H[k];
+    if(!A.length) return [];
+    var h = A.slice().sort(function(a, b){ return a.d < b.d ? -1 : 1; });
     var have = {}, i;
     for(i = 0; i < h.length; i++) have[h[i].d] = h[i].v;
     var last = parseKey(h[h.length - 1].d), today = midnight();
     var endD = last > today ? last : today, startD;
-    var range = ranges[a];
+    var range = ranges[k];
     if(!range){ startD = parseKey(h[0].d); }
     else {
       startD = addDays(endD, -(range - 1));
@@ -3119,110 +3113,166 @@
     var out = [], cur = null;
     for(i = 0; i < h.length; i++){ if(parseKey(h[i].d) <= startD) cur = h[i].v; else break; }
     var d = new Date(startD.getTime()), guard = 0;
-    while(d <= endD && guard++ < 1500){
-      var k = keyOf(d);
-      if(k in have){ cur = have[k]; out.push({ d:k, v:cur, real:true }); }
-      else if(cur !== null){ out.push({ d:k, v:cur, real:false }); }
+    while(d <= endD && guard++ < 1600){
+      var key = keyOf(d);
+      if(key in have){ cur = have[key]; out.push({ d:key, v:cur, real:true }); }
+      else if(cur !== null){ out.push({ d:key, v:cur, real:false }); }
       d = addDays(d, 1);
     }
     if(out.length >= 2) return out;
     return h.map(function(r){ return { d:r.d, v:r.v, real:true }; }).slice(-2);
   }
 
-  function renderRateHead(a){
-    var c = ASSET[a], H = hist(a);
-    var amtEl = el(a, 'Amt'), chgEl = el(a, 'Chg'), metaEl = el(a, 'Meta');
-    if(!H.length){
-      amtEl.textContent = '—';
-      chgEl.className = 'gold-chg flat'; chgEl.textContent = 'no data';
-      metaEl.textContent = 'Nothing yet — tap Check now.';
-      return;
-    }
-    var h = H.slice().sort(function(x, y){ return x.d < y.d ? -1 : 1; });
-    var last = h[h.length - 1], prev = h.length > 1 ? h[h.length - 2] : null;
-    amtEl.textContent = rate(a, last.v);
-    if(prev){
-      var diff = last.v - prev.v, pct = (diff / prev.v) * 100;
-      var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : 'flat';
-      chgEl.className = 'gold-chg ' + dir;
-      chgEl.textContent = (dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '● ') +
-        (dir === 'flat' ? '0' : rate(a, Math.abs(diff))) +
-        ' (' + (dir === 'flat' ? '0.00' : Math.abs(pct).toFixed(2)) + '%)';
-    }else{
-      chgEl.className = 'gold-chg flat'; chgEl.textContent = 'first reading';
-    }
-    var d = parseKey(last.d), stale = last.d !== todayKey();
-    metaEl.innerHTML =
-      DAYS[d.getDay()].slice(0,3) + ', ' + fmtShort(d) + ' ' + d.getFullYear() +
-      ' · ' + h.length + ' days recorded' +
-      (stale ? ' · <b>not updated today</b>' : '') +
-      '<br>' + (goldState.ok ? 'Checked automatically once a day' : 'Source: ' + c.src) +
-      ' · <a href="#" data-manual="'+a+'">enter today’s figure</a>';
+  /* ---------- the collapsed line ---------- */
+  function sparkSVG(k){
+    var h = H[k];
+    if(h.length < 3) return '';
+    var pts = h.slice(-30).map(function(r){ return r.v; });
+    var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts);
+    if(hi === lo){ hi += 1; lo -= 1; }
+    var W = 64, Ht = 22, P = 2.5;
+    var d = pts.map(function(v, i){
+      var x = P + (i / (pts.length - 1)) * (W - P * 2);
+      var y = P + (1 - (v - lo) / (hi - lo)) * (Ht - P * 2);
+      return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    var lx = W - P, ly = P + (1 - (pts[pts.length-1] - lo) / (hi - lo)) * (Ht - P * 2);
+    return '<svg class="spark" viewBox="0 0 '+W+' '+Ht+'" aria-hidden="true">' +
+      '<path d="'+d+'"/><circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2"/></svg>';
+  }
+  function changeChip(k){
+    var h = H[k];
+    if(h.length < 2) return '<span class="rate-chg">new</span>';
+    var a = h[h.length - 2].v, b = h[h.length - 1].v;
+    var pct = ((b - a) / a) * 100;
+    var dir = pct > 0.005 ? 'up' : pct < -0.005 ? 'down' : '';
+    return '<span class="rate-chg '+dir+'">' +
+      (dir === 'up' ? '▲ ' : dir === 'down' ? '▼ ' : '') +
+      Math.abs(pct).toFixed(2) + '%</span>';
   }
 
-  function renderRateChart(a){
-    var box = el(a, 'Chart'), statsEl = el(a, 'Stats'), noteEl = el(a, 'Note');
-    var tip = el(a, 'Tip');
+  var CARET = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+
+  function rateCard(c){
+    var last = latest(c.k);
+    var open = rateOpen === c.k;
+    var val = last ? fig(c.k, last.v) : '—';
+    var alt = last ? altLine(c.k, last.v) : 'nothing yet';
+    return '<section class="rate-card'+(open ? ' open' : '')+'" data-a="'+c.k+'">' +
+      '<button class="rate-head" data-open="'+c.k+'" aria-expanded="'+open+'">' +
+        '<span class="rate-dot"></span>' +
+        '<span class="rate-main">' +
+          '<span class="rate-name">'+c.name+'</span>' +
+          '<span class="rate-val"><b>'+val+'</b><i>'+c.unit+'</i></span>' +
+          '<span class="rate-alt">'+alt+'</span>' +
+        '</span>' +
+        '<span class="rate-right">'+changeChip(c.k)+sparkSVG(c.k)+'</span>' +
+        '<span class="rate-caret">'+CARET+'</span>' +
+      '</button>' +
+      '<div class="rate-body">' +
+        '<div class="range-row" data-range="'+c.k+'">' +
+          [7,30,90,180,365,0].map(function(r){
+            return '<button data-r="'+r+'"'+(ranges[c.k] === r ? ' class="on"' : '')+'>' +
+              (r === 7 ? '7D' : r === 30 ? '1M' : r === 90 ? '3M' : r === 180 ? '6M' : r === 365 ? '1Y' : 'All') +
+              '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="gchart-wrap"><div class="gtip" id="'+c.k+'Tip"></div><div id="'+c.k+'Chart"></div></div>' +
+        '<div class="gstats" id="'+c.k+'Stats"></div>' +
+        '<div class="rate-stale" id="'+c.k+'Meta"></div>' +
+        '<div class="rate-act">' +
+          '<button class="gold-check" data-check="'+c.k+'">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>' +
+            ' Check now</button>' +
+          '<button class="rate-type" data-type="'+c.k+'">enter it by hand</button>' +
+          '<span class="gold-status" id="'+c.k+'Status"></span>' +
+        '</div>' +
+        '<div class="todo-add gold-add" id="'+c.k+'Add">' +
+          '<input type="number" inputmode="decimal" step="'+(c.dp ? '0.01' : '1')+'" id="'+c.k+'Input" placeholder="'+c.hint+'">' +
+          '<button data-save="'+c.k+'">Save</button>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderRates(){
+    document.getElementById('page-gold').innerHTML = RATES.map(rateCard).join('');
+    if(rateOpen) renderRateChart(rateOpen);
+  }
+
+  function renderRateChart(k){
+    var box = document.getElementById(k + 'Chart');
+    if(!box) return;
+    var statsEl = document.getElementById(k + 'Stats');
+    var metaEl = document.getElementById(k + 'Meta');
+    var tip = document.getElementById(k + 'Tip');
+    var c = rateCfg(k);
     tip.classList.remove('on');
-    var s = series(a);
-    el(a, 'Span').textContent = s.length ? s.length + ' days' : '';
+    var last = latest(k);
+    if(metaEl){
+      metaEl.textContent = last
+        ? (H[k].length + ' days recorded · last ' + fmtShort(parseKey(last.d)) +
+           (last.d === todayKey() ? '' : ' · not updated today') + ' · ' + c.src)
+        : 'Nothing recorded yet';
+    }
+    var s = series(k);
     if(s.length < 2){
       box.innerHTML = '<div class="empty-note">Not enough history yet — it grows by a day at a time</div>';
-      statsEl.innerHTML = ''; noteEl.textContent = '';
+      statsEl.innerHTML = '';
       return;
     }
-    var W = 320, H = 124, PL = 42, PR = 8, PT = 12, PB = 17;
+    var W = 320, Ht = 124, PL = 44, PR = 8, PT = 12, PB = 17;
     var vals = s.map(function(r){ return r.v; });
     var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
     if(hi === lo){ hi += 1; lo -= 1; }
     var pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
     var x = function(i){ return PL + (i / (s.length - 1)) * (W - PL - PR); };
-    var y = function(v){ return PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB); };
+    var y = function(v){ return PT + (1 - (v - lo) / (hi - lo)) * (Ht - PT - PB); };
+    var axis = function(v){
+      if(k === 'btc') return Math.round(v / 1000) + 'k';
+      if(k === 'inr') return v.toFixed(2);
+      return String(Math.round(v));
+    };
 
     var pts = s.map(function(r, i){ return x(i).toFixed(1) + ' ' + y(r.v).toFixed(1); });
     var line = 'M' + pts.join(' L');
-    var area = line + ' L' + x(s.length - 1).toFixed(1) + ' ' + (H - PB) + ' L' + PL + ' ' + (H - PB) + ' Z';
+    var area = line + ' L' + x(s.length - 1).toFixed(1) + ' ' + (Ht - PB) + ' L' + PL + ' ' + (Ht - PB) + ' Z';
     var lastI = s.length - 1, lastV = s[lastI].v;
-    var firstD = parseKey(s[0].d), lastD = parseKey(s[lastI].d);
-    var gid = 'fade-' + a;
-
-    var refY = y(lastV);
+    var gid = 'fade-' + k, refY = y(lastV);
     var ticks = '', TICKS = 4, ti, tv, ty;
     for(ti = 0; ti < TICKS; ti++){
       tv = lo + pad + (hi - pad - (lo + pad)) * (ti / (TICKS - 1));
       ty = y(tv);
       ticks += '<line class="ggrid" x1="'+PL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+ty.toFixed(1)+'"/>';
       if(Math.abs(ty - refY) > 9){
-        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+axisLab(a, tv)+'</text>';
+        ticks += '<text class="gyl" x="'+(PL-6)+'" y="'+(ty + 3).toFixed(1)+'" text-anchor="end">'+axis(tv)+'</text>';
       }
     }
     var ref = '<line class="gref" x1="'+PL+'" y1="'+refY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+refY.toFixed(1)+'"/>' +
-      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+axisLab(a, lastV)+'</text>';
+      '<text class="gyl now" x="'+(PL-6)+'" y="'+(refY + 3).toFixed(1)+'" text-anchor="end">'+axis(lastV)+'</text>';
 
     box.innerHTML =
-      '<svg class="gchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+ASSET[a].lab+' trend">' +
+      '<svg class="gchart" viewBox="0 0 '+W+' '+Ht+'" role="img" aria-label="'+c.name+' trend">' +
         '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">' +
           '<stop offset="0" stop-color="var(--series)" stop-opacity=".26"/>' +
           '<stop offset="1" stop-color="var(--series)" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
         ticks +
         '<path class="garea" style="fill:url(#'+gid+')" d="'+area+'"/>' +
-        '<path class="gline" d="'+line+'"/>' +
-        ref +
-        '<line class="gcross" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" style="display:none"/>' +
+        '<path class="gline" d="'+line+'"/>' + ref +
+        '<line class="gcross" x1="0" y1="'+PT+'" x2="0" y2="'+(Ht-PB)+'" style="display:none"/>' +
         '<circle class="gdot" cx="'+x(lastI).toFixed(1)+'" cy="'+refY.toFixed(1)+'" r="4"/>' +
-        '<text class="gxl" x="'+PL+'" y="'+(H-3)+'">'+fmtShort(firstD)+'</text>' +
-        '<text class="gxl" x="'+(W-PR)+'" y="'+(H-3)+'" text-anchor="end">'+fmtShort(lastD)+'</text>' +
+        '<text class="gxl" x="'+PL+'" y="'+(Ht-3)+'">'+fmtShort(parseKey(s[0].d))+'</text>' +
+        '<text class="gxl" x="'+(W-PR)+'" y="'+(Ht-3)+'" text-anchor="end">'+fmtShort(parseKey(s[lastI].d))+'</text>' +
       '</svg>';
 
     var first = s[0].v, diff = lastV - first, pct = (diff / first) * 100;
-    var dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : '';
+    var dir = diff > 0 ? 'up' : diff < 0 ? 'down' : '';
     statsEl.innerHTML =
-      '<div class="gstat"><b>'+rate(a, hi - pad)+'</b><span>high</span></div>' +
-      '<div class="gstat"><b>'+rate(a, lo + pad)+'</b><span>low</span></div>' +
+      '<div class="gstat"><b>'+fig(k, hi - pad)+'</b><span>high</span></div>' +
+      '<div class="gstat"><b>'+fig(k, lo + pad)+'</b><span>low</span></div>' +
       '<div class="gstat"><b class="'+dir+'">'+(dir === 'up' ? '▲ +' : dir === 'down' ? '▼ −' : '')+
-        (dir ? Math.abs(pct).toFixed(2) : '0.00')+'%</b><span>change</span></div>';
-    noteEl.textContent = 'Tap the chart to read a day · updates once a day';
+        Math.abs(pct).toFixed(2)+'%</b><span>change</span></div>';
 
     var svg = box.querySelector('.gchart');
     var cross = svg.querySelector('.gcross'), dot = svg.querySelector('.gdot');
@@ -3235,8 +3285,8 @@
       cross.setAttribute('x1', px); cross.setAttribute('x2', px);
       cross.style.display = '';
       dot.setAttribute('cx', px); dot.setAttribute('cy', py);
-      var dd = parseKey(s[i].d);
-      tip.textContent = rate(a, s[i].v) + ' · ' + fmtShort(dd) + (s[i].real === false ? ' (carried)' : '');
+      tip.textContent = fig(k, s[i].v) + ' · ' + fmtShort(parseKey(s[i].d)) +
+        (s[i].real === false ? ' (carried)' : '');
       tip.style.left = (px / W * 100) + '%';
       tip.classList.add('on');
     }
@@ -3252,50 +3302,56 @@
     svg.addEventListener('touchmove', function(e){ if(e.touches.length) readAt(e.touches[0].clientX); }, {passive:true});
     svg.addEventListener('touchend', clear);
   }
-
-  function renderGold(){
-    for(var i = 0; i < ASSETS.length; i++){ renderRateHead(ASSETS[i]); renderRateChart(ASSETS[i]); }
+  function renderGold(){ renderRates(); }
+  function setGoldStatus(k, msg){
+    var e2 = document.getElementById(k + 'Status');
+    if(e2) e2.textContent = msg || '';
   }
-  function setGoldStatus(a, msg){ var e2 = el(a, 'Status'); if(e2) e2.textContent = msg || ''; }
 
-  /* ---------- one delegated listener for both sections ---------- */
+  /* ---------- one delegated listener for all four ---------- */
   document.getElementById('page-gold').addEventListener('click', function(e){
+    var head = e.target.closest('[data-open]');
+    if(head){
+      var k = head.getAttribute('data-open');
+      rateOpen = rateOpen === k ? '' : k;
+      try{ localStorage.setItem(RATE_OPEN_KEY, rateOpen); }catch(err){}
+      renderRates();
+      return;
+    }
     var r = e.target.closest('[data-range] button');
     if(r){
-      var row = r.closest('[data-range]'), a = row.getAttribute('data-range');
-      ranges[a] = +r.getAttribute('data-r');
+      var row = r.closest('[data-range]'), rk = row.getAttribute('data-range');
+      ranges[rk] = +r.getAttribute('data-r');
       var bs = row.querySelectorAll('button');
       for(var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === r);
-      renderRateChart(a);
+      renderRateChart(rk);
       return;
     }
     var chk = e.target.closest('[data-check]');
     if(chk){ fetchRates(true, chk.getAttribute('data-check')); return; }
     var sv = e.target.closest('[data-save]');
     if(sv){ saveManual(sv.getAttribute('data-save')); return; }
-    var man = e.target.closest('[data-manual]');
-    if(man){
-      e.preventDefault();
-      var a2 = man.getAttribute('data-manual');
-      var add = el(a2, 'Add');
-      add.classList.toggle('show');
-      if(add.classList.contains('show')) el(a2, 'Input').focus();
+    var ty = e.target.closest('[data-type]');
+    if(ty){
+      var tk = ty.getAttribute('data-type');
+      var box = document.getElementById(tk + 'Add');
+      box.classList.toggle('show');
+      if(box.classList.contains('show')) document.getElementById(tk + 'Input').focus();
+      return;
     }
   });
   document.getElementById('page-gold').addEventListener('keydown', function(e){
     if(e.key !== 'Enter') return;
     var inp = e.target.closest('[id$="Input"]');
-    if(!inp) return;
-    saveManual(inp.id.replace('Input', ''));
+    if(inp) saveManual(inp.id.replace('Input', ''));
   });
-  function saveManual(a){
-    var inp = el(a, 'Input'), c = ASSET[a];
+  function saveManual(k){
+    var inp = document.getElementById(k + 'Input'), c = rateCfg(k);
     var v = parseFloat(inp.value);
-    if(!v || v < c.lo || v > c.hi){ toast('Enter the ' + c.hint.toLowerCase()); return; }
-    putRate(a, todayKey(), a === 'btc' ? Math.round(v) : Math.round(v * 100) / 100, true);
+    if(!v || v < c.lo || v > c.hi){ toast('Enter the ' + c.hint); return; }
+    putRate(k, todayKey(), c.dp ? Math.round(v * 1000) / 1000 : Math.round(v), true);
     inp.value = '';
-    el(a, 'Add').classList.remove('show');
-    renderGold();
+    renderRates();
     toast('Saved today’s figure');
   }
 
@@ -3323,8 +3379,26 @@
       return v;
     });
   }
-  /* Live readings, tried only when the repo file has nothing for today.
-     Each resolves to a number in dirhams or throws. */
+  var DXY_BASKET = ['EUR','JPY','GBP','CAD','SEK','CHF'];
+  function dxyFrom(r){
+    var eur = 1 / r.EUR, gbp = 1 / r.GBP;
+    var v = 50.14348112 *
+      Math.pow(eur, -0.576) * Math.pow(r.JPY, 0.136) * Math.pow(gbp, -0.119) *
+      Math.pow(r.CAD, 0.091) * Math.pow(r.SEK, 0.042) * Math.pow(r.CHF, 0.036);
+    return (v > 50 && v < 200) ? Math.round(v * 100) / 100 : 0;
+  }
+  function ecbLatest(){
+    return fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR,' + DXY_BASKET.join(','),
+      { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){ return j.rates || {}; });
+  }
+  function erApi(){
+    return fetch('https://open.er-api.com/v6/latest/USD', { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){ return j.rates || {}; });
+  }
+  /* each resolves to one number, or throws */
   var LIVE = {
     gold: [
       function(){ return fetch(GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); },
@@ -3333,7 +3407,6 @@
       function(){ return fetch('https://r.jina.ai/' + GOLD_PAGE, { cache:'no-store' }).then(readGoldPage); }
     ],
     btc: [
-      /* CoinGecko quotes dirhams directly, so there is no conversion to get wrong */
       function(){
         return fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=aed', { cache:'no-store' })
           .then(function(r){ if(!r.ok) throw 0; return r.json(); })
@@ -3352,6 +3425,28 @@
             return Math.round(v * AED_PER_USD);
           });
       }
+    ],
+    inr: [
+      function(){ return ecbLatest().then(function(r){
+        if(!(r.INR > 0)) throw 0;
+        return Math.round((r.INR / AED_PER_USD) * 1000) / 1000;
+      }); },
+      function(){ return erApi().then(function(r){
+        if(!(r.INR > 0)) throw 0;
+        return Math.round((r.INR / AED_PER_USD) * 1000) / 1000;
+      }); }
+    ],
+    dxy: [
+      function(){ return ecbLatest().then(function(r){
+        var v = dxyFrom(r);
+        if(!v) throw 0;
+        return v;
+      }); },
+      function(){ return erApi().then(function(r){
+        var v = dxyFrom(r);
+        if(!v) throw 0;
+        return v;
+      }); }
     ]
   };
 
@@ -3365,22 +3460,22 @@
       have[rows[i].d] = 1;
       added++;
     }
-    if(added) into.sort(function(x, y){ return x.d < y.d ? -1 : 1; });
+    if(added) into.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
     return added;
   }
-  function freshToday(a){
-    var h = hist(a);
-    return h.length && h[h.length - 1].d === todayKey();
+  function freshToday(k){
+    var l = latest(k);
+    return !!l && l.d === todayKey();
   }
 
   function fetchRates(force, only){
     var now = Date.now();
-    if(goldChecking) return;
-    if(!force && now - goldFetchedAt < 60 * 60 * 1000) return;
+    if(rateChecking) return;
+    if(!force && now - rateFetchedAt < 60 * 60 * 1000) return;
     if(!force && goldState.last === todayKey() && goldState.ok) return;
-    goldFetchedAt = now; goldChecking = true;
-    var want = only ? [only] : ASSETS;
-    if(force) want.forEach(function(a){ setGoldStatus(a, 'Checking…'); });
+    rateFetchedAt = now; rateChecking = true;
+    var want = only ? [only] : RATES.map(function(c){ return c.k; });
+    if(force) want.forEach(function(k){ setGoldStatus(k, 'Checking…'); });
 
     /* the morning job writes gold.json beside this page — same origin, so it
        always works; the live readings are only a fallback */
@@ -3388,42 +3483,45 @@
       .then(function(r){ if(!r.ok) throw 0; return r.json(); })
       .then(function(j){
         if(!j) throw 0;
-        if(mergeRows(goldHist, j.history)) saveA('gold');
-        if(mergeRows(btcHist, j.btc)) saveA('btc');
-        renderGold();
+        var S = j.series || {};
+        /* older files held only these two, under their own names */
+        if(mergeRows(H.gold, (S.gold && S.gold.rows) || j.history)) saveRate('gold');
+        if(mergeRows(H.btc,  (S.btc  && S.btc.rows)  || j.btc))     saveRate('btc');
+        if(S.inr && mergeRows(H.inr, S.inr.rows)) saveRate('inr');
+        if(S.dxy && mergeRows(H.dxy, S.dxy.rows)) saveRate('dxy');
+        renderRates();
       })
       .catch(function(){})
       .then(function(){
-        var pending = want.filter(function(a){ return !freshToday(a); });
-        want.forEach(function(a){
-          if(freshToday(a) && force) setGoldStatus(a, 'Up to date');
-        });
+        var pending = want.filter(function(k){ return !freshToday(k); });
+        if(force) want.forEach(function(k){ if(freshToday(k)) setGoldStatus(k, 'Up to date'); });
         if(!pending.length){
-          goldChecking = false;
+          rateChecking = false;
           goldState = { last: todayKey(), ok: true }; saveGoldState();
-          renderGold();
+          renderRates();
           return;
         }
         var done = 0;
-        pending.forEach(function(a){
-          tryLive(a, function(){
+        pending.forEach(function(k){
+          tryLive(k, function(){
             if(++done === pending.length){
-              goldChecking = false;
-              goldState = { last: todayKey(), ok: ASSETS.every(freshToday) };
+              rateChecking = false;
+              goldState = { last: todayKey(), ok: RATES.every(function(c){ return freshToday(c.k); }) };
               saveGoldState();
-              renderGold();
+              renderRates();
             }
           });
         });
       });
 
-    function tryLive(a, after){
-      var ways = LIVE[a] || [], i = 0;
+    function tryLive(k, after){
+      var ways = LIVE[k] || [], i = 0;
       (function next(){
         if(i >= ways.length){
           if(force){
-            setGoldStatus(a, 'Couldn’t reach it — type it in below');
-            el(a, 'Add').classList.add('show');
+            setGoldStatus(k, 'Couldn’t reach it — type it in below');
+            var add = document.getElementById(k + 'Add');
+            if(add) add.classList.add('show');
           }
           after();
           return;
@@ -3431,9 +3529,8 @@
         ways[i++]()
           .then(function(v){
             if(!(v > 0)) throw 0;
-            putRate(a, todayKey(), v, false);
-            renderRateHead(a); renderRateChart(a);
-            setGoldStatus(a, force ? 'Updated just now' : '');
+            putRate(k, todayKey(), v, false);
+            setGoldStatus(k, force ? 'Updated just now' : '');
             after();
           })
           .catch(function(){ next(); });
@@ -3441,7 +3538,7 @@
     }
   }
 
-  renderGold();
+  renderRates();
   fetchRates(true);
 
   /* ==================== SETTINGS ==================== */

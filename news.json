@@ -1,0 +1,4 @@
+{
+  "_why": "The News tab was removed in v9.0, but .github/workflows/daily.yml still names this path when it checks what changed, and a token without the workflow scope cannot edit files under .github. This stub is what lets the daily job run at all. Delete it only together with the news.json references in that workflow.",
+  "retired": "2026-10-25"
+}

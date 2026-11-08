@@ -1,0 +1,4 @@
+{
+  "_why": "Retired with the News tab in v9.0. The workflow still watches this path, so changing this file is what kicks off an immediate run instead of waiting for the 07:10 schedule.",
+  "touched": "2026-11-08T06:00:00Z"
+}
