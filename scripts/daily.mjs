@@ -60,19 +60,20 @@ function dxy(r) {
 
 async function ecbSeries() {
   const url = `https://api.frankfurter.dev/v1/${since}..${today}` +
-              `?base=USD&symbols=INR,${DXY_BASKET.join(',')}`;
+              `?base=USD&symbols=INR,PLN,${DXY_BASKET.join(',')}`;
   const res = await get(url, { accept: 'application/json' });
   if (!res.ok) throw new Error(`frankfurter ${res.status}`);
   const rates = (await res.json()).rates || {};
-  const inr = [], idx = [];
+  const inr = [], idx = [], pln = {};
   for (const [d, r] of Object.entries(rates)) {
+    if (r.PLN > 0) pln[d] = r.PLN;
     if (r.INR && sane(r.INR / AED_PER_USD, 5, 100)) inr.push([d, r.INR / AED_PER_USD]);
     if (DXY_BASKET.every((c) => r[c] > 0)) {
       const v = dxy(r);
       if (v) idx.push([d, v]);
     }
   }
-  return { inr, idx };
+  return { inr, idx, pln };
 }
 
 /** today only, when the series endpoint is down */
@@ -80,7 +81,7 @@ async function ecbLatest() {
   const res = await get(`https://open.er-api.com/v6/latest/USD`, { accept: 'application/json' });
   if (!res.ok) throw new Error(`er-api ${res.status}`);
   const r = (await res.json()).rates || {};
-  const out = { inr: [], idx: [] };
+  const out = { inr: [], idx: [], pln: {} };
   if (r.INR > 0) out.inr.push([today, r.INR / AED_PER_USD]);
   if (DXY_BASKET.every((c) => r[c] > 0)) {
     const v = dxy(r);
@@ -194,12 +195,12 @@ async function goldRetail() {
  *  Several free sources are tried in turn and every attempt is recorded in
  *  gold.json under notes.goldHistory — the run logs are not readable from
  *  where this gets maintained, so the file has to say what happened. */
-async function goldSpotSeries(notes) {
-  const tryOne = async (label, fn) => {
+async function goldSpotSeries(notes, pln) {
+  const tryOne = async (label, fn, min = 60) => {
     try {
       const rows = await fn();
       notes.push({ src: label, n: rows.length });
-      return rows.length > 60 ? rows : null;
+      return rows.length >= min ? rows : null;
     } catch (e) {
       notes.push({ src: label, err: String(e.message || e).slice(0, 120) });
       return null;
@@ -210,7 +211,42 @@ async function goldSpotSeries(notes) {
     return sane(v, 50, 5000) ? [iso(dms), v] : null;
   };
 
-  let rows = await tryOne('cryptocompare', async () => {
+  let rows;
+  /* Poland's central bank posts a daily gold fixing in zloty per gram and,
+     unlike the finance sites, does not turn away a datacentre. Divided by
+     the same day's zloty-per-dollar from the ECB it becomes dollars per
+     gram, and the peg does the rest. Asked in year-long slices, which is
+     all the API will serve at once. */
+  rows = await tryOne('nbp', async () => {
+    if (!Object.keys(pln || {}).length) throw new Error('no zloty rates');
+    const days = Object.keys(pln).sort();
+    const out = [];
+    let from = new Date(since + 'T00:00:00Z');
+    const stop = new Date(today + 'T00:00:00Z');
+    for (let slice = 0; slice < 4 && from < stop; slice++) {
+      let to = new Date(from.getTime() + 360 * DAY);
+      if (to > stop) to = stop;
+      const r = await get(`https://api.nbp.pl/api/cenyzlota/${iso(from)}/${iso(to)}/?format=json`,
+        { accept: 'application/json' });
+      if (r.ok) {
+        for (const row of await r.json()) {
+          const d = row.data, perGramPln = Number(row.cena);
+          if (!(perGramPln > 0)) continue;
+          /* the nearest zloty rate at or before that day */
+          let rate = 0;
+          for (let i = days.length - 1; i >= 0; i--) if (days[i] <= d) { rate = pln[days[i]]; break; }
+          if (!(rate > 0)) continue;
+          const v = (perGramPln / rate) * AED_PER_USD;
+          if (sane(v, 50, 5000)) out.push([d, v]);
+        }
+      }
+      from = new Date(to.getTime() + DAY);
+    }
+    return out;
+  });
+  if (rows) return { rows, from: 'NBP daily fixing' };
+
+  rows = await tryOne('cryptocompare', async () => {
     const r = await get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=XAU&tsym=USD&limit=1100',
       { accept: 'application/json' });
     if (!r.ok) throw new Error(`http ${r.status}`);
@@ -262,7 +298,7 @@ async function goldSpotSeries(notes) {
       if (!/^\d{4}-\d{2}/.test(d || '') || !(parseFloat(p) > 0)) return null;
       return toRow(Date.parse(d.length === 7 ? d + '-01' : d), parseFloat(p));
     }).filter(Boolean).filter(([d]) => d >= since);
-  });
+  }, 12);
   if (rows) return { rows, from: 'LBMA monthly' };
 
   return { rows: [], from: '' };
@@ -271,6 +307,7 @@ async function goldSpotSeries(notes) {
 /* ----------------------------------------------------------------- run --- */
 
 const goldNotes = [];
+let plnRates = {};
 let cur = {};
 try { cur = JSON.parse(await readFile(new URL('gold.json', ROOT), 'utf8')); } catch {}
 const old = cur.series || {};
@@ -286,7 +323,8 @@ const sources = {};
 
 /* --- currencies --- */
 try {
-  const { inr, idx } = await ecbSeries();
+  const { inr, idx, pln } = await ecbSeries();
+  plnRates = pln;
   series.inr.rows = merge(series.inr.rows, inr);
   series.dxy.rows = merge(series.dxy.rows, idx);
   sources.inr = sources.dxy = 'ECB via Frankfurter';
@@ -294,7 +332,8 @@ try {
 } catch (e) {
   console.log('currencies: series failed —', e.message);
   try {
-    const { inr, idx } = await ecbLatest();
+    const { inr, idx, pln } = await ecbLatest();
+    plnRates = pln;
     series.inr.rows = merge(series.inr.rows, inr);
     series.dxy.rows = merge(series.dxy.rows, idx);
     sources.inr = sources.dxy = 'open.er-api.com';
@@ -316,7 +355,7 @@ try {
 try {
   const retail = await goldRetail();
   let spot = [], spotFrom = '';
-  try { const g = await goldSpotSeries(goldNotes); spot = g.rows; spotFrom = g.from; }
+  try { const g = await goldSpotSeries(goldNotes, plnRates); spot = g.rows; spotFrom = g.from; }
   catch (e) { goldNotes.push({ src: 'all', err: String(e.message || e).slice(0, 120) }); }
   if (spot.length) sources.goldHistory = spotFrom;
 
