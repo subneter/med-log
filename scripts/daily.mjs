@@ -190,23 +190,68 @@ async function goldRetail() {
   return null;
 }
 
-/** daily XAU/USD from Stooq, as AED per gram of spot */
+/** Three years of daily gold, as AED per gram of spot. Stooq came back empty
+ *  from GitHub's machines, so it is now the last of several tries and the
+ *  winner is recorded in gold.json, which saves digging through run logs. */
 async function goldSpotSeries() {
-  const d1 = since.replace(/-/g, ''), d2 = today.replace(/-/g, '');
-  const res = await get(`https://stooq.com/q/d/l/?s=xauusd&d1=${d1}&d2=${d2}&i=d`);
-  if (!res.ok) throw new Error(`stooq ${res.status}`);
-  const csv = await res.text();
-  const lines = csv.trim().split('\n');
-  if (lines.length < 50 || !/^Date/i.test(lines[0])) throw new Error('stooq gave no table');
   const out = [];
-  for (const line of lines.slice(1)) {
-    const c = line.split(',');
-    const close = parseFloat(c[4]);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(c[0]) || !(close > 0)) continue;
-    const v = close * AED_PER_USD / GRAMS_PER_OZ;
-    if (sane(v, 50, 5000)) out.push([c[0], v]);
+
+  /* CryptoCompare carries XAU as well as the coins, and already answers
+     reliably from this runner */
+  try {
+    const r = await get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=XAU&tsym=USD&limit=1100',
+      { accept: 'application/json' });
+    if (r.ok) {
+      const rows = (await r.json())?.Data?.Data || [];
+      for (const c of rows) {
+        const v = c.close * AED_PER_USD / GRAMS_PER_OZ;
+        if (c.close > 0 && sane(v, 50, 5000)) out.push([iso(c.time * 1000), v]);
+      }
+      if (out.length > 100) return { rows: out, from: 'CryptoCompare XAU' };
+    }
+  } catch (e) { console.log('gold history: cryptocompare —', e.message); }
+
+  /* Yahoo's chart endpoint, spot first and then the futures contract */
+  for (const sym of ['XAUUSD=X', 'GC=F']) {
+    try {
+      const r = await get(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=3y&interval=1d`,
+        { accept: 'application/json' });
+      if (!r.ok) continue;
+      const res = (await r.json())?.chart?.result?.[0];
+      const ts = res?.timestamp || [];
+      const close = res?.indicators?.quote?.[0]?.close || [];
+      const rows = [];
+      for (let i = 0; i < ts.length; i++) {
+        const c = close[i];
+        if (!(c > 0)) continue;
+        const v = c * AED_PER_USD / GRAMS_PER_OZ;
+        if (sane(v, 50, 5000)) rows.push([iso(ts[i] * 1000), v]);
+      }
+      if (rows.length > 100) return { rows, from: `Yahoo ${sym}` };
+    } catch (e) { console.log(`gold history: yahoo ${sym} —`, e.message); }
   }
-  return out;
+
+  /* Stooq, kept in case it starts answering again */
+  try {
+    const d1 = since.replace(/-/g, ''), d2 = today.replace(/-/g, '');
+    const r = await get(`https://stooq.com/q/d/l/?s=xauusd&d1=${d1}&d2=${d2}&i=d`);
+    if (r.ok) {
+      const lines = (await r.text()).trim().split('\n');
+      if (lines.length > 50 && /^Date/i.test(lines[0])) {
+        const rows = [];
+        for (const line of lines.slice(1)) {
+          const c = line.split(',');
+          const close = parseFloat(c[4]);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(c[0]) || !(close > 0)) continue;
+          const v = close * AED_PER_USD / GRAMS_PER_OZ;
+          if (sane(v, 50, 5000)) rows.push([c[0], v]);
+        }
+        if (rows.length > 100) return { rows, from: 'Stooq' };
+      }
+    }
+  } catch (e) { console.log('gold history: stooq —', e.message); }
+
+  return { rows: [], from: '' };
 }
 
 /* ----------------------------------------------------------------- run --- */
@@ -255,9 +300,11 @@ try {
 /* --- gold --- */
 try {
   const retail = await goldRetail();
-  let spot = [];
-  try { spot = await goldSpotSeries(); }
+  let spot = [], spotFrom = '';
+  try { const g = await goldSpotSeries(); spot = g.rows; spotFrom = g.from; }
   catch (e) { console.log('gold: history —', e.message); }
+  if (spot.length) sources.goldHistory = spotFrom;
+  else console.log('gold: no multi-year history from any source');
 
   if (spot.length && retail) {
     /* line the spot history up with the rate actually being charged today */
